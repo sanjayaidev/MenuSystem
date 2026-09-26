@@ -1,5 +1,6 @@
 const express = require('express');
 const supabase = require('../db/supabase');
+const { getAuthUser } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -29,6 +30,8 @@ router.post('/orders', async (req, res) => {
   if (delivery_type === 'delivery' && !delivery_address) {
     return res.status(400).json({ error: 'delivery_address is required for home delivery' });
   }
+
+  const authUser = await getAuthUser(req);
 
   // Fetch real prices/names from the DB — never trust prices sent by the client.
   const ids = items.map((i) => i.menu_item_id);
@@ -72,6 +75,7 @@ router.post('/orders', async (req, res) => {
   const { data: order, error: orderErr } = await supabase
     .from('orders')
     .insert({
+      user_id: authUser?.id || null,
       customer_name,
       customer_phone,
       delivery_type,

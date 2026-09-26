@@ -105,7 +105,7 @@
   /* ===== OVERLAYS (item modal / cart / checkout) ===== */
   .overlay{
     position:absolute; inset:0; z-index:30; background:var(--bg); display:none;
-    flex-direction:column; overflow-y:auto;
+    flex-direction:column; min-height:0; overflow-y:auto;
   }
   .overlay.is-open{display:flex;}
   .overlay-head{
@@ -178,7 +178,7 @@
   .order-type button .free-tag{color:#5fbf7a; font-weight:700; margin-inline-end:4px;}
   .order-type button.active .free-tag{color:#1a1408;}
 
-  .cart-list{padding:0 16px; flex:1;}
+  .cart-list{padding:0 16px; flex:1 1 auto; min-height:0; overflow-y:auto;}
   .cart-row{
     display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line);
   }
@@ -190,7 +190,7 @@
   .cart-row .cart-thumb img{width:100%; height:100%; object-fit:cover;}
   .cart-row .price{color:var(--gold); font-weight:700; font-size:14px; white-space:nowrap;}
 
-  .cart-summary{padding:14px 16px; border-top:1px solid var(--line); position:sticky; bottom:0; background:var(--bg);}
+  .cart-summary{padding:14px 16px; border-top:1px solid var(--line); position:sticky; bottom:0; flex-shrink:0; background:var(--bg);}
   .summary-line{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); padding:3px 0;}
   .summary-line.final{color:var(--gold); font-weight:700; font-size:16px; padding-top:8px;}
   .primary-btn{
@@ -210,6 +210,20 @@
 
   /* checkout form */
   .checkout-body{padding:16px; flex:1;}
+  .profile-body{padding:16px; overflow-y:auto;}
+  .profile-subtitle{color:var(--muted); font-size:13px; line-height:1.5; margin:0 0 18px;}
+  .profile-identity{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:16px;}
+  .profile-identity strong{display:block; margin-bottom:4px;}
+  .profile-identity small{display:block; color:var(--muted); overflow-wrap:anywhere;}
+  .profile-actions{display:flex; gap:10px; margin-top:16px;}
+  .profile-actions .primary-btn{margin-top:0;}
+  .profile-secondary-btn{flex:1; border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--surface); color:var(--text); font:inherit; font-weight:700; cursor:pointer;}
+  .profile-status{min-height:18px; color:var(--muted); font-size:12px; margin:12px 0 0;}
+  .profile-orders-title{font-size:16px; margin:26px 0 10px;}
+  .profile-order{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:8px;}
+  .profile-order-head{display:flex; justify-content:space-between; gap:10px; font-size:13px; font-weight:700;}
+  .profile-order small{display:block; color:var(--muted); margin-top:6px; line-height:1.45;}
+  .profile-empty{color:var(--muted); font-size:13px;}
   .checkout-branch{color:var(--gold); font-weight:700; font-size:14px; margin-bottom:2px;}
   .checkout-subrow{display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:18px;}
   .field-label{font-size:12px; color:var(--gold); font-weight:600; margin:14px 0 6px;}
@@ -358,6 +372,56 @@
     </div>
   </div>
 
+  <!-- ===== PROFILE OVERLAY ===== -->
+  <div class="overlay" id="profileOverlay">
+    <div class="overlay-head">
+      <button class="icon-btn" id="profileClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="overlay-title" id="profileTitle"></span>
+      <span style="width:38px;"></span>
+    </div>
+    <div class="profile-body">
+      <div id="profileLoggedOut">
+        <h2 id="profileSignInTitle"></h2>
+        <p class="profile-subtitle" id="profileAccountHint"></p>
+        <p class="field-label" id="profileEmailLabel"></p>
+        <input class="field-input" id="profileEmail" type="email" autocomplete="email">
+        <p class="field-label" id="profilePasswordLabel"></p>
+        <input class="field-input" id="profilePassword" type="password" autocomplete="current-password">
+        <div id="profileNameWrap" style="display:none;">
+          <p class="field-label" id="profileNameLabel"></p>
+          <input class="field-input" id="profileName" type="text" autocomplete="name">
+        </div>
+        <div class="profile-actions">
+          <button class="primary-btn" id="profileLoginBtn"></button>
+          <button class="profile-secondary-btn" id="profileRegisterBtn"></button>
+        </div>
+        <p class="profile-status" id="profileAuthStatus"></p>
+      </div>
+
+      <div id="profileLoggedIn" style="display:none;">
+        <div class="profile-identity">
+          <strong id="profileEmailValue"></strong>
+          <small id="profileIdValue"></small>
+        </div>
+        <p class="field-label" id="profileSavedNameLabel"></p>
+        <input class="field-input" id="profileSavedName" type="text" autocomplete="name">
+        <p class="field-label" id="profilePhoneLabel"></p>
+        <input class="field-input" id="profilePhone" type="tel" autocomplete="tel">
+        <p class="field-label" id="profileAddressLabel"></p>
+        <textarea class="field-textarea" id="profileAddress" autocomplete="street-address"></textarea>
+        <div class="profile-actions">
+          <button class="primary-btn" id="profileSaveBtn"></button>
+          <button class="profile-secondary-btn" id="profileLogoutBtn"></button>
+        </div>
+        <p class="profile-status" id="profileStatus"></p>
+        <h2 class="profile-orders-title" id="profileOrdersTitle"></h2>
+        <div id="profileOrders"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== CHECKOUT OVERLAY ===== -->
   <div class="overlay" id="checkoutOverlay">
     <div class="overlay-head">
@@ -412,7 +476,11 @@ const STR = {
        sortName:'Name (A–Z)', sortTime:'Newest', sortOffer:'Offers first',
        sortPrice:'Price: low to high', sortPopular:'Most popular',
        empty:'No dishes in this category yet.', offer:'Offer',
-       navHome:'Home', navMenu:'Menu', navBasket:'Basket', navProfile:'Profile',
+      navHome:'Home', navMenu:'Menu', navBasket:'Basket', navProfile:'Profile',
+      profileTitle:'My profile', signInTitle:'Sign in to your account', accountHint:'Save your details and see previous orders.',
+      email:'Email', password:'Password', displayName:'Full name', phone:'Phone', address:'Address',
+      signIn:'Sign in', register:'Create account', saveProfile:'Save profile', signOut:'Sign out',
+      authRequired:'Please enter your email and password.', profileSaved:'Profile saved.', orderHistory:'Previous orders', noOrders:'No orders yet.', authError:'Unable to sign in. Please check your details.',
        cartTitle:'Order Cart', pickupLabel:'Pick-up from the branch', free:'Free', deliveryLabel:'Home delivery',
        cartEmptyTitle:'The basket is currently empty.', cartEmptyText:'Enjoy the most delicious meals and order now!',
        browseMenu:'Browse the menu', subtotal:'Subtotal:', deliveryFees:'Delivery fees:', finalTotal:'Final total:',
@@ -429,7 +497,11 @@ const STR = {
        sortName:'الاسم (أ-ي)', sortTime:'الأحدث', sortOffer:'العروض أولاً',
        sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً',
        empty:'لا توجد أطباق في هذا الصنف بعد.', offer:'عرض',
-       navHome:'الرئيسية', navMenu:'القائمة', navBasket:'السلة', navProfile:'حسابي',
+      navHome:'الرئيسية', navMenu:'القائمة', navBasket:'السلة', navProfile:'حسابي',
+      profileTitle:'حسابي', signInTitle:'تسجيل الدخول', accountHint:'احفظ بياناتك وشاهد طلباتك السابقة.',
+      email:'البريد الإلكتروني', password:'كلمة المرور', displayName:'الاسم الكامل', phone:'رقم الجوال', address:'العنوان',
+      signIn:'تسجيل الدخول', register:'إنشاء حساب', saveProfile:'حفظ الحساب', signOut:'تسجيل الخروج',
+      authRequired:'أدخل البريد الإلكتروني وكلمة المرور.', profileSaved:'تم حفظ الحساب.', orderHistory:'الطلبات السابقة', noOrders:'لا توجد طلبات بعد.', authError:'تعذر تسجيل الدخول. تحقق من بياناتك.',
        cartTitle:'سلة الطلبات', pickupLabel:'الاستلام من الفرع', free:'مجاني', deliveryLabel:'التوصيل للمنزل',
        cartEmptyTitle:'السلة فارغة حالياً.', cartEmptyText:'استمتع بألذ الأطباق واطلب وجبتك الآن!',
        browseMenu:'تصفح القائمة', subtotal:'المجموع الفرعي:', deliveryFees:'رسوم التوصيل:', finalTotal:'الإجمالي النهائي:',
@@ -446,7 +518,11 @@ const STR = {
        sortName:'نام (اے-زیڈ)', sortTime:'تازہ ترین', sortOffer:'پہلے آفرز',
        sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین',
        empty:'اس زمرے میں ابھی کوئی ڈش نہیں۔', offer:'آفر',
-       navHome:'ہوم', navMenu:'مینو', navBasket:'باسکٹ', navProfile:'پروفائل',
+      navHome:'ہوم', navMenu:'مینو', navBasket:'باسکٹ', navProfile:'پروفائل',
+      profileTitle:'میرا پروفائل', signInTitle:'اپنے اکاؤنٹ میں سائن ان کریں', accountHint:'اپنی معلومات محفوظ کریں اور پچھلے آرڈرز دیکھیں۔',
+      email:'ای میل', password:'پاس ورڈ', displayName:'پورا نام', phone:'فون', address:'پتہ',
+      signIn:'سائن ان', register:'اکاؤنٹ بنائیں', saveProfile:'پروفائل محفوظ کریں', signOut:'سائن آؤٹ',
+      authRequired:'ای میل اور پاس ورڈ درج کریں۔', profileSaved:'پروفائل محفوظ ہو گیا۔', orderHistory:'پچھلے آرڈرز', noOrders:'ابھی کوئی آرڈر نہیں۔', authError:'سائن ان نہیں ہو سکا۔ معلومات چیک کریں۔',
        cartTitle:'آرڈر کارٹ', pickupLabel:'برانچ سے پک اپ', free:'مفت', deliveryLabel:'ہوم ڈیلیوری',
        cartEmptyTitle:'ٹوکری اس وقت خالی ہے۔', cartEmptyText:'لذیذ کھانوں سے لطف اٹھائیں اور ابھی آرڈر کریں!',
        browseMenu:'مینو دیکھیں', subtotal:'ذیلی مجموعہ:', deliveryFees:'ڈیلیوری فیس:', finalTotal:'حتمی رقم:',
@@ -463,7 +539,11 @@ const STR = {
        sortName:'名称（A-Z）', sortTime:'最新', sortOffer:'优惠优先',
        sortPrice:'价格：从低到高', sortPopular:'最受欢迎',
        empty:'该分类暂无菜品。', offer:'优惠',
-       navHome:'首页', navMenu:'菜单', navBasket:'购物车', navProfile:'我的',
+      navHome:'首页', navMenu:'菜单', navBasket:'购物车', navProfile:'我的',
+      profileTitle:'我的资料', signInTitle:'登录您的账户', accountHint:'保存您的信息并查看历史订单。',
+      email:'电子邮箱', password:'密码', displayName:'姓名', phone:'电话', address:'地址',
+      signIn:'登录', register:'创建账户', saveProfile:'保存资料', signOut:'退出登录',
+      authRequired:'请输入电子邮箱和密码。', profileSaved:'资料已保存。', orderHistory:'历史订单', noOrders:'暂无订单。', authError:'登录失败，请检查您的信息。',
        cartTitle:'订单购物车', pickupLabel:'到店自取', free:'免费', deliveryLabel:'送货上门',
        cartEmptyTitle:'购物车当前为空。', cartEmptyText:'尽享美味佳肴，现在就下单吧！',
        browseMenu:'浏览菜单', subtotal:'小计：', deliveryFees:'配送费：', finalTotal:'总计：',
@@ -635,6 +715,7 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
     document.querySelectorAll('footer.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     if(btn.dataset.tab === 'basket') openCart();
+    else if(btn.dataset.tab === 'profile') openProfile();
     else if(btn.dataset.tab === 'menu') document.getElementById('menu').scrollIntoView({behavior:'smooth'});
   });
 });
@@ -787,6 +868,127 @@ document.getElementById('cartCheckoutBtn').addEventListener('click', ()=>{
   openCheckout();
 });
 
+/* ---------- PROFILE ---------- */
+const profileOverlay = document.getElementById('profileOverlay');
+const AUTH_TOKEN_KEY = 'redhouse_access_token';
+let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
+let profileData = null;
+
+function authHeaders(){
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+}
+function profileStatus(message, error = false){
+  const status = document.getElementById(profileData ? 'profileStatus' : 'profileAuthStatus');
+  status.textContent = message;
+  status.style.color = error ? 'var(--red)' : 'var(--muted)';
+}
+function refreshProfileStaticText(){
+  document.getElementById('profileTitle').textContent = STR[lang].profileTitle;
+  document.getElementById('profileSignInTitle').textContent = STR[lang].signInTitle;
+  document.getElementById('profileAccountHint').textContent = STR[lang].accountHint;
+  document.getElementById('profileEmailLabel').textContent = STR[lang].email;
+  document.getElementById('profilePasswordLabel').textContent = STR[lang].password;
+  document.getElementById('profileNameLabel').textContent = STR[lang].displayName;
+  document.getElementById('profileSavedNameLabel').textContent = STR[lang].displayName;
+  document.getElementById('profilePhoneLabel').textContent = STR[lang].phone;
+  document.getElementById('profileAddressLabel').textContent = STR[lang].address;
+  document.getElementById('profileLoginBtn').textContent = STR[lang].signIn;
+  document.getElementById('profileRegisterBtn').textContent = STR[lang].register;
+  document.getElementById('profileSaveBtn').textContent = STR[lang].saveProfile;
+  document.getElementById('profileLogoutBtn').textContent = STR[lang].signOut;
+  document.getElementById('profileOrdersTitle').textContent = STR[lang].orderHistory;
+}
+function renderProfile(){
+  refreshProfileStaticText();
+  const loggedIn = Boolean(profileData);
+  document.getElementById('profileLoggedOut').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('profileLoggedIn').style.display = loggedIn ? 'block' : 'none';
+  if(!loggedIn) return;
+
+  document.getElementById('profileEmailValue').textContent = profileData.email || '';
+  document.getElementById('profileIdValue').textContent = `ID: ${profileData.user_id}`;
+  document.getElementById('profileSavedName').value = profileData.profile.display_name || '';
+  document.getElementById('profilePhone').value = profileData.profile.phone || '';
+  document.getElementById('profileAddress').value = profileData.profile.address || '';
+}
+function escapeHtml(value){
+  return String(value).replace(/[&<>'"]/g, character => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  }[character]));
+}
+async function loadProfile(){
+  if(!authToken){ profileData = null; renderProfile(); return; }
+  const response = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
+  if(!response.ok){
+    authToken = ''; profileData = null; localStorage.removeItem(AUTH_TOKEN_KEY); renderProfile();
+    return;
+  }
+  profileData = await response.json();
+  renderProfile();
+  loadProfileOrders();
+}
+async function loadProfileOrders(){
+  const ordersEl = document.getElementById('profileOrders');
+  ordersEl.innerHTML = '';
+  const response = await fetch(`${API_BASE}/api/auth/orders`, { headers: authHeaders() });
+  if(!response.ok){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].authError)}</p>`; return; }
+  const { orders } = await response.json();
+  if(!orders.length){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].noOrders)}</p>`; return; }
+  ordersEl.innerHTML = orders.map(order => {
+    const items = order.order_items.map(item => `${item.quantity} × ${escapeHtml(item.name_snapshot)}`).join(', ');
+    return `<div class="profile-order"><div class="profile-order-head"><span>#${order.id}</span><span>${escapeHtml(money(Number(order.total)))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
+  }).join('');
+}
+function openProfile(){
+  profileOverlay.classList.add('is-open');
+  renderProfile();
+  if(authToken) loadProfile().catch(() => profileStatus(STR[lang].authError, true));
+}
+document.getElementById('profileClose').addEventListener('click', ()=> profileOverlay.classList.remove('is-open'));
+document.getElementById('profileLoginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('profileEmail').value.trim();
+  const password = document.getElementById('profilePassword').value;
+  if(!email || !password){ profileStatus(STR[lang].authRequired, true); return; }
+  try{
+    const response = await fetch(`${API_BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password}) });
+    const result = await response.json();
+    if(!response.ok) throw new Error(result.error);
+    authToken = result.access_token; localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+    profileData = { email, user_id: result.profile.id, profile: result.profile };
+    renderProfile(); loadProfileOrders();
+  }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
+});
+document.getElementById('profileRegisterBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('profileEmail').value.trim();
+  const password = document.getElementById('profilePassword').value;
+  const display_name = document.getElementById('profileName').value.trim();
+  if(!email || !password){ profileStatus(STR[lang].authRequired, true); return; }
+  try{
+    const response = await fetch(`${API_BASE}/api/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password, display_name}) });
+    const result = await response.json();
+    if(!response.ok) throw new Error(result.error);
+    document.getElementById('profileLoginBtn').click();
+  }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
+});
+document.getElementById('profileSaveBtn').addEventListener('click', async ()=>{
+  const updates = {
+    display_name: document.getElementById('profileSavedName').value,
+    phone: document.getElementById('profilePhone').value,
+    address: document.getElementById('profileAddress').value,
+  };
+  const response = await fetch(`${API_BASE}/api/auth/me`, { method:'PATCH', headers:{'Content-Type':'application/json', ...authHeaders()}, body:JSON.stringify(updates) });
+  const result = await response.json();
+  if(!response.ok){ profileStatus(result.error || STR[lang].authError, true); return; }
+  profileData.profile = result.profile;
+  profileStatus(STR[lang].profileSaved);
+  document.getElementById('checkoutName').value = result.profile.display_name || '';
+  document.getElementById('checkoutPhone').value = result.profile.phone || '';
+  document.getElementById('checkoutAddress').value = result.profile.address || '';
+});
+document.getElementById('profileLogoutBtn').addEventListener('click', ()=>{
+  authToken = ''; profileData = null; localStorage.removeItem(AUTH_TOKEN_KEY); renderProfile();
+});
+
 /* ---------- CHECKOUT OVERLAY ---------- */
 const checkoutOverlay = document.getElementById('checkoutOverlay');
 function refreshCheckoutStaticText(){
@@ -810,6 +1012,11 @@ function refreshCheckoutStaticText(){
 }
 function openCheckout(){
   refreshCheckoutStaticText();
+  if(profileData){
+    document.getElementById('checkoutName').value = profileData.profile.display_name || '';
+    document.getElementById('checkoutPhone').value = profileData.profile.phone || '';
+    document.getElementById('checkoutAddress').value = profileData.profile.address || '';
+  }
   document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
   document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
   document.getElementById('checkoutSubVal').textContent = money(cartSubtotal());
@@ -857,7 +1064,7 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     await new Promise(r=>setTimeout(r, 700));
     const res = await fetch(`${API_BASE}/api/orders`, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json', ...authHeaders()},
       body: JSON.stringify(payload)
     });
     if(!res.ok) throw new Error('order failed');

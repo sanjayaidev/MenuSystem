@@ -7,6 +7,7 @@ const path = require('path');
 
 const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use('/api', menuRoutes);
 app.use('/api', orderRoutes);
+app.use('/api/auth', authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Red House Catering server running on port ${PORT}`);

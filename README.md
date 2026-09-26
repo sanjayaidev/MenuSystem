@@ -7,6 +7,7 @@ Node/Express API backed by Supabase, deployed on Render.
 2. Paste the contents of `db/schema.sql` and run it.
 3. Check **Table Editor** to confirm `categories`, `menu_items`, `orders`, `order_items` exist, with 4 seeded categories.
 4. Run `db/seed_menu_items.sql` to add `calories`/`rating` columns and seed the 18 real menu items — their ids (1–18) are set explicitly so they line up with the `ITEMS` array ids in `homepage.html`.
+5. If the database already exists, run `db/profile_auth.sql` once to add Auth UUID-backed profiles and the optional `orders.user_id` link.
 
 ## 2. Get your Supabase keys
 Project → **Settings → API**:
@@ -40,6 +41,11 @@ curl "http://localhost:3000/api/menu?category=mains&sort=price"
 - `GET /api/categories`
 - `GET /api/menu?category=<key>&sort=popular|name|time|offer|price`
 - `GET /api/menu/:id`
+- `POST /api/auth/register` — creates a Supabase Auth user and matching profile.
+- `POST /api/auth/login` — returns a Supabase access token and profile.
+- `GET /api/auth/me` — returns the authenticated user and profile. Requires `Authorization: Bearer <token>`.
+- `PATCH /api/auth/me` — updates `display_name`, `phone`, and `address`. Requires `Authorization: Bearer <token>`.
+- `GET /api/auth/orders` — returns the authenticated user's order history. Requires `Authorization: Bearer <token>`.
 - `POST /api/orders` — creates an order. Re-checks every item's price against Supabase server-side (never trusts client prices), computes subtotal/delivery fee/total, marks `payment_status = 'paid'` (simulated — swap for a real gateway later), returns `{ id, subtotal, deliveryFee, total, status, payment_status }`.
 - `GET /api/orders/:id` — order + its line items, for confirmation/support lookups.
 

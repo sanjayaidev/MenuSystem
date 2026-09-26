@@ -37,9 +37,21 @@ create table if not exists menu_items (
 
 create index if not exists idx_menu_items_category on menu_items(category_id);
 
+-- ---------- PROFILES ----------
+-- The profile id is the immutable UUID issued by Supabase Auth.
+create table if not exists profiles (
+  id            uuid primary key references auth.users(id) on delete cascade,
+  display_name  text not null default '',
+  phone         text,
+  address       text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
 -- ---------- ORDERS ----------
 create table if not exists orders (
   id             bigint generated always as identity primary key,
+  user_id        uuid references auth.users(id) on delete set null,
   customer_name  text,
   customer_phone text,
   customer_email text,
@@ -70,6 +82,7 @@ create table if not exists order_items (
 );
 
 create index if not exists idx_order_items_order on order_items(order_id);
+create index if not exists idx_orders_user_id on orders(user_id);
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -82,6 +95,7 @@ create index if not exists idx_order_items_order on order_items(order_id);
 
 alter table categories enable row level security;
 alter table menu_items enable row level security;
+alter table profiles enable row level security;
 alter table orders enable row level security;
 alter table order_items enable row level security;
 
