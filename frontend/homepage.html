@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Red House Catering</title>
+<link rel="preload" as="image" href="frames/frame_0001.jpg" fetchpriority="high">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121110; --surface:#1c1a18; --line:#2c2925;
+    --gold:#e3b23c; --red:#b8352b;
+    --text:#f4efe6; --muted:#a99f8f;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Poppins',sans-serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html[lang="ar"] body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
+  html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Poppins',sans-serif;}
+  html[lang="zh"] body{font-family:'Noto Sans SC','Poppins',sans-serif;}
+  .app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative;}
+
+  /* ===== TOP BAR: full-width, black bg, logo fit-to-height, free width ===== */
+  .topbar{
+    background:#000; height:56px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 14px; gap:10px;
+  }
+  .topbar .logo-wrap{height:100%; display:flex; align-items:center; padding:10px 0;}
+  .topbar .logo-wrap img{height:100%; width:auto; display:block;}
+  .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:14px; letter-spacing:.03em; display:none;}
+  .lang-pills{
+    display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;
+    max-width:58%;
+  }
+  .lang-pills::-webkit-scrollbar{display:none;}
+  .lang-pill{
+    flex-shrink:0; background:#000; color:var(--muted); border:1px solid var(--line);
+    border-radius:999px; padding:6px 14px; font-family:inherit; font-size:12px; font-weight:600;
+    cursor:pointer; transition:background .15s ease, color .15s ease;
+  }
+  .lang-pill.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+
+  /* ===== HERO: autoplay frame loop ===== */
+  .hero{position:relative; height:calc(100svh - 56px); min-height:280px; overflow:hidden; background:#000;}
+  .hero-poster, .hero-canvas{position:absolute; inset:0; width:100%; height:100%;}
+  .hero-poster{object-fit:cover;}
+  .hero-canvas{opacity:0; transition:opacity .5s ease;}
+  .hero-canvas.is-ready{opacity:1;}
+  .hero-scrim{
+    position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(to top, rgba(8,12,10,.75) 0%, rgba(8,12,10,0) 45%);
+  }
+  .hero-meter{
+    position:absolute; left:20px; bottom:44px; font-size:12px; color:var(--muted);
+    display:flex; flex-direction:column; gap:6px; pointer-events:none;
+  }
+  .hero-meter-bar{display:block; width:110px; height:2px; background:rgba(244,239,230,.2); overflow:hidden;}
+  .hero-meter-bar i{display:block; height:100%; background:var(--gold); transform-origin:left center; transform:scaleX(0);}
+  .hero.is-loaded .hero-meter{display:none;}
+  .hero-cue{
+    position:absolute; left:20px; bottom:18px; display:flex; align-items:center; gap:8px;
+    font-size:12px; color:var(--muted); text-decoration:none;
+  }
+  .hero-cue svg{width:14px; height:14px; animation:bob 1.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(4px);}}
+  html[dir="rtl"] .hero-meter, html[dir="rtl"] .hero-cue{left:auto; right:20px;}
+  @media (prefers-reduced-motion:reduce){ .hero-cue svg{animation:none;} }
+
+  /* ===== MENU ===== */
+  .controls{display:flex; gap:10px; padding:14px 16px 6px;}
+  .controls select{
+    flex:1; background:var(--surface); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; padding:10px 10px; font-family:inherit; font-size:13px; appearance:none;
+  }
+  main{flex:1; padding:6px 16px 90px;}
+
+  .row{
+    display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line);
+    cursor:pointer; background:none; border-left:none; border-right:none; border-top:none; width:100%; text-align:start; color:inherit;
+  }
+  html[dir="rtl"] .row{flex-direction:row-reverse; text-align:end;}
+  .row:active{background:rgba(227,178,60,0.06);}
+  .row .thumb{
+    width:96px; height:92px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .row .thumb img{height:100%; width:auto; max-width:96px; object-fit:contain; display:block;}
+  .row .thumb-fallback{display:none; width:100%; height:100%; align-items:center; justify-content:center;}
+  .row .thumb-fallback svg{width:55%; height:55%;}
+  .row .info{flex:1; min-width:0;}
+  .row .info .name{font-size:15px; font-weight:600; line-height:1.3; margin:0 0 6px;}
+  .row .info .price{font-size:14px; color:var(--gold); font-weight:600; margin:0;}
+  .row .offer-tag{
+    font-size:10px; color:var(--red); background:rgba(184,53,43,.12); border:1px solid var(--red);
+    border-radius:6px; padding:1px 6px; margin-inline-end:6px; font-weight:600;
+  }
+
+  .empty{padding:40px 10px; text-align:center; color:var(--muted); font-size:14px;}
+
+  /* ===== OVERLAYS (item modal / cart / checkout) ===== */
+  .overlay{
+    position:absolute; inset:0; z-index:30; background:var(--bg); display:none;
+    flex-direction:column; overflow-y:auto;
+  }
+  .overlay.is-open{display:flex;}
+  .overlay-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 14px; position:sticky; top:0; background:var(--bg); z-index:2;
+  }
+  html[dir="rtl"] .overlay-head{flex-direction:row-reverse;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%; border:none; background:rgba(255,255,255,.06);
+    color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .icon-btn svg{width:18px; height:18px;}
+  .overlay-title{font-size:16px; font-weight:700; flex:1; text-align:center;}
+  .count-pill{
+    background:var(--red); color:#fff; font-size:12px; font-weight:700; border-radius:999px;
+    padding:4px 12px; flex-shrink:0;
+  }
+
+  /* item modal */
+  .item-hero{position:relative; width:100%; aspect-ratio:1/1; max-height:340px; overflow:hidden; background:#000;}
+  .item-hero img{width:100%; height:100%; object-fit:cover;}
+  .item-hero .icon-btn{position:absolute; top:12px; inset-inline-start:12px;}
+  .item-tag{
+    position:absolute; top:12px; inset-inline-end:12px; background:var(--gold); color:#1a1408;
+    font-size:12px; font-weight:700; border-radius:999px; padding:5px 12px;
+  }
+  .item-body{padding:16px;}
+  .badge-row{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .badge{
+    border:1px solid var(--line); border-radius:8px; padding:5px 10px; font-size:12px;
+    color:var(--gold); font-weight:600; background:var(--surface);
+  }
+  .item-body h2{font-size:21px; margin:4px 0 2px;}
+  .item-subtitle{color:var(--gold); font-size:13px; font-weight:600; margin:0 0 12px;}
+  .item-desc{color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 16px;}
+  .includes-box{
+    border:1px solid var(--gold); background:rgba(227,178,60,.08); border-radius:12px;
+    padding:12px 14px; margin-bottom:16px;
+  }
+  .includes-box .includes-title{color:var(--gold); font-weight:700; font-size:13px; margin:0 0 6px;}
+  .includes-box p{margin:0; font-size:13px; color:var(--text); line-height:1.5;}
+  .item-actionbar{
+    display:flex; align-items:center; gap:10px; padding:12px 16px 16px; position:sticky; bottom:0;
+    background:var(--bg); border-top:1px solid var(--line);
+  }
+  .add-cart-btn{
+    flex:1; background:var(--gold); color:#1a1408; border:none; border-radius:12px;
+    padding:14px 16px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .qty-stepper{
+    display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:10px 12px; flex-shrink:0;
+  }
+  .qty-stepper button{
+    width:26px; height:26px; border-radius:50%; border:none; font-size:16px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .qty-stepper .step-minus{background:rgba(255,255,255,.08); color:var(--text);}
+  .qty-stepper .step-plus{background:var(--red); color:#fff;}
+  .qty-stepper .qty-val{min-width:16px; text-align:center; font-weight:700;}
+
+  /* cart / order type toggle */
+  .order-type{display:flex; gap:10px; padding:0 16px 14px;}
+  .order-type button{
+    flex:1; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--text);
+    font-family:inherit; font-size:13px; font-weight:600; padding:12px 8px; cursor:pointer;
+  }
+  .order-type button.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .order-type button .free-tag{color:#5fbf7a; font-weight:700; margin-inline-end:4px;}
+  .order-type button.active .free-tag{color:#1a1408;}
+
+  .cart-list{padding:0 16px; flex:1;}
+  .cart-row{
+    display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line);
+  }
+  .cart-row .trash-btn{background:none; border:none; color:var(--muted); cursor:pointer; flex-shrink:0;}
+  .cart-row .trash-btn svg{width:18px; height:18px;}
+  .cart-row .cart-info{flex:1; min-width:0;}
+  .cart-row .cart-info .name{font-weight:600; font-size:14px; margin:0 0 8px;}
+  .cart-row .cart-thumb{width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#000;}
+  .cart-row .cart-thumb img{width:100%; height:100%; object-fit:cover;}
+  .cart-row .price{color:var(--gold); font-weight:700; font-size:14px; white-space:nowrap;}
+
+  .cart-summary{padding:14px 16px; border-top:1px solid var(--line); position:sticky; bottom:0; background:var(--bg);}
+  .summary-line{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); padding:3px 0;}
+  .summary-line.final{color:var(--gold); font-weight:700; font-size:16px; padding-top:8px;}
+  .primary-btn{
+    width:100%; margin-top:12px; background:var(--gold); color:#1a1408; border:none; border-radius:12px;
+    padding:15px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .wa-btn{background:#25d366; color:#06210f;}
+  .empty-cart{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; text-align:center;}
+  .empty-cart .empty-icon{
+    width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.05); display:flex;
+    align-items:center; justify-content:center; margin-bottom:20px; color:var(--gold);
+  }
+  .empty-cart .empty-icon svg{width:38px; height:38px;}
+  .empty-cart h3{font-size:17px; margin:0 0 8px;}
+  .empty-cart p{color:var(--muted); font-size:13px; margin:0 0 22px; line-height:1.5;}
+
+  /* checkout form */
+  .checkout-body{padding:16px; flex:1;}
+  .checkout-branch{color:var(--gold); font-weight:700; font-size:14px; margin-bottom:2px;}
+  .checkout-subrow{display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:18px;}
+  .field-label{font-size:12px; color:var(--gold); font-weight:600; margin:14px 0 6px;}
+  .field-input, .field-textarea{
+    width:100%; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:12px 12px; color:var(--text); font-family:inherit; font-size:14px;
+  }
+  .field-textarea{resize:vertical; min-height:64px;}
+  .pay-method{
+    display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--gold);
+    border-radius:12px; padding:14px; margin-top:18px; color:var(--gold); font-weight:700; font-size:14px;
+    background:rgba(227,178,60,.08);
+  }
+  .status-note{font-size:12px; text-align:center; color:var(--muted); margin-top:8px;}
+  .primary-btn:disabled{opacity:.6; cursor:default;}
+
+  /* ===== FLOATING chat/call ===== */
+  .floating{position:fixed; right:14px; bottom:82px; display:flex; flex-direction:column; gap:10px; z-index:15;}
+  html[dir="rtl"] .floating{right:auto; left:14px;}
+  .fab{width:46px; height:46px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .fab svg{width:20px; height:20px;}
+  .fab-chat{background:var(--surface); color:var(--gold); border:1px solid var(--line);}
+  .fab-call{background:var(--gold); color:#1a1408;}
+
+  /* ===== FOOTER: Home, Menu, Basket, Profile ===== */
+  footer.tabs{
+    position:sticky; bottom:0; z-index:10; background:var(--surface); border-top:1px solid var(--line);
+    display:flex; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));
+  }
+  footer.tabs button{flex:1; background:none; border:none; color:var(--muted); font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; padding:6px 0; cursor:pointer;}
+  footer.tabs button.active{color:var(--gold);}
+  footer.tabs .icon{width:22px; height:22px;}
+  footer.tabs .icon svg{width:100%; height:100%;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="logo-wrap">
+      <img id="logoImg" src="images/logo.png" alt="Red House Catering">
+      <span class="logo-fallback" id="logoFallback">RED HOUSE CATERING</span>
+    </div>
+    <div class="lang-pills" id="langPills" role="group" aria-label="Language">
+      <button class="lang-pill" data-lang="en">EN</button>
+      <button class="lang-pill" data-lang="ar">عربي</button>
+      <button class="lang-pill" data-lang="ur">اردو</button>
+      <button class="lang-pill" data-lang="zh">中文</button>
+    </div>
+  </header>
+
+  <section class="hero" id="hero" aria-label="Red House Catering">
+    <img class="hero-poster" id="heroPoster" src="frames/frame_0001.jpg" alt="" fetchpriority="high" decoding="async">
+    <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="hero-scrim"></div>
+    <div class="hero-meter" id="heroMeter">
+      <span id="meterLabel">Loading 0%</span>
+      <span class="hero-meter-bar"><i id="meterFill"></i></span>
+    </div>
+    <a class="hero-cue" href="#menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      <span id="exploreLabel">Explore menu</span>
+    </a>
+  </section>
+
+  <div id="menu">
+    <div class="controls">
+      <select id="categorySelect" aria-label="Filter by category"></select>
+      <select id="sortSelect" aria-label="Sort menu"></select>
+    </div>
+
+    <main id="list"></main>
+
+    <div class="floating">
+      <button class="fab fab-chat" aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.2-4.3A8 8 0 1 1 21 12Z"/></svg></button>
+      <button class="fab fab-call" aria-label="Call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg></button>
+    </div>
+
+    <footer class="tabs">
+      <button class="active" data-tab="home"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span><span data-i18n="navHome">Home</span></button>
+      <button data-tab="menu"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2v9"/><path d="M8 3v6"/><path d="M4 6h4"/><path d="M18 3c-1.7 0-3 2-3 5s1.3 5 3 5v8"/></svg></span><span data-i18n="navMenu">Menu</span></button>
+      <button data-tab="basket"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span data-i18n="navBasket">Basket</span></button>
+      <button data-tab="profile"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span data-i18n="navProfile">Profile</span></button>
+    </footer>
+  </div>
+
+  <!-- ===== ITEM DETAIL MODAL ===== -->
+  <div class="overlay" id="itemModal">
+    <div class="item-hero">
+      <button class="icon-btn" id="itemModalClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="item-tag" id="itemModalCat"></span>
+      <img id="itemModalImg" src="" alt="">
+    </div>
+    <div class="item-body">
+      <div class="badge-row">
+        <span class="badge" id="itemModalCalories"></span>
+        <span class="badge" id="itemModalRating"></span>
+      </div>
+      <h2 id="itemModalName"></h2>
+      <p class="item-subtitle" id="itemModalEnName"></p>
+      <p class="item-desc" id="itemModalDesc"></p>
+      <div class="includes-box">
+        <p class="includes-title" id="itemModalIncludesTitle"></p>
+        <p id="itemModalIncludesText"></p>
+      </div>
+    </div>
+    <div class="item-actionbar">
+      <button class="add-cart-btn" id="itemModalAdd"></button>
+      <div class="qty-stepper">
+        <button class="step-minus" id="itemModalMinus" aria-label="Decrease">−</button>
+        <span class="qty-val" id="itemModalQty">1</span>
+        <button class="step-plus" id="itemModalPlus" aria-label="Increase">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CART OVERLAY ===== -->
+  <div class="overlay" id="cartOverlay">
+    <div class="overlay-head">
+      <button class="icon-btn" id="cartClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="overlay-title" id="cartTitle"></span>
+      <span class="count-pill" id="cartCountPill">0</span>
+    </div>
+    <div class="order-type" id="orderTypeRow">
+      <button data-type="pickup" id="pickupBtn"></button>
+      <button data-type="delivery" id="deliveryBtn"></button>
+    </div>
+    <div id="cartEmptyState" class="empty-cart">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      </div>
+      <h3 id="cartEmptyTitle"></h3>
+      <p id="cartEmptyText"></p>
+      <button class="primary-btn" id="cartBrowseBtn" style="width:auto; padding:12px 26px;"></button>
+    </div>
+    <div class="cart-list" id="cartList" style="display:none;"></div>
+    <div class="cart-summary" id="cartSummary" style="display:none;">
+      <div class="summary-line"><span id="cartSubtotalLabel"></span><span id="cartSubtotalVal"></span></div>
+      <div class="summary-line" id="cartDeliveryLine"><span id="cartDeliveryLabel"></span><span id="cartDeliveryVal"></span></div>
+      <div class="summary-line final"><span id="cartTotalLabel"></span><span id="cartTotalVal"></span></div>
+      <button class="primary-btn" id="cartCheckoutBtn"></button>
+    </div>
+  </div>
+
+  <!-- ===== CHECKOUT OVERLAY ===== -->
+  <div class="overlay" id="checkoutOverlay">
+    <div class="overlay-head">
+      <button class="icon-btn" id="checkoutBack" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="overlay-title" id="checkoutTitle"></span>
+      <span style="width:38px;"></span>
+    </div>
+    <div class="checkout-body">
+      <p class="checkout-branch" id="checkoutBranch"></p>
+      <div class="checkout-subrow"><span id="checkoutTypeLabel"></span><span id="checkoutTypeVal"></span></div>
+
+      <p class="field-label" id="checkoutContactLabel"></p>
+      <p class="field-label" id="nameLabel"></p>
+      <input class="field-input" id="checkoutName" type="text">
+      <p class="field-label" id="phoneLabel"></p>
+      <input class="field-input" id="checkoutPhone" type="tel" placeholder="05XXXXXXXX">
+      <div id="addressWrap">
+        <p class="field-label" id="addressLabel"></p>
+        <textarea class="field-textarea" id="checkoutAddress"></textarea>
+      </div>
+
+      <p class="field-label" id="paymentLabel"></p>
+      <div class="pay-method">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        <span id="paymentMethodText"></span>
+      </div>
+
+      <div class="cart-summary" style="border:none; padding:18px 0 0;">
+        <div class="summary-line"><span id="checkoutSubLabel"></span><span id="checkoutSubVal"></span></div>
+        <div class="summary-line" id="checkoutDeliveryLine"><span id="checkoutDeliveryLabel"></span><span id="checkoutDeliveryVal"></span></div>
+        <div class="summary-line final"><span id="checkoutTotalLabel"></span><span id="checkoutTotalVal"></span></div>
+        <button class="primary-btn wa-btn" id="checkoutPayBtn"></button>
+        <p class="status-note" id="checkoutStatusNote"></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   i18n — EN / AR / UR / ZH. AR + UR are RTL; EN + ZH are LTR.
+   Note: AR/UR/ZH strings below are a working first pass for layout and
+   flow — have a native speaker review the actual wording before launch.
+   ===================================================================== */
+const LANGS = { en:{dir:'ltr'}, ar:{dir:'rtl'}, ur:{dir:'rtl'}, zh:{dir:'ltr'} };
+
+const STR = {
+  en:{ loading:'Loading', explore:'Explore menu', allCategories:'All categories',
+       sortName:'Name (A–Z)', sortTime:'Newest', sortOffer:'Offers first',
+       sortPrice:'Price: low to high', sortPopular:'Most popular',
+       empty:'No dishes in this category yet.', offer:'Offer',
+       navHome:'Home', navMenu:'Menu', navBasket:'Basket', navProfile:'Profile',
+       cartTitle:'Order Cart', pickupLabel:'Pick-up from the branch', free:'Free', deliveryLabel:'Home delivery',
+       cartEmptyTitle:'The basket is currently empty.', cartEmptyText:'Enjoy the most delicious meals and order now!',
+       browseMenu:'Browse the menu', subtotal:'Subtotal:', deliveryFees:'Delivery fees:', finalTotal:'Final total:',
+       completeOrder:'Complete your order now', addToCart:'Add to cart', calLabel:'Calories',
+       checkoutTitle:'Checkout', requestType:'Request type:', customerContact:'Customer contact information:',
+       fullName:'Full name:', fullNamePh:'Enter your name...', mobileNumber:'Mobile number (WhatsApp/call):',
+       deliveryAddress:'Delivery address:', deliveryAddressPh:'Neighborhood, street, building/villa, apartment...',
+       paymentMethod:'Payment method:', paymentSimulated:'Simulated payment (test mode)',
+       payBtn:'Pay & send order', processingPayment:'Processing payment…', paymentDone:'Payment confirmed — opening WhatsApp…',
+       orderFailed:'Something went wrong. Please try again.',
+       includesTitle:'This meal automatically includes:', includesText:'Steamed rice, soup, salad and bottled water.',
+       descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
+  ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
+       sortName:'الاسم (أ-ي)', sortTime:'الأحدث', sortOffer:'العروض أولاً',
+       sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً',
+       empty:'لا توجد أطباق في هذا الصنف بعد.', offer:'عرض',
+       navHome:'الرئيسية', navMenu:'القائمة', navBasket:'السلة', navProfile:'حسابي',
+       cartTitle:'سلة الطلبات', pickupLabel:'الاستلام من الفرع', free:'مجاني', deliveryLabel:'التوصيل للمنزل',
+       cartEmptyTitle:'السلة فارغة حالياً.', cartEmptyText:'استمتع بألذ الأطباق واطلب وجبتك الآن!',
+       browseMenu:'تصفح القائمة', subtotal:'المجموع الفرعي:', deliveryFees:'رسوم التوصيل:', finalTotal:'الإجمالي النهائي:',
+       completeOrder:'أكمل طلبك الآن', addToCart:'أضف إلى السلة', calLabel:'سعرة حرارية',
+       checkoutTitle:'إتمام الطلب', requestType:'نوع الطلب:', customerContact:'بيانات التواصل:',
+       fullName:'الاسم الكامل:', fullNamePh:'أدخل اسمك...', mobileNumber:'رقم الجوال (واتساب/اتصال):',
+       deliveryAddress:'عنوان التوصيل:', deliveryAddressPh:'الحي، الشارع، رقم المبنى/الفيلا، الشقة...',
+       paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع تجريبي (وضع الاختبار)',
+       payBtn:'ادفع وأرسل الطلب', processingPayment:'جارٍ معالجة الدفع…', paymentDone:'تم تأكيد الدفع — جارٍ فتح واتساب…',
+       orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
+       includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'أرز مطهو على البخار، شوربة، سلطة وماء معبأ.',
+       descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
+  ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
+       sortName:'نام (اے-زیڈ)', sortTime:'تازہ ترین', sortOffer:'پہلے آفرز',
+       sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین',
+       empty:'اس زمرے میں ابھی کوئی ڈش نہیں۔', offer:'آفر',
+       navHome:'ہوم', navMenu:'مینو', navBasket:'باسکٹ', navProfile:'پروفائل',
+       cartTitle:'آرڈر کارٹ', pickupLabel:'برانچ سے پک اپ', free:'مفت', deliveryLabel:'ہوم ڈیلیوری',
+       cartEmptyTitle:'ٹوکری اس وقت خالی ہے۔', cartEmptyText:'لذیذ کھانوں سے لطف اٹھائیں اور ابھی آرڈر کریں!',
+       browseMenu:'مینو دیکھیں', subtotal:'ذیلی مجموعہ:', deliveryFees:'ڈیلیوری فیس:', finalTotal:'حتمی رقم:',
+       completeOrder:'ابھی آرڈر مکمل کریں', addToCart:'کارٹ میں شامل کریں', calLabel:'کیلوریز',
+       checkoutTitle:'چیک آؤٹ', requestType:'درخواست کی قسم:', customerContact:'رابطہ کی معلومات:',
+       fullName:'پورا نام:', fullNamePh:'اپنا نام درج کریں...', mobileNumber:'موبائل نمبر (واٹس ایپ/کال):',
+       deliveryAddress:'ڈیلیوری پتہ:', deliveryAddressPh:'محلہ، گلی، عمارت/ولا نمبر، اپارٹمنٹ...',
+       paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'ٹیسٹ ادائیگی (آزمائشی موڈ)',
+       payBtn:'ادائیگی کریں اور آرڈر بھیجیں', processingPayment:'ادائیگی جاری ہے…', paymentDone:'ادائیگی کی تصدیق — واٹس ایپ کھل رہا ہے…',
+       orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+       includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'ابلے چاول، سوپ، سلاد اور بوتل بند پانی۔',
+       descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
+  zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
+       sortName:'名称（A-Z）', sortTime:'最新', sortOffer:'优惠优先',
+       sortPrice:'价格：从低到高', sortPopular:'最受欢迎',
+       empty:'该分类暂无菜品。', offer:'优惠',
+       navHome:'首页', navMenu:'菜单', navBasket:'购物车', navProfile:'我的',
+       cartTitle:'订单购物车', pickupLabel:'到店自取', free:'免费', deliveryLabel:'送货上门',
+       cartEmptyTitle:'购物车当前为空。', cartEmptyText:'尽享美味佳肴，现在就下单吧！',
+       browseMenu:'浏览菜单', subtotal:'小计：', deliveryFees:'配送费：', finalTotal:'总计：',
+       completeOrder:'立即完成订单', addToCart:'加入购物车', calLabel:'卡路里',
+       checkoutTitle:'结账', requestType:'订单类型：', customerContact:'客户联系信息：',
+       fullName:'姓名：', fullNamePh:'请输入您的姓名…', mobileNumber:'手机号码（WhatsApp/通话）：',
+       deliveryAddress:'送货地址：', deliveryAddressPh:'小区、街道、楼栋/别墅号、公寓号…',
+       paymentMethod:'付款方式：', paymentSimulated:'模拟付款（测试模式）',
+       payBtn:'付款并发送订单', processingPayment:'正在处理付款…', paymentDone:'付款已确认——正在打开WhatsApp…',
+       orderFailed:'出错了，请重试。',
+       includesTitle:'此套餐自动包含：', includesText:'米饭、汤、沙拉和瓶装水。',
+       descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
+};
+
+const CATS = [
+  {key:'beef', price:11.99, label:{en:'Beef Meal', ar:'وجبة لحم بقر', ur:'بیف میل', zh:'牛肉套餐'}},
+  {key:'chicken', price:10.99, label:{en:'Chicken Meal', ar:'وجبة دجاج', ur:'چکن میل', zh:'鸡肉套餐'}},
+  {key:'shrimp', price:12.99, label:{en:'Shrimp Meal', ar:'وجبة روبيان', ur:'جھینگا میل', zh:'虾仁套餐'}},
+  {key:'tofu', price:9.99, label:{en:'Tofu & Noodle', ar:'توفو ونودلز', ur:'توفو اور نوڈلز', zh:'豆腐面食'}},
+  {key:'soup', price:8.99, label:{en:'Soup & Rice', ar:'شوربة وأرز', ur:'سوپ اور چاول', zh:'汤与米饭'}},
+  {key:'salad', price:7.99, label:{en:'Salad & Appetizer', ar:'سلطة ومقبلات', ur:'سلاد اور شروعات', zh:'沙拉与开胃菜'}},
+];
+const catInfo = k => CATS.find(c=>c.key===k);
+
+const ITEMS = [
+  {id:1,cat:'beef',pop:9,offer:false,cal:780,rating:4.6,name:{en:'Black Pepper Beef',ar:'لحم بقر بالفلفل الأسود',ur:'بلیک پیپر بیف',zh:'黑椒牛肉'}},
+  {id:2,cat:'beef',pop:10,offer:true,cal:1020,rating:4.9,name:{en:'Mongolian Beef',ar:'لحم بقر منغولي',ur:'منگولین بیف',zh:'蒙古牛肉'}},
+  {id:3,cat:'beef',pop:6,offer:false,cal:850,rating:4.4,name:{en:'Stir Fried Beef With Chili',ar:'لحم بقر مقلي بالفلفل الحار',ur:'مرچ کے ساتھ بیف',zh:'辣椒炒牛肉'}},
+  {id:4,cat:'tofu',pop:4,offer:false,cal:520,rating:4.2,name:{en:'Mandarin Tofu',ar:'توفو ماندرين',ur:'مینڈرن توفو',zh:'陈皮豆腐'}},
+  {id:5,cat:'tofu',pop:5,offer:false,cal:610,rating:4.3,name:{en:'Tofu With Minced Beef',ar:'توفو مع لحم مفروم',ur:'قیمہ کے ساتھ توفو',zh:'肉末豆腐'}},
+  {id:6,cat:'tofu',pop:7,offer:false,cal:720,rating:4.5,name:{en:'Chicken Fried Noodle',ar:'نودلز دجاج مقلية',ur:'چکن فرائیڈ نوڈلز',zh:'鸡肉炒面'}},
+  {id:7,cat:'chicken',pop:10,offer:true,cal:890,rating:4.8,name:{en:'Kung Pao Chicken',ar:'دجاج كونغ باو',ur:'کنگ پاؤ چکن',zh:'宫保鸡丁'}},
+  {id:8,cat:'chicken',pop:8,offer:false,cal:760,rating:4.5,name:{en:'Pineapple Chicken',ar:'دجاج بالأناناس',ur:'انناس چکن',zh:'菠萝鸡'}},
+  {id:9,cat:'chicken',pop:9,offer:false,cal:810,rating:4.6,name:{en:'Sweet & Sour Chicken',ar:'دجاج بالحلو والحامض',ur:'میٹھا اور کھٹا چکن',zh:'糖醋鸡'}},
+  {id:10,cat:'soup',pop:5,offer:false,cal:340,rating:4.3,name:{en:'Wonton Soup',ar:'شوربة ونتون',ur:'وونٹن سوپ',zh:'馄饨汤'}},
+  {id:11,cat:'soup',pop:6,offer:false,cal:610,rating:4.1,name:{en:'Vegetable Fried Rice',ar:'أرز مقلي بالخضار',ur:'ویجیٹیبل فرائیڈ رائس',zh:'蔬菜炒饭'}},
+  {id:12,cat:'soup',pop:7,offer:false,cal:640,rating:4.2,name:{en:'Egg Fried Rice',ar:'أرز مقلي بالبيض',ur:'انڈا فرائیڈ رائس',zh:'蛋炒饭'}},
+  {id:13,cat:'shrimp',pop:7,offer:false,cal:680,rating:4.5,name:{en:'Shrimp With Garlic Sauce',ar:'روبيان بصلصة الثوم',ur:'لہسن ساس کے ساتھ جھینگا',zh:'蒜香虾'}},
+  {id:14,cat:'shrimp',pop:6,offer:false,cal:700,rating:4.4,name:{en:'Sweet & Sour Shrimp',ar:'روبيان بالحلو والحامض',ur:'میٹھا اور کھٹا جھینگا',zh:'糖醋虾'}},
+  {id:15,cat:'shrimp',pop:8,offer:true,cal:730,rating:4.7,name:{en:'New Style Shrimp Spicy',ar:'روبيان حار بالطريقة الجديدة',ur:'نیو اسٹائل اسپائسی جھینگا',zh:'新派麻辣虾'}},
+  {id:16,cat:'salad',pop:5,offer:false,cal:310,rating:4.3,name:{en:'Spring Roll',ar:'سبرينغ رول',ur:'اسپرنگ رول',zh:'春卷'}},
+  {id:17,cat:'salad',pop:6,offer:false,cal:420,rating:4.4,name:{en:'Thai Chicken Salad',ar:'سلطة دجاج تايلاندية',ur:'تھائی چکن سلاد',zh:'泰式鸡肉沙拉'}},
+  {id:18,cat:'salad',pop:3,offer:false,cal:180,rating:4.0,name:{en:'Green Salad',ar:'سلطة خضراء',ur:'گرین سلاد',zh:'绿色沙拉'}},
+];
+
+let lang = 'en';
+
+/* ---------- image fallback (dish -> category -> icon) ---------- */
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]/g,''); }
+function dishImgPath(cat, name){ return `images/${cat}/${slugify(name)}.png`; }
+function catImgPath(cat){ return `images/${cat}.png`; }
+function genericImgPath(){ return `images/food.png`; }
+const FALLBACK_ICON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+  '<circle cx="50" cy="50" r="30" fill="none" stroke="#3a3630" stroke-width="3"/>' +
+  '<circle cx="50" cy="50" r="18" fill="none" stroke="#3a3630" stroke-width="2"/></svg>';
+function wireImgFallback(imgEl){
+  const cat = imgEl.dataset.cat;
+  function onError(){
+    if(imgEl.dataset.stage === 'dish'){ imgEl.dataset.stage = 'cat'; imgEl.src = catImgPath(cat); }
+    else if(imgEl.dataset.stage === 'cat'){ imgEl.dataset.stage = 'generic'; imgEl.src = genericImgPath(); }
+    else {
+      imgEl.removeEventListener('error', onError);
+      imgEl.style.display = 'none';
+      const fb = imgEl.nextElementSibling;
+      if(fb) fb.style.display = 'flex';
+    }
+  }
+  imgEl.dataset.stage = 'dish';
+  imgEl.addEventListener('error', onError);
+}
+wireImgFallback.call = wireImgFallback; // no-op, keeps linter quiet
+
+/* logo fallback if images/logo.png is missing */
+(() => {
+  const img = document.getElementById('logoImg');
+  img.addEventListener('error', function onErr(){
+    img.removeEventListener('error', onErr);
+    img.style.display = 'none';
+    document.getElementById('logoFallback').style.display = 'block';
+  });
+})();
+
+/* ---------- language switching ---------- */
+const langPills = document.getElementById('langPills');
+langPills.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-pill');
+  if (btn) setLang(btn.dataset.lang);
+});
+
+function setLang(code){
+  lang = code;
+  document.documentElement.lang = code;
+  document.documentElement.dir = LANGS[code].dir;
+  langPills.querySelectorAll('.lang-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.lang === code);
+  });
+
+  document.getElementById('meterLabel').textContent = STR[lang].loading + ' 0%';
+  document.getElementById('exploreLabel').textContent = STR[lang].explore;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent = STR[lang][el.dataset.i18n];
+  });
+
+  categorySelect.innerHTML = `<option value="all">${STR[lang].allCategories}</option>` +
+    CATS.map(c=>`<option value="${c.key}">${c.label[lang]}</option>`).join('');
+
+  sortSelect.innerHTML = `
+    <option value="popular">${STR[lang].sortPopular}</option>
+    <option value="name">${STR[lang].sortName}</option>
+    <option value="time">${STR[lang].sortTime}</option>
+    <option value="offer">${STR[lang].sortOffer}</option>
+    <option value="price">${STR[lang].sortPrice}</option>`;
+
+  render();
+  refreshCartStaticText();
+  refreshCheckoutStaticText();
+  if(!cartOverlay.classList.contains('is-open')) {/* no-op, guards below re-render only if open */}
+  if(cartOverlay.classList.contains('is-open')) renderCart();
+}
+
+/* ---------- menu list ---------- */
+const categorySelect = document.getElementById('categorySelect');
+const sortSelect = document.getElementById('sortSelect');
+const listEl = document.getElementById('list');
+
+function render(){
+  const cat = categorySelect.value;
+  const sort = sortSelect.value;
+  let items = ITEMS.filter(i => cat==='all' || i.cat===cat);
+
+  if(sort==='name') items.sort((a,b)=>a.name[lang].localeCompare(b.name[lang]));
+  else if(sort==='time') items.sort((a,b)=>b.id-a.id);
+  else if(sort==='offer') items.sort((a,b)=>(b.offer-a.offer) || (b.pop-a.pop));
+  else if(sort==='price') items.sort((a,b)=>catInfo(a.cat).price - catInfo(b.cat).price);
+  else if(sort==='popular') items.sort((a,b)=>b.pop-a.pop);
+
+  if(!items.length){
+    listEl.innerHTML = `<div class="empty">${STR[lang].empty}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = items.map(i=>{
+    const c = catInfo(i.cat);
+    const name = i.name[lang];
+    return `<button class="row" data-id="${i.id}">
+      <div class="thumb">
+        <img src="${dishImgPath(i.cat, i.name.en)}" alt="${name}" loading="lazy" data-cat="${i.cat}">
+        <div class="thumb-fallback">${FALLBACK_ICON}</div>
+      </div>
+      <div class="info">
+        <p class="name">${i.offer ? `<span class="offer-tag">${STR[lang].offer}</span>` : ''}${name}</p>
+        <p class="price">$${c.price.toFixed(2)}</p>
+      </div>
+    </button>`;
+  }).join('');
+
+  listEl.querySelectorAll('.thumb img').forEach(wireImgFallback);
+  listEl.querySelectorAll('.row').forEach(row=>{
+    row.addEventListener('click', ()=> openItemModal(Number(row.dataset.id)));
+  });
+}
+
+categorySelect.addEventListener('change', render);
+sortSelect.addEventListener('change', render);
+
+/* ---------- footer tabs ---------- */
+document.querySelectorAll('footer.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('footer.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(btn.dataset.tab === 'basket') openCart();
+    else if(btn.dataset.tab === 'menu') document.getElementById('menu').scrollIntoView({behavior:'smooth'});
+  });
+});
+
+/* =====================================================================
+   CONFIG — adjust these for your real deployment
+   ===================================================================== */
+const CURRENCY = '$';
+const DELIVERY_FEE = 20;                    // keep in sync with server routes/orders.js
+const API_BASE = 'https://YOUR-RENDER-SERVICE.onrender.com'; // <-- set your deployed Node server URL
+const WHATSAPP_NUMBER = 'YOUR_WHATSAPP_NUMBER';               // <-- e.g. '9665XXXXXXXX', no + or leading 00
+const BRANCH_NAME = 'Red House Trading';
+
+/* ---------- cart state ---------- */
+let cart = {};          // { itemId: qty }
+let orderType = 'pickup'; // 'pickup' | 'delivery'
+let lastOrder = null;   // {id, items, subtotal, deliveryFee, total} set after a successful order
+
+function itemById(id){ return ITEMS.find(i=>i.id===id); }
+function itemPrice(item){ return catInfo(item.cat).price; }
+function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+function cartLines(){
+  return Object.entries(cart).map(([id,qty])=>{
+    const item = itemById(Number(id));
+    return { item, qty, lineTotal: itemPrice(item)*qty };
+  }).filter(l=>l.item);
+}
+function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
+function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
+function cartTotal(){ return cartSubtotal() + cartDeliveryFee(); }
+function money(n){ return `${CURRENCY}${n.toFixed(2)}`; }
+
+/* ---------- ITEM MODAL ---------- */
+const itemModal = document.getElementById('itemModal');
+let modalItem = null, modalQty = 1;
+
+function openItemModal(id){
+  modalItem = itemById(id);
+  modalQty = cart[id] || 1;
+  const c = catInfo(modalItem.cat);
+  const modalImg = document.getElementById('itemModalImg');
+  modalImg.dataset.stage = 'dish';
+  modalImg.onerror = () => {
+    if(modalImg.dataset.stage === 'dish'){ modalImg.dataset.stage = 'cat'; modalImg.src = catImgPath(modalItem.cat); }
+    else if(modalImg.dataset.stage === 'cat'){ modalImg.dataset.stage = 'generic'; modalImg.src = genericImgPath(); }
+  };
+  modalImg.src = dishImgPath(modalItem.cat, modalItem.name.en);
+  document.getElementById('itemModalCat').textContent = c.label[lang];
+  document.getElementById('itemModalCalories').textContent = `${modalItem.cal} ${STR[lang].calLabel}`;
+  document.getElementById('itemModalRating').textContent = `${modalItem.rating.toFixed(1)} ★`;
+  document.getElementById('itemModalName').textContent = modalItem.name[lang];
+  document.getElementById('itemModalEnName').textContent = lang==='en' ? '' : modalItem.name.en;
+  document.getElementById('itemModalEnName').style.display = lang==='en' ? 'none' : 'block';
+  document.getElementById('itemModalDesc').textContent = STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
+  document.getElementById('itemModalIncludesTitle').textContent = STR[lang].includesTitle;
+  document.getElementById('itemModalIncludesText').textContent = STR[lang].includesText;
+  document.getElementById('itemModalQty').textContent = modalQty;
+  updateModalAddBtn();
+  itemModal.classList.add('is-open');
+}
+function updateModalAddBtn(){
+  const price = itemPrice(modalItem) * modalQty;
+  document.getElementById('itemModalAdd').innerHTML =
+    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${money(price)} · ${STR[lang].addToCart}`;
+}
+document.getElementById('itemModalClose').addEventListener('click', ()=> itemModal.classList.remove('is-open'));
+document.getElementById('itemModalPlus').addEventListener('click', ()=>{
+  modalQty++; document.getElementById('itemModalQty').textContent = modalQty; updateModalAddBtn();
+});
+document.getElementById('itemModalMinus').addEventListener('click', ()=>{
+  if(modalQty>1){ modalQty--; document.getElementById('itemModalQty').textContent = modalQty; updateModalAddBtn(); }
+});
+document.getElementById('itemModalAdd').addEventListener('click', ()=>{
+  cart[modalItem.id] = modalQty;
+  itemModal.classList.remove('is-open');
+  renderCart();
+});
+
+/* ---------- CART OVERLAY ---------- */
+const cartOverlay = document.getElementById('cartOverlay');
+function refreshCartStaticText(){
+  document.getElementById('cartTitle').textContent = STR[lang].cartTitle;
+  document.getElementById('pickupBtn').innerHTML = `<span class="free-tag">(${STR[lang].free})</span>🏠 ${STR[lang].pickupLabel}`;
+  document.getElementById('deliveryBtn').innerHTML = `🛵 ${STR[lang].deliveryLabel}`;
+  document.getElementById('cartEmptyTitle').textContent = STR[lang].cartEmptyTitle;
+  document.getElementById('cartEmptyText').textContent = STR[lang].cartEmptyText;
+  document.getElementById('cartBrowseBtn').textContent = STR[lang].browseMenu;
+  document.getElementById('cartSubtotalLabel').textContent = STR[lang].subtotal;
+  document.getElementById('cartDeliveryLabel').textContent = STR[lang].deliveryFees;
+  document.getElementById('cartTotalLabel').textContent = STR[lang].finalTotal;
+  document.getElementById('cartCheckoutBtn').textContent = STR[lang].completeOrder;
+}
+function openCart(){ renderCart(); cartOverlay.classList.add('is-open'); }
+document.getElementById('cartClose').addEventListener('click', ()=> cartOverlay.classList.remove('is-open'));
+document.getElementById('cartBrowseBtn').addEventListener('click', ()=>{
+  cartOverlay.classList.remove('is-open');
+  document.getElementById('menu').scrollIntoView({behavior:'smooth'});
+});
+document.getElementById('pickupBtn').addEventListener('click', ()=>{ orderType='pickup'; renderCart(); });
+document.getElementById('deliveryBtn').addEventListener('click', ()=>{ orderType='delivery'; renderCart(); });
+
+function renderCart(){
+  refreshCartStaticText();
+  document.getElementById('cartCountPill').textContent = cartCount();
+  document.getElementById('pickupBtn').classList.toggle('active', orderType==='pickup');
+  document.getElementById('deliveryBtn').classList.toggle('active', orderType==='delivery');
+
+  const lines = cartLines();
+  const emptyEl = document.getElementById('cartEmptyState');
+  const listEl2 = document.getElementById('cartList');
+  const summaryEl = document.getElementById('cartSummary');
+
+  if(!lines.length){
+    emptyEl.style.display = 'flex'; listEl2.style.display = 'none'; summaryEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none'; listEl2.style.display = 'block'; summaryEl.style.display = 'block';
+
+  listEl2.innerHTML = lines.map(l=>`
+    <div class="cart-row" data-id="${l.item.id}">
+      <button class="trash-btn" data-action="remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-9 0 1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg></button>
+      <div class="cart-info">
+        <p class="name">${l.item.name[lang]}</p>
+        <div class="qty-stepper" style="padding:6px 8px;">
+          <button class="step-minus" data-action="minus">−</button>
+          <span class="qty-val">${l.qty}</span>
+          <button class="step-plus" data-action="plus">+</button>
+        </div>
+      </div>
+      <div class="cart-thumb"><img src="${dishImgPath(l.item.cat, l.item.name.en)}" alt=""></div>
+      <div class="price">${money(l.lineTotal)}</div>
+    </div>`).join('');
+
+  listEl2.querySelectorAll('.cart-row').forEach(row=>{
+    const id = Number(row.dataset.id);
+    row.querySelector('[data-action="plus"]').addEventListener('click', ()=>{ cart[id]++; renderCart(); });
+    row.querySelector('[data-action="minus"]').addEventListener('click', ()=>{
+      cart[id]--; if(cart[id]<=0) delete cart[id]; renderCart();
+    });
+    row.querySelector('[data-action="remove"]').addEventListener('click', ()=>{ delete cart[id]; renderCart(); });
+  });
+
+  document.getElementById('cartSubtotalVal').textContent = money(cartSubtotal());
+  document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('cartDeliveryVal').textContent = money(cartDeliveryFee());
+  document.getElementById('cartTotalVal').textContent = money(cartTotal());
+}
+document.getElementById('cartCheckoutBtn').addEventListener('click', ()=>{
+  cartOverlay.classList.remove('is-open');
+  openCheckout();
+});
+
+/* ---------- CHECKOUT OVERLAY ---------- */
+const checkoutOverlay = document.getElementById('checkoutOverlay');
+function refreshCheckoutStaticText(){
+  document.getElementById('checkoutTitle').textContent = STR[lang].checkoutTitle;
+  document.getElementById('checkoutBranch').textContent = BRANCH_NAME;
+  document.getElementById('checkoutTypeLabel').textContent = STR[lang].requestType;
+  document.getElementById('checkoutContactLabel').textContent = STR[lang].customerContact;
+  document.getElementById('nameLabel').textContent = STR[lang].fullName;
+  document.getElementById('checkoutName').placeholder = STR[lang].fullNamePh;
+  document.getElementById('phoneLabel').textContent = STR[lang].mobileNumber;
+  document.getElementById('addressLabel').textContent = STR[lang].deliveryAddress;
+  document.getElementById('checkoutAddress').placeholder = STR[lang].deliveryAddressPh;
+  document.getElementById('paymentLabel').textContent = STR[lang].paymentMethod;
+  document.getElementById('paymentMethodText').textContent = STR[lang].paymentSimulated;
+  document.getElementById('checkoutSubLabel').textContent = STR[lang].subtotal;
+  document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
+  document.getElementById('checkoutTotalLabel').textContent = STR[lang].finalTotal;
+  if(!checkoutOverlay.dataset.submitting){
+    document.getElementById('checkoutPayBtn').textContent = `${STR[lang].payBtn} · ${money(cartTotal())}`;
+  }
+}
+function openCheckout(){
+  refreshCheckoutStaticText();
+  document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
+  document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
+  document.getElementById('checkoutSubVal').textContent = money(cartSubtotal());
+  document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('checkoutDeliveryVal').textContent = money(cartDeliveryFee());
+  document.getElementById('checkoutTotalVal').textContent = money(cartTotal());
+  document.getElementById('checkoutStatusNote').textContent = '';
+  checkoutOverlay.classList.add('is-open');
+}
+document.getElementById('checkoutBack').addEventListener('click', ()=>{
+  checkoutOverlay.classList.remove('is-open');
+  openCart();
+});
+
+/* ---------- SIMULATED PAYMENT + WHATSAPP HANDOFF ---------- */
+document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('checkoutName').value.trim();
+  const phone = document.getElementById('checkoutPhone').value.trim();
+  const address = document.getElementById('checkoutAddress').value.trim();
+  const statusNote = document.getElementById('checkoutStatusNote');
+  const payBtn = document.getElementById('checkoutPayBtn');
+
+  if(!name || !phone || (orderType==='delivery' && !address)){
+    statusNote.textContent = STR[lang].orderFailed;
+    return;
+  }
+
+  payBtn.disabled = true;
+  checkoutOverlay.dataset.submitting = '1';
+  payBtn.textContent = STR[lang].processingPayment;
+  statusNote.textContent = '';
+
+  const payload = {
+    customer_name: name,
+    customer_phone: phone,
+    delivery_type: orderType,
+    delivery_address: orderType==='delivery' ? address : null,
+    items: cartLines().map(l=>({ menu_item_id: l.item.id, quantity: l.qty }))
+  };
+
+  try{
+    // Simulated payment: brief delay to mimic processing, then create the
+    // order server-side (server re-checks prices in Supabase — never trust
+    // client-sent prices) and mark it paid.
+    await new Promise(r=>setTimeout(r, 700));
+    const res = await fetch(`${API_BASE}/api/orders`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('order failed');
+    const order = await res.json();
+    lastOrder = order;
+
+    statusNote.textContent = STR[lang].paymentDone;
+    sendOrderToWhatsApp(order, { name, phone, address });
+
+    cart = {};
+    checkoutOverlay.classList.remove('is-open');
+  }catch(err){
+    statusNote.textContent = STR[lang].orderFailed;
+  }finally{
+    payBtn.disabled = false;
+    delete checkoutOverlay.dataset.submitting;
+    refreshCheckoutStaticText();
+  }
+});
+
+function sendOrderToWhatsApp(order, contact){
+  const lines = cartLines().map(l=>`• ${l.qty}x ${l.item.name.en} — ${money(l.lineTotal)}`).join('\n');
+  const typeLine = orderType==='delivery'
+    ? `Home delivery\nAddress: ${contact.address}`
+    : `Pick-up from the branch`;
+  const message =
+`New order #${order.id} — ${BRANCH_NAME}
+${typeLine}
+
+Name: ${contact.name}
+Phone: ${contact.phone}
+
+Items:
+${lines}
+
+Subtotal: ${money(cartSubtotal())}
+Delivery: ${money(cartDeliveryFee())}
+Total: ${money(cartTotal())}
+Payment: confirmed (simulated)`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+setLang('en');
+
+/* =====================================================================
+   HERO: paint frame 1 instantly, preload the rest, then autoplay in a
+   continuous loop. Point FRAME_URL / TOTAL_FRAMES at your real frames.
+   ===================================================================== */
+(() => {
+  const FRAME_URL = (n) => `frames/frame_${String(n).padStart(4, '0')}.jpg`;
+  const TOTAL_FRAMES = 60;   // set to your actual exported frame count
+  const CONCURRENCY = 6;
+  const FPS = 24;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const hero = document.getElementById('hero');
+  const canvas = document.getElementById('heroCanvas');
+  const ctx = canvas.getContext('2d', { alpha:false });
+  const meterLabel = document.getElementById('meterLabel');
+  const meterFill = document.getElementById('meterFill');
+
+  const frames = [];
+  let done = 0;
+
+  function resizeCanvas(){
+    const dpr = Math.min(window.devicePixelRatio||1, 2);
+    canvas.width = Math.round(hero.clientWidth*dpr);
+    canvas.height = Math.round(hero.clientHeight*dpr);
+  }
+  function paint(img){
+    const cw=canvas.width, ch=canvas.height;
+    const scale = Math.max(cw/img.naturalWidth, ch/img.naturalHeight);
+    const dw=img.naturalWidth*scale, dh=img.naturalHeight*scale;
+    ctx.drawImage(img, (cw-dw)/2, (ch-dh)/2, dw, dh);
+  }
+  function nearestFrame(i){
+    if(frames[i]) return frames[i];
+    for(let d=1; d<TOTAL_FRAMES; d++){
+      if(frames[i-d]) return frames[i-d];
+      if(frames[i+d]) return frames[i+d];
+    }
+    return null;
+  }
+  function loadImage(src){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => (img.decode ? img.decode() : Promise.resolve()).catch(()=>{}).then(()=>resolve(img));
+      img.onerror = () => reject(new Error('missing frame'));
+      img.src = src;
+    });
+  }
+  function showLoading(){
+    const pct = Math.round((done/TOTAL_FRAMES)*100);
+    meterLabel.textContent = `${STR[lang].loading} ${pct}%`;
+    meterFill.style.transform = `scaleX(${done/TOTAL_FRAMES})`;
+  }
+
+  let playhead = 0, lastTime = 0;
+  function loopTick(ts){
+    if(!lastTime) lastTime = ts;
+    if(ts - lastTime > 1000/FPS){
+      lastTime = ts;
+      const img = nearestFrame(playhead);
+      if(img) paint(img);
+      playhead = (playhead + 1) % TOTAL_FRAMES;
+    }
+    requestAnimationFrame(loopTick);
+  }
+
+  async function start(){
+    resizeCanvas();
+    try{
+      frames[0] = await loadImage(FRAME_URL(1));
+      done++; showLoading();
+      canvas.classList.add('is-ready');
+      paint(frames[0]);
+    }catch(e){ done++; }
+
+    let next = 1;
+    async function worker(){
+      while(next < TOTAL_FRAMES){
+        const i = next++;
+        try{ frames[i] = await loadImage(FRAME_URL(i+1)); }
+        catch(e){ /* skip missing frame, nearest one is used instead */ }
+        done++; showLoading();
+      }
+    }
+    await Promise.all(Array.from({length:CONCURRENCY}, worker));
+
+    hero.classList.add('is-loaded');
+    if(!reduceMotion) requestAnimationFrame(loopTick);
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  start();
+})();
+</script>
+</body>
+</html>
