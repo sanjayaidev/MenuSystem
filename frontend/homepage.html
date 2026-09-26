@@ -644,7 +644,7 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
    ===================================================================== */
 const CURRENCY = '$';
 const DELIVERY_FEE = 20;                    // keep in sync with server routes/orders.js
-const API_BASE = 'https://YOUR-RENDER-SERVICE.onrender.com'; // <-- set your deployed Node server URL
+const API_BASE = window.location.origin;
 const WHATSAPP_NUMBER = 'YOUR_WHATSAPP_NUMBER';               // <-- e.g. '9665XXXXXXXX', no + or leading 00
 const BRANCH_NAME = 'Red House Trading';
 
