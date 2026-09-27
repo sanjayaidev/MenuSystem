@@ -138,6 +138,15 @@ let autoRefreshTimer = null;
 
 function authHeaders(){ return token ? { Authorization: `Bearer ${token}` } : {}; }
 function money(n){ return `$${Number(n).toFixed(2)}`; }
+async function readApiJson(response){
+  const body = await response.text();
+  if(!body.trim()) throw new Error(`Server returned an empty response (HTTP ${response.status}).`);
+  try{
+    return JSON.parse(body);
+  }catch{
+    throw new Error(`Server returned an invalid response (HTTP ${response.status}).`);
+  }
+}
 
 /* ---------- view switching ---------- */
 function showLogin(message = '', isError = false){
@@ -176,7 +185,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const result = await res.json();
+    const result = await readApiJson(res);
     if(!res.ok) throw new Error(result.error || 'Sign-in failed.');
 
     token = result.access_token;

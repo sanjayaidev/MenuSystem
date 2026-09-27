@@ -6,6 +6,10 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+function asyncHandler(handler) {
+  return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+}
+
 // Login/register/password-reset are the endpoints someone could try to
 // brute-force or spam with guessed credentials/emails. Limit by IP.
 const authLimiter = rateLimit({
@@ -49,7 +53,7 @@ async function getOrCreateProfile(user) {
   return createdProfile;
 }
 
-router.post('/register', authLimiter, async (req, res) => {
+router.post('/register', authLimiter, asyncHandler(async (req, res) => {
   const { email, password, display_name = '' } = req.body;
 
   if (!email || !password) {
@@ -75,9 +79,9 @@ router.post('/register', authLimiter, async (req, res) => {
     await supabase.auth.admin.deleteUser(data.user.id);
     return res.status(500).json({ error: profileError.message });
   }
-});
+}));
 
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', authLimiter, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });
@@ -100,7 +104,7 @@ router.post('/login', authLimiter, async (req, res) => {
   } catch (profileError) {
     res.status(500).json({ error: profileError.message });
   }
-});
+}));
 
 router.get('/me', requireAuth, async (req, res) => {
   try {
@@ -173,7 +177,7 @@ router.post('/request-password-reset', authLimiter, async (req, res) => {
 // fragment (reset-password.html reads it and sends it here). We verify
 // it identifies a real user, then set the new password with the
 // service-role admin API — no anon key / client-side Supabase SDK needed.
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', asyncHandler(async (req, res) => {
   const { access_token, new_password } = req.body;
   if (!access_token || !new_password) {
     return res.status(400).json({ error: 'access_token and new_password are required' });
@@ -193,6 +197,12 @@ router.post('/reset-password', async (req, res) => {
   if (updateError) return res.status(500).json({ error: updateError.message });
 
   res.json({ ok: true });
+}));
+
+router.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+  console.error('Auth request failed:', error);
+  res.status(500).json({ error: error.message || 'Authentication request failed. Please try again.' });
 });
 
 module.exports = router;

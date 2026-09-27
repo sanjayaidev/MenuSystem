@@ -1121,6 +1121,15 @@ function escapeHtml(value){
     '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
   }[character]));
 }
+async function readApiJson(response){
+  const body = await response.text();
+  if(!body.trim()) throw new Error(`Server returned an empty response (HTTP ${response.status}).`);
+  try{
+    return JSON.parse(body);
+  }catch{
+    throw new Error(`Server returned an invalid response (HTTP ${response.status}).`);
+  }
+}
 async function loadProfile(){
   if(!authToken){ profileData = null; renderProfile(); return; }
   const response = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
@@ -1128,7 +1137,7 @@ async function loadProfile(){
     authToken = ''; profileData = null; localStorage.removeItem(AUTH_TOKEN_KEY); renderProfile();
     return;
   }
-  profileData = await response.json();
+  profileData = await readApiJson(response);
   renderProfile();
   loadProfileOrders();
 }
@@ -1137,7 +1146,7 @@ async function loadProfileOrders(){
   ordersEl.innerHTML = '';
   const response = await fetch(`${API_BASE}/api/auth/orders`, { headers: authHeaders() });
   if(!response.ok){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].authError)}</p>`; return; }
-  const { orders } = await response.json();
+  const { orders } = await readApiJson(response);
   if(!orders.length){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].noOrders)}</p>`; return; }
   ordersEl.innerHTML = orders.map(order => {
     const items = order.order_items.map(item => `${item.quantity} × ${escapeHtml(item.name_snapshot)}`).join(', ');
@@ -1156,7 +1165,7 @@ document.getElementById('profileLoginBtn').addEventListener('click', async ()=>{
   if(!email || !password){ profileStatus(STR[lang].authRequired, true); return; }
   try{
     const response = await fetch(`${API_BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password}) });
-    const result = await response.json();
+    const result = await readApiJson(response);
     if(!response.ok) throw new Error(result.error);
     authToken = result.access_token; localStorage.setItem(AUTH_TOKEN_KEY, authToken);
     profileData = { email, user_id: result.profile.id, profile: result.profile };
@@ -1172,7 +1181,7 @@ document.getElementById('profileRegisterBtn').addEventListener('click', async ()
   if(!email || !password){ profileStatus(STR[lang].authRequired, true); return; }
   try{
     const response = await fetch(`${API_BASE}/api/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password, display_name}) });
-    const result = await response.json();
+    const result = await readApiJson(response);
     if(!response.ok) throw new Error(result.error);
     document.getElementById('profileLoginBtn').click();
   }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
@@ -1183,14 +1192,16 @@ document.getElementById('profileSaveBtn').addEventListener('click', async ()=>{
     phone: document.getElementById('profilePhone').value,
     address: document.getElementById('profileAddress').value,
   };
-  const response = await fetch(`${API_BASE}/api/auth/me`, { method:'PATCH', headers:{'Content-Type':'application/json', ...authHeaders()}, body:JSON.stringify(updates) });
-  const result = await response.json();
-  if(!response.ok){ profileStatus(result.error || STR[lang].authError, true); return; }
-  profileData.profile = result.profile;
-  profileStatus(STR[lang].profileSaved);
-  document.getElementById('checkoutName').value = result.profile.display_name || '';
-  document.getElementById('checkoutPhone').value = result.profile.phone || '';
-  document.getElementById('checkoutAddress').value = result.profile.address || '';
+  try{
+    const response = await fetch(`${API_BASE}/api/auth/me`, { method:'PATCH', headers:{'Content-Type':'application/json', ...authHeaders()}, body:JSON.stringify(updates) });
+    const result = await readApiJson(response);
+    if(!response.ok){ profileStatus(result.error || STR[lang].authError, true); return; }
+    profileData.profile = result.profile;
+    profileStatus(STR[lang].profileSaved);
+    document.getElementById('checkoutName').value = result.profile.display_name || '';
+    document.getElementById('checkoutPhone').value = result.profile.phone || '';
+    document.getElementById('checkoutAddress').value = result.profile.address || '';
+  }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
 });
 document.getElementById('profileForgotBtn').addEventListener('click', async ()=>{
   const email = document.getElementById('profileEmail').value.trim();
