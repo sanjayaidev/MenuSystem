@@ -4,17 +4,11 @@ Node/Express API backed by Supabase, deployed on Render.
 
 ## 1. Set up the database
 Run these in Supabase → **SQL Editor** → New query, **in this order**:
-1. `db/schema.sql` — creates `categories`, `menu_items`, `orders`, `order_items`.
-2. `db/profile_auth.sql` — adds Auth UUID-backed `profiles` and the `orders.user_id` link.
-3. `db/reset_and_seed_menu.sql` — wipes and reseeds `categories`/`menu_items` with the real
-   18-item menu (ids 1–18, matching `homepage.html`), including `calories`, `rating`, and
-   `description_en` for each dish. Safe to re-run any time you want to reset the menu back
-   to this baseline.
-4. `db/admin_cart_rls.sql` — adds:
-   - `profiles.is_admin` (staff/admin flag)
-   - `cart_items` table (server-side cart for signed-in users)
-   - `orders.order_token` (an unguessable per-order lookup token — see API section)
-   - RLS policies on `profiles`, `orders`, `order_items`, `cart_items`
+1. `db/01_create_tables.sql` — creates all app tables, including profiles and carts.
+2. `db/02_rls_and_constraints.sql` — adds indexes, unique order tokens, and RLS policies.
+3. `db/03_insert_menu.sql` — inserts or updates the six categories and 18 menu items
+   (ids 1–18, matching `homepage.html`). Re-running it updates the baseline menu without
+   deleting order history.
 
 ### Making someone an admin
 There's no signup flow for staff — just flip the flag on an existing account, in
@@ -135,7 +129,7 @@ completed` (or `cancelled`), polling every 25s.
 - **Rate limiting**: login, register, password-reset-request, and order creation are all limited per-IP (20 requests / 15 min) via `express-rate-limit`.
 - **CORS**: locked to `ALLOWED_ORIGINS` (see section 3) instead of wide open.
 - **`helmet`** is enabled for standard security headers (CSP is left off since the frontend is single-file with inline `<script>`/`<style>` — worth tightening if you split those out later).
-- **RLS** is enabled on `profiles`, `orders`, `order_items`, and `cart_items` (see `db/admin_cart_rls.sql`). The server always uses the `service_role` key, which bypasses RLS entirely — these policies are defense-in-depth for if anything ever queries Supabase directly with the anon key.
+- **RLS** is enabled on `profiles`, `orders`, `order_items`, and `cart_items` (see `db/02_rls_and_constraints.sql`). The server always uses the `service_role` key, which bypasses RLS entirely — these policies are defense-in-depth for if anything ever queries Supabase directly with the anon key.
 
 ## Next up
 - Real payment gateway to replace the simulated step in `routes/orders.js`.

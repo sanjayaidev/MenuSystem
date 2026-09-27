@@ -21,7 +21,7 @@ async function requireAuth(req, res, next) {
 
 // Requires a valid Supabase session AND profiles.is_admin = true.
 // Staff accounts are just normal Supabase Auth users with that flag
-// set manually in the DB (see db/admin_cart_rls.sql).
+// set manually in the DB (see db/02_rls_and_constraints.sql).
 async function requireAdmin(req, res, next) {
   const user = await getAuthUser(req);
   if (!user) return res.status(401).json({ error: 'Authentication required' });
