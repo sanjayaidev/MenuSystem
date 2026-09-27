@@ -618,10 +618,20 @@ function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]/g,''); }
 function dishImgPath(cat, name){ return `images/${cat}/${slugify(name)}.png`; }
 function catImgPath(cat){ return `images/${cat}.png`; }
 function genericImgPath(){ return `images/food.png`; }
+function hasImageUrl(item){ return typeof item.imagePath === 'string' && item.imagePath.trim().length > 0; }
+function itemImgPath(item){
+  if(!hasImageUrl(item)) return dishImgPath(item.cat, item.name.en);
+  try{
+    const url = new URL(item.imagePath.trim(), window.location.href);
+    if(url.protocol === 'https:' || url.protocol === 'http:') return url.href;
+  }catch{}
+  return '';
+}
 const FALLBACK_ICON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
   '<circle cx="50" cy="50" r="30" fill="none" stroke="#3a3630" stroke-width="3"/>' +
   '<circle cx="50" cy="50" r="18" fill="none" stroke="#3a3630" stroke-width="2"/></svg>';
 function wireImgFallback(imgEl){
+  if(imgEl.dataset.hasImageUrl === 'true') return;
   const cat = imgEl.dataset.cat;
   function onError(){
     if(imgEl.dataset.stage === 'dish'){ imgEl.dataset.stage = 'cat'; imgEl.src = catImgPath(cat); }
@@ -709,10 +719,12 @@ function render(){
 
   listEl.innerHTML = items.map(i=>{
     const name = i.name[lang];
+    const imageUrl = itemImgPath(i);
+    const hasUrl = hasImageUrl(i);
     return `<button class="row" data-id="${i.id}">
       <div class="thumb">
-        <img src="${dishImgPath(i.cat, i.name.en)}" alt="${name}" loading="lazy" data-cat="${i.cat}">
-        <div class="thumb-fallback">${FALLBACK_ICON}</div>
+        ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(name)}" loading="lazy" data-cat="${escapeHtml(i.cat || '')}" data-has-image-url="${hasUrl}">` : ''}
+        ${!hasUrl ? `<div class="thumb-fallback">${FALLBACK_ICON}</div>` : ''}
       </div>
       <div class="info">
         <p class="name">${i.offer ? `<span class="offer-tag">${STR[lang].offer}</span>` : ''}${name}</p>
@@ -819,6 +831,7 @@ async function loadMenuData(){
       cal: i.calories ?? null,
       rating: i.rating != null ? Number(i.rating) : null,
       price: Number(i.price),
+      imagePath: i.image_path || '',
       name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
       desc: { en:i.description_en || null },
     }));
@@ -959,10 +972,19 @@ function openItemModal(id){
   const modalImg = document.getElementById('itemModalImg');
   modalImg.dataset.stage = 'dish';
   modalImg.onerror = () => {
+    if(hasImageUrl(modalItem)){ modalImg.onerror = null; return; }
     if(modalImg.dataset.stage === 'dish'){ modalImg.dataset.stage = 'cat'; modalImg.src = catImgPath(modalItem.cat); }
     else if(modalImg.dataset.stage === 'cat'){ modalImg.dataset.stage = 'generic'; modalImg.src = genericImgPath(); }
   };
-  modalImg.src = dishImgPath(modalItem.cat, modalItem.name.en);
+  const imageUrl = itemImgPath(modalItem);
+  if(imageUrl){
+    modalImg.style.display = '';
+    modalImg.src = imageUrl;
+  }else{
+    modalImg.removeAttribute('src');
+    modalImg.onerror = null;
+    modalImg.style.display = 'none';
+  }
   document.getElementById('itemModalCat').textContent = c.label[lang];
   document.getElementById('itemModalCalories').textContent = modalItem.cal != null ? `${modalItem.cal} ${STR[lang].calLabel}` : '';
   document.getElementById('itemModalCalories').style.display = modalItem.cal != null ? 'inline-block' : 'none';
@@ -1051,10 +1073,11 @@ function renderCart(){
           <button class="step-plus" data-action="plus">+</button>
         </div>
       </div>
-      <div class="cart-thumb"><img src="${dishImgPath(l.item.cat, l.item.name.en)}" alt=""></div>
+      <div class="cart-thumb">${itemImgPath(l.item) ? `<img src="${escapeHtml(itemImgPath(l.item))}" alt="" data-cat="${escapeHtml(l.item.cat || '')}" data-has-image-url="${hasImageUrl(l.item)}">` : ''}</div>
       <div class="price">${money(l.lineTotal)}</div>
     </div>`).join('');
 
+  listEl2.querySelectorAll('.cart-thumb img').forEach(wireImgFallback);
   listEl2.querySelectorAll('.cart-row').forEach(row=>{
     const id = Number(row.dataset.id);
     row.querySelector('[data-action="plus"]').addEventListener('click', ()=>{ cartSet(id, (cart[id]||0)+1); renderCart(); });

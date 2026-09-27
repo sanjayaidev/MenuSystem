@@ -447,6 +447,326 @@ function escapeHtml(value){
   return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
+/* ---------- admin tabs ---------- */
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.admin-tab').forEach(button => {
+      const isActive = button === tab;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', String(isActive));
+    });
+    document.querySelectorAll('.admin-panel').forEach(panel => {
+      panel.hidden = panel.id !== tab.dataset.panel;
+    });
+
+    if(tab.dataset.panel === 'categoriesPanel') loadCategories();
+    if(tab.dataset.panel === 'menuPanel') loadMenu();
+  });
+});
+
+async function adminRequest(path, options = {}){
+  const response = await fetch(`${API_BASE}/api/admin${path}`, {
+    ...options,
+    headers: { ...authHeaders(), ...(options.headers || {}) },
+  });
+  const result = await readApiJson(response);
+  if(response.status === 401 || response.status === 403){
+    token = '';
+    localStorage.removeItem(TOKEN_KEY);
+    showLogin('Your session expired. Please sign in again.', true);
+    throw new Error(result.error || 'Admin access is required.');
+  }
+  if(!response.ok) throw new Error(result.error || `Request failed (HTTP ${response.status}).`);
+  return result;
+}
+
+function setFormNote(id, message, isError = false){
+  const note = document.getElementById(id);
+  note.textContent = message;
+  note.classList.toggle('error', isError);
+}
+
+/* ---------- categories ---------- */
+let categories = [];
+
+async function loadCategories(){
+  const records = document.getElementById('categoryRecords');
+  records.innerHTML = '<div class="empty">Loading categories…</div>';
+  try{
+    const result = await adminRequest('/categories');
+    categories = result.categories || [];
+    renderCategories();
+  }catch(error){
+    records.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Failed to load categories.')}</div>`;
+  }
+}
+
+function renderCategories(){
+  document.getElementById('categoryCount').textContent = `${categories.length} categor${categories.length === 1 ? 'y' : 'ies'}`;
+  const records = document.getElementById('categoryRecords');
+  if(!categories.length){
+    records.innerHTML = '<div class="empty">No categories yet.</div>';
+    return;
+  }
+  records.innerHTML = categories.map(category => `
+    <div class="record">
+      <div class="record-copy"><strong>${escapeHtml(category.label_en)}</strong><small>${escapeHtml(category.key)} · Sort ${category.sort_order}</small></div>
+      <div class="record-actions">
+        <button class="action-btn" type="button" data-category-action="edit" data-id="${category.id}">Edit</button>
+        <button class="action-btn danger" type="button" data-category-action="delete" data-id="${category.id}">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function resetCategoryForm(){
+  const form = document.getElementById('categoryForm');
+  form.reset();
+  document.getElementById('categoryId').value = '';
+  document.getElementById('categoryFormTitle').textContent = 'New category';
+  document.getElementById('categorySubmit').textContent = 'Create category';
+  document.getElementById('categoryCancel').hidden = true;
+  setFormNote('categoryNote', '');
+}
+
+document.getElementById('categoryForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const id = document.getElementById('categoryId').value;
+  const payload = Object.fromEntries(new FormData(form).entries());
+  const button = document.getElementById('categorySubmit');
+  button.disabled = true;
+  setFormNote('categoryNote', id ? 'Saving changes…' : 'Creating category…');
+  try{
+    await adminRequest(id ? `/categories/${encodeURIComponent(id)}` : '/categories', {
+      method: id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    resetCategoryForm();
+    setFormNote('categoryNote', id ? 'Category updated.' : 'Category created.');
+    await loadCategories();
+  }catch(error){
+    setFormNote('categoryNote', error.message || 'Could not save category.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+document.getElementById('categoryCancel').addEventListener('click', resetCategoryForm);
+document.getElementById('categoryRecords').addEventListener('click', async event => {
+  const button = event.target.closest('[data-category-action]');
+  if(!button) return;
+  const category = categories.find(record => String(record.id) === button.dataset.id);
+  if(!category) return;
+
+  if(button.dataset.categoryAction === 'edit'){
+    document.getElementById('categoryId').value = category.id;
+    document.getElementById('categoryKey').value = category.key;
+    document.getElementById('categorySort').value = category.sort_order;
+    for(const language of ['en', 'ar', 'ur', 'zh']){
+      document.querySelector(`[name="label_${language}"]`).value = category[`label_${language}`] || '';
+    }
+    document.getElementById('categoryFormTitle').textContent = 'Edit category';
+    document.getElementById('categorySubmit').textContent = 'Save category';
+    document.getElementById('categoryCancel').hidden = false;
+    setFormNote('categoryNote', '');
+    document.getElementById('categoryForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  if(!window.confirm(`Delete category “${category.label_en}”?`)) return;
+  button.disabled = true;
+  try{
+    await adminRequest(`/categories/${encodeURIComponent(category.id)}`, { method: 'DELETE' });
+    await loadCategories();
+  }catch(error){
+    window.alert(error.message || 'Could not delete category.');
+  }finally{
+    button.disabled = false;
+  }
+});
+
+/* ---------- menu items ---------- */
+let menuItems = [];
+
+async function loadMenu(){
+  const records = document.getElementById('menuRecords');
+  records.innerHTML = '<div class="empty">Loading menu items…</div>';
+  try{
+    const [categoryResult, menuResult] = await Promise.all([
+      adminRequest('/categories'),
+      adminRequest('/menu'),
+    ]);
+    categories = categoryResult.categories || [];
+    menuItems = menuResult.items || [];
+    renderCategoryOptions();
+    renderMenu();
+  }catch(error){
+    records.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Failed to load menu items.')}</div>`;
+  }
+}
+
+function renderCategoryOptions(selectedId = ''){
+  const select = document.getElementById('itemCategory');
+  select.innerHTML = '<option value="">Choose a category</option>' + categories.map(category =>
+    `<option value="${category.id}" ${String(category.id) === String(selectedId) ? 'selected' : ''}>${escapeHtml(category.label_en)}</option>`
+  ).join('');
+}
+
+function renderMenu(){
+  document.getElementById('menuCount').textContent = `${menuItems.length} item${menuItems.length === 1 ? '' : 's'}`;
+  const query = document.getElementById('menuSearch').value.trim().toLocaleLowerCase();
+  const filtered = menuItems.filter(item =>
+    [item.name_en, item.name_ar, item.name_ur, item.name_zh, item.categories?.label_en]
+      .some(value => String(value || '').toLocaleLowerCase().includes(query))
+  );
+  document.getElementById('menuResultCount').textContent = `${filtered.length} shown`;
+  const records = document.getElementById('menuRecords');
+  if(!filtered.length){
+    records.innerHTML = `<div class="empty">${menuItems.length ? 'No matching menu items.' : 'No menu items yet.'}</div>`;
+    return;
+  }
+  records.innerHTML = filtered.map(item => `
+    <div class="record">
+      <div class="record-main">
+        ${item.image_path ? `<img class="record-thumb" src="${escapeHtml(item.image_path)}" alt="">` : ''}
+        <div class="record-copy">
+          <strong>${escapeHtml(item.name_en)}</strong>
+          <small>${escapeHtml(item.categories?.label_en || 'Uncategorized')} · ${money(item.price)}</small>
+          <div class="record-meta">
+            <span class="record-badge${item.is_available ? '' : ' unavailable'}">${item.is_available ? 'Available' : 'Unavailable'}</span>
+            ${item.is_offer ? '<span class="record-badge">Featured offer</span>' : ''}
+          </div>
+        </div>
+      </div>
+      <div class="record-actions">
+        <button class="action-btn" type="button" data-menu-action="edit" data-id="${item.id}">Edit</button>
+        <button class="action-btn danger" type="button" data-menu-action="delete" data-id="${item.id}">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateImagePreview(url){
+  const preview = document.getElementById('itemImagePreview');
+  preview.innerHTML = url
+    ? `<img src="${escapeHtml(url)}" alt="Menu item preview"><span>Image preview</span>`
+    : '<span>No image selected</span>';
+}
+
+function resetItemForm(){
+  const form = document.getElementById('itemForm');
+  form.reset();
+  document.getElementById('itemId').value = '';
+  renderCategoryOptions();
+  document.getElementById('itemFormTitle').textContent = 'New menu item';
+  document.getElementById('itemSubmit').textContent = 'Create menu item';
+  document.getElementById('itemCancel').hidden = true;
+  document.getElementById('itemImageFile').value = '';
+  document.getElementById('imageUploadBtn').disabled = true;
+  updateImagePreview('');
+  setFormNote('itemNote', '');
+}
+
+document.getElementById('itemForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const id = document.getElementById('itemId').value;
+  const payload = Object.fromEntries(new FormData(form).entries());
+  payload.is_available = document.getElementById('itemAvailable').checked;
+  payload.is_offer = document.getElementById('itemOffer').checked;
+  const button = document.getElementById('itemSubmit');
+  button.disabled = true;
+  setFormNote('itemNote', id ? 'Saving changes…' : 'Creating menu item…');
+  try{
+    await adminRequest(id ? `/menu/${encodeURIComponent(id)}` : '/menu', {
+      method: id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    resetItemForm();
+    setFormNote('itemNote', id ? 'Menu item updated.' : 'Menu item created.');
+    await loadMenu();
+  }catch(error){
+    setFormNote('itemNote', error.message || 'Could not save menu item.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+document.getElementById('itemCancel').addEventListener('click', resetItemForm);
+document.getElementById('menuRecords').addEventListener('click', async event => {
+  const button = event.target.closest('[data-menu-action]');
+  if(!button) return;
+  const item = menuItems.find(record => String(record.id) === button.dataset.id);
+  if(!item) return;
+
+  if(button.dataset.menuAction === 'edit'){
+    document.getElementById('itemId').value = item.id;
+    renderCategoryOptions(item.category_id);
+    for(const field of ['price', 'calories', 'rating', 'popularity', 'image_path', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
+      const input = document.querySelector(`#itemForm [name="${field}"]`);
+      input.value = item[field] ?? '';
+    }
+    document.getElementById('itemAvailable').checked = item.is_available;
+    document.getElementById('itemOffer').checked = item.is_offer;
+    document.getElementById('itemFormTitle').textContent = 'Edit menu item';
+    document.getElementById('itemSubmit').textContent = 'Save menu item';
+    document.getElementById('itemCancel').hidden = false;
+    updateImagePreview(item.image_path || '');
+    setFormNote('itemNote', '');
+    document.getElementById('itemForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  if(!window.confirm(`Delete menu item “${item.name_en}”?`)) return;
+  button.disabled = true;
+  try{
+    await adminRequest(`/menu/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+    await loadMenu();
+  }catch(error){
+    window.alert(error.message || 'Could not delete menu item.');
+  }finally{
+    button.disabled = false;
+  }
+});
+
+document.getElementById('menuSearch').addEventListener('input', renderMenu);
+document.getElementById('itemImageUrl').addEventListener('input', event => updateImagePreview(event.currentTarget.value.trim()));
+document.getElementById('itemImageFile').addEventListener('change', event => {
+  document.getElementById('imageUploadBtn').disabled = !event.currentTarget.files.length;
+});
+document.getElementById('imageUploadBtn').addEventListener('click', async event => {
+  const file = document.getElementById('itemImageFile').files[0];
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024){
+    setFormNote('itemNote', 'Image must be smaller than 5 MB.', true);
+    return;
+  }
+  const button = event.currentTarget;
+  button.disabled = true;
+  setFormNote('itemNote', 'Uploading image…');
+  try{
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not read the selected image.'));
+      reader.readAsDataURL(file);
+    });
+    const result = await adminRequest('/images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: dataUrl,
+    });
+    document.getElementById('itemImageUrl').value = result.url;
+    updateImagePreview(result.url);
+    setFormNote('itemNote', 'Image uploaded.');
+  }catch(error){
+    setFormNote('itemNote', error.message || 'Image upload failed.', true);
+  }finally{
+    button.disabled = !document.getElementById('itemImageFile').files.length;
+  }
+});
+
 /* ---------- boot ---------- */
 if(token){
   // We don't know the signed-in email until /me responds; show a
