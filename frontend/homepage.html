@@ -429,6 +429,7 @@
         <input class="field-input" id="profileEmail" type="email" autocomplete="email">
         <p class="field-label" id="profilePasswordLabel"></p>
         <input class="field-input" id="profilePassword" type="password" autocomplete="current-password">
+        <button type="button" id="profileForgotBtn" style="background:none; border:none; color:var(--gold); font-size:12px; padding:8px 0 0; cursor:pointer; text-decoration:underline;"></button>
         <div id="profileNameWrap" style="display:none;">
           <p class="field-label" id="profileNameLabel"></p>
           <input class="field-input" id="profileName" type="text" autocomplete="name">
@@ -521,6 +522,7 @@ const STR = {
       email:'Email', password:'Password', displayName:'Full name', phone:'Phone', address:'Address',
       signIn:'Sign in', register:'Create account', saveProfile:'Save profile', signOut:'Sign out',
       authRequired:'Please enter your email and password.', profileSaved:'Profile saved.', orderHistory:'Previous orders', noOrders:'No orders yet.', authError:'Unable to sign in. Please check your details.',
+      forgotPassword:'Forgot password?', resetEmailRequired:'Enter your email above, then tap "Forgot password?" again.', resetLinkSent:'If that email is registered, a reset link has been sent to it.',
        cartTitle:'Order Cart', pickupLabel:'Pick-up from the branch', free:'Free', deliveryLabel:'Home delivery',
        cartEmptyTitle:'The basket is currently empty.', cartEmptyText:'Enjoy the most delicious meals and order now!',
        browseMenu:'Browse the menu', subtotal:'Subtotal:', deliveryFees:'Delivery fees:', finalTotal:'Final total:',
@@ -542,6 +544,7 @@ const STR = {
       email:'البريد الإلكتروني', password:'كلمة المرور', displayName:'الاسم الكامل', phone:'رقم الجوال', address:'العنوان',
       signIn:'تسجيل الدخول', register:'إنشاء حساب', saveProfile:'حفظ الحساب', signOut:'تسجيل الخروج',
       authRequired:'أدخل البريد الإلكتروني وكلمة المرور.', profileSaved:'تم حفظ الحساب.', orderHistory:'الطلبات السابقة', noOrders:'لا توجد طلبات بعد.', authError:'تعذر تسجيل الدخول. تحقق من بياناتك.',
+      forgotPassword:'نسيت كلمة المرور؟', resetEmailRequired:'أدخل بريدك الإلكتروني أعلاه، ثم اضغط "نسيت كلمة المرور؟" مرة أخرى.', resetLinkSent:'إذا كان هذا البريد الإلكتروني مسجلاً، فقد تم إرسال رابط إعادة تعيين كلمة المرور إليه.',
        cartTitle:'سلة الطلبات', pickupLabel:'الاستلام من الفرع', free:'مجاني', deliveryLabel:'التوصيل للمنزل',
        cartEmptyTitle:'السلة فارغة حالياً.', cartEmptyText:'استمتع بألذ الأطباق واطلب وجبتك الآن!',
        browseMenu:'تصفح القائمة', subtotal:'المجموع الفرعي:', deliveryFees:'رسوم التوصيل:', finalTotal:'الإجمالي النهائي:',
@@ -563,6 +566,7 @@ const STR = {
       email:'ای میل', password:'پاس ورڈ', displayName:'پورا نام', phone:'فون', address:'پتہ',
       signIn:'سائن ان', register:'اکاؤنٹ بنائیں', saveProfile:'پروفائل محفوظ کریں', signOut:'سائن آؤٹ',
       authRequired:'ای میل اور پاس ورڈ درج کریں۔', profileSaved:'پروفائل محفوظ ہو گیا۔', orderHistory:'پچھلے آرڈرز', noOrders:'ابھی کوئی آرڈر نہیں۔', authError:'سائن ان نہیں ہو سکا۔ معلومات چیک کریں۔',
+      forgotPassword:'پاس ورڈ بھول گئے؟', resetEmailRequired:'پہلے اوپر اپنا ای میل درج کریں، پھر دوبارہ "پاس ورڈ بھول گئے؟" دبائیں۔', resetLinkSent:'اگر یہ ای میل رجسٹرڈ ہے تو اس پر ری سیٹ لنک بھیج دیا گیا ہے۔',
        cartTitle:'آرڈر کارٹ', pickupLabel:'برانچ سے پک اپ', free:'مفت', deliveryLabel:'ہوم ڈیلیوری',
        cartEmptyTitle:'ٹوکری اس وقت خالی ہے۔', cartEmptyText:'لذیذ کھانوں سے لطف اٹھائیں اور ابھی آرڈر کریں!',
        browseMenu:'مینو دیکھیں', subtotal:'ذیلی مجموعہ:', deliveryFees:'ڈیلیوری فیس:', finalTotal:'حتمی رقم:',
@@ -584,6 +588,7 @@ const STR = {
       email:'电子邮箱', password:'密码', displayName:'姓名', phone:'电话', address:'地址',
       signIn:'登录', register:'创建账户', saveProfile:'保存资料', signOut:'退出登录',
       authRequired:'请输入电子邮箱和密码。', profileSaved:'资料已保存。', orderHistory:'历史订单', noOrders:'暂无订单。', authError:'登录失败，请检查您的信息。',
+      forgotPassword:'忘记密码？', resetEmailRequired:'请先在上方输入邮箱，然后再次点击"忘记密码？"。', resetLinkSent:'如果该邮箱已注册，重置链接已发送至该邮箱。',
        cartTitle:'订单购物车', pickupLabel:'到店自取', free:'免费', deliveryLabel:'送货上门',
        cartEmptyTitle:'购物车当前为空。', cartEmptyText:'尽享美味佳肴，现在就下单吧！',
        browseMenu:'浏览菜单', subtotal:'小计：', deliveryFees:'配送费：', finalTotal:'总计：',
@@ -764,13 +769,28 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
 });
 
 /* =====================================================================
-   CONFIG — adjust these for your real deployment
+   CONFIG — DELIVERY_FEE / WHATSAPP_NUMBER / BRANCH_NAME now come from
+   the server (GET /api/config), which reads them from env vars, so
+   there's one source of truth instead of duplicating them here.
    ===================================================================== */
 const CURRENCY = '$';
-const DELIVERY_FEE = 20;                    // keep in sync with server routes/orders.js
 const API_BASE = window.location.origin;
-const WHATSAPP_NUMBER = 'YOUR_WHATSAPP_NUMBER';               // <-- e.g. '9665XXXXXXXX', no + or leading 00
-const BRANCH_NAME = 'Red House Trading';
+let DELIVERY_FEE = 20;          // overwritten by loadConfig() below
+let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
+let BRANCH_NAME = 'Red House Trading';
+
+async function loadConfig(){
+  try{
+    const res = await fetch(`${API_BASE}/api/config`);
+    if(!res.ok) throw new Error(`GET /api/config failed (${res.status})`);
+    const cfg = await res.json();
+    DELIVERY_FEE = Number(cfg.deliveryFee ?? DELIVERY_FEE);
+    WHATSAPP_NUMBER = cfg.whatsappNumber || '';
+    BRANCH_NAME = cfg.branchName || BRANCH_NAME;
+  }catch(err){
+    console.error('Failed to load server config, using defaults:', err);
+  }
+}
 
 /* ---------- load categories + menu items from the real backend ---------- */
 async function loadMenuData(){
@@ -821,10 +841,98 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   applyTheme(isLight ? 'dark' : 'light');
 });
 
-/* ---------- cart state ---------- */
-let cart = {};          // { itemId: qty }
+/* ---------- cart state ----------
+   Signed-in users: the cart lives in Supabase (cart_items table via
+   /api/cart) so it follows them across devices. Guests: the cart lives
+   in localStorage only, on this device/browser. cartSet()/clearCart()
+   are the only places that mutate `cart` so every call site stays in
+   sync with whichever storage is currently active. */
+let cart = {};            // { itemId: qty } — always the in-memory source of truth for rendering
 let orderType = 'pickup'; // 'pickup' | 'delivery'
-let lastOrder = null;   // {id, items, subtotal, deliveryFee, total} set after a successful order
+let lastOrder = null;     // {id, items, subtotal, deliveryFee, total} set after a successful order
+
+const GUEST_CART_KEY = 'redhouse_guest_cart';
+function loadGuestCart(){
+  try{ return JSON.parse(localStorage.getItem(GUEST_CART_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function saveGuestCart(){
+  try{ localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart)); }catch(e){ /* storage unavailable, ignore */ }
+}
+
+// Sets (or, for qty <= 0, removes) one cart line. Updates the in-memory
+// `cart` synchronously so the UI never waits on the network, then syncs
+// to Supabase (signed in) or localStorage (guest) in the background.
+function cartSet(id, qty){
+  id = Number(id);
+  if(qty <= 0){ delete cart[id]; } else { cart[id] = qty; }
+
+  if(authToken){
+    const request = qty <= 0
+      ? fetch(`${API_BASE}/api/cart/${id}`, { method:'DELETE', headers:authHeaders() })
+      : fetch(`${API_BASE}/api/cart`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json', ...authHeaders()},
+          body: JSON.stringify({ menu_item_id:id, quantity:qty }),
+        });
+    request.catch(err => console.error('Cart sync failed:', err));
+  }else{
+    saveGuestCart();
+  }
+}
+
+// Empties the cart (after a completed order): clears every DB row for a
+// signed-in user, or just wipes localStorage for a guest.
+async function clearCart(){
+  const ids = Object.keys(cart).map(Number);
+  cart = {};
+  if(authToken){
+    try{
+      await Promise.all(ids.map(id => fetch(`${API_BASE}/api/cart/${id}`, { method:'DELETE', headers:authHeaders() })));
+    }catch(err){ console.error('Failed to clear server cart:', err); }
+  }else{
+    saveGuestCart();
+  }
+}
+
+// Replaces in-memory `cart` with whatever's saved server-side for the
+// signed-in user (called on page load when a token exists, and after login).
+async function loadCartFromServer(){
+  try{
+    const res = await fetch(`${API_BASE}/api/cart`, { headers: authHeaders() });
+    if(!res.ok) throw new Error(`GET /api/cart failed (${res.status})`);
+    const { items } = await res.json();
+    cart = {};
+    items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+  }catch(err){
+    console.error('Failed to load cart from server:', err);
+  }
+}
+
+// Called once, right after a successful login: folds whatever was in the
+// guest's localStorage cart into their DB cart (quantities add on top of
+// anything already saved there), then makes the DB the source of truth.
+async function mergeGuestCartIntoServer(){
+  const guestItems = Object.entries(cart).map(([id, qty]) => ({ menu_item_id:Number(id), quantity:qty }));
+  try{
+    if(guestItems.length){
+      const res = await fetch(`${API_BASE}/api/cart/merge`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', ...authHeaders()},
+        body: JSON.stringify({ items: guestItems }),
+      });
+      if(!res.ok) throw new Error(`POST /api/cart/merge failed (${res.status})`);
+      const { items } = await res.json();
+      cart = {};
+      items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+    }else{
+      await loadCartFromServer();
+    }
+  }catch(err){
+    console.error('Failed to merge guest cart into server cart:', err);
+  }
+  try{ localStorage.removeItem(GUEST_CART_KEY); }catch(e){ /* ignore */ }
+}
 
 function itemById(id){ return ITEMS.find(i=>i.id===id); }
 function itemPrice(item){ return item.price; }
@@ -887,7 +995,7 @@ document.getElementById('itemModalMinus').addEventListener('click', ()=>{
   if(modalQty>1){ modalQty--; document.getElementById('itemModalQty').textContent = modalQty; updateModalAddBtn(); }
 });
 document.getElementById('itemModalAdd').addEventListener('click', ()=>{
-  cart[modalItem.id] = modalQty;
+  cartSet(modalItem.id, modalQty);
   closeOverlay(itemModal);
   renderCart();
 });
@@ -949,11 +1057,9 @@ function renderCart(){
 
   listEl2.querySelectorAll('.cart-row').forEach(row=>{
     const id = Number(row.dataset.id);
-    row.querySelector('[data-action="plus"]').addEventListener('click', ()=>{ cart[id]++; renderCart(); });
-    row.querySelector('[data-action="minus"]').addEventListener('click', ()=>{
-      cart[id]--; if(cart[id]<=0) delete cart[id]; renderCart();
-    });
-    row.querySelector('[data-action="remove"]').addEventListener('click', ()=>{ delete cart[id]; renderCart(); });
+    row.querySelector('[data-action="plus"]').addEventListener('click', ()=>{ cartSet(id, (cart[id]||0)+1); renderCart(); });
+    row.querySelector('[data-action="minus"]').addEventListener('click', ()=>{ cartSet(id, (cart[id]||0)-1); renderCart(); });
+    row.querySelector('[data-action="remove"]').addEventListener('click', ()=>{ cartSet(id, 0); renderCart(); });
   });
 
   document.getElementById('cartSubtotalVal').textContent = money(cartSubtotal());
@@ -992,6 +1098,7 @@ function refreshProfileStaticText(){
   document.getElementById('profileAddressLabel').textContent = STR[lang].address;
   document.getElementById('profileLoginBtn').textContent = STR[lang].signIn;
   document.getElementById('profileRegisterBtn').textContent = STR[lang].register;
+  document.getElementById('profileForgotBtn').textContent = STR[lang].forgotPassword;
   document.getElementById('profileSaveBtn').textContent = STR[lang].saveProfile;
   document.getElementById('profileLogoutBtn').textContent = STR[lang].signOut;
   document.getElementById('profileOrdersTitle').textContent = STR[lang].orderHistory;
@@ -1054,6 +1161,8 @@ document.getElementById('profileLoginBtn').addEventListener('click', async ()=>{
     authToken = result.access_token; localStorage.setItem(AUTH_TOKEN_KEY, authToken);
     profileData = { email, user_id: result.profile.id, profile: result.profile };
     renderProfile(); loadProfileOrders();
+    await mergeGuestCartIntoServer();
+    if(cartOverlay.classList.contains('is-open')) renderCart();
   }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
 });
 document.getElementById('profileRegisterBtn').addEventListener('click', async ()=>{
@@ -1083,8 +1192,28 @@ document.getElementById('profileSaveBtn').addEventListener('click', async ()=>{
   document.getElementById('checkoutPhone').value = result.profile.phone || '';
   document.getElementById('checkoutAddress').value = result.profile.address || '';
 });
+document.getElementById('profileForgotBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('profileEmail').value.trim();
+  if(!email){ profileStatus(STR[lang].resetEmailRequired, true); return; }
+  try{
+    await fetch(`${API_BASE}/api/auth/request-password-reset`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email }),
+    });
+  }catch(err){
+    // Network error — still show the generic confirmation below; the
+    // endpoint never reveals whether an account exists either way.
+  }
+  profileStatus(STR[lang].resetLinkSent);
+});
 document.getElementById('profileLogoutBtn').addEventListener('click', ()=>{
   authToken = ''; profileData = null; localStorage.removeItem(AUTH_TOKEN_KEY); renderProfile();
+  // Signing out starts a fresh guest cart on this device rather than
+  // keeping whatever was synced from the account.
+  cart = {};
+  try{ localStorage.removeItem(GUEST_CART_KEY); }catch(e){ /* ignore */ }
+  if(cartOverlay.classList.contains('is-open')) renderCart();
 });
 
 /* ---------- CHECKOUT OVERLAY ---------- */
@@ -1172,7 +1301,7 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     statusNote.textContent = STR[lang].paymentDone;
     sendOrderToWhatsApp(order, { name, phone, address });
 
-    cart = {};
+    await clearCart();
     closeOverlay(checkoutOverlay);
   }catch(err){
     statusNote.textContent = STR[lang].orderFailed;
@@ -1208,7 +1337,12 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await loadMenuData();
+  await Promise.all([loadMenuData(), loadConfig()]);
+  if(authToken){
+    await loadCartFromServer();
+  }else{
+    cart = loadGuestCart();
+  }
   setLang('en');
 })();
 
