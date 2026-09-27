@@ -90,7 +90,7 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
   // Verify credentials on a throwaway client, NOT the shared service-role
   // `supabase` client below — see db/supabase-auth-client.js for why.
   const authClient = createAuthClient();
-  const { data, error } = await authClient.signInWithPassword({ email, password });
+  const { data, error } = await authClient.auth.signInWithPassword({ email, password });
   if (error) return res.status(401).json({ error: error.message });
 
   try {
