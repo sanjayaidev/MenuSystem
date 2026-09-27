@@ -25,13 +25,26 @@ async function getOrCreateProfile(user) {
   if (profileError) throw profileError;
   if (profile) return profile;
 
-  const { data: createdProfile, error: createError } = await supabase
+  // Upsert with ignoreDuplicates instead of a plain insert: if two
+  // requests for a brand-new user land at the same time (e.g. a
+  // double-click on login), the loser doesn't error out on the
+  // profiles_pkey conflict — it just no-ops and we re-select below.
+  const { error: upsertError } = await supabase
     .from('profiles')
-    .insert({ id: user.id, display_name: user.user_metadata?.display_name || '' })
+    .upsert(
+      { id: user.id, display_name: user.user_metadata?.display_name || '' },
+      { onConflict: 'id', ignoreDuplicates: true }
+    );
+
+  if (upsertError) throw upsertError;
+
+  const { data: createdProfile, error: reselectError } = await supabase
+    .from('profiles')
     .select('id, display_name, phone, address, created_at, updated_at')
+    .eq('id', user.id)
     .single();
 
-  if (createError) throw createError;
+  if (reselectError) throw reselectError;
   return createdProfile;
 }
 
