@@ -23,6 +23,7 @@ their normal email/password.
 Project → **Settings → API**:
 - `Project URL` → `SUPABASE_URL`
 - `service_role` secret key → `SUPABASE_SERVICE_ROLE_KEY` (⚠️ never expose this in frontend code — server-side only)
+- `anon` `public` key → `SUPABASE_ANON_KEY` (used only to verify login credentials on an isolated client — see `db/supabase-auth-client.js`)
 
 ## 3. Environment variables
 ```bash
@@ -32,6 +33,7 @@ cp .env.example .env
 |---|---|---|
 | `SUPABASE_URL` | yes | Your project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Server-side only, bypasses RLS |
+| `SUPABASE_ANON_KEY` | yes | Used only to verify login credentials on a client isolated from the service-role one (prevents a logged-in user's session from leaking into other requests) |
 | `PORT` | no (default 3000) | Local port |
 | `APP_URL` | yes | Used for the keep-alive pinger **and** as the base for the password-reset redirect link (see below) |
 | `ALLOWED_ORIGINS` | recommended | Comma-separated list of origins allowed to call this API cross-origin, e.g. `https://your-service.onrender.com,https://yourdomain.com`. Falls back to `APP_URL` alone if unset. Requests with no `Origin` header (curl, same-origin page loads) are always allowed regardless. |
