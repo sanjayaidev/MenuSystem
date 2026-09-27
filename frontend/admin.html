@@ -97,6 +97,8 @@
   .panel-title .count{font-size:12px; color:var(--muted);}
   .manager-form{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:20px;}
   .manager-form h3{margin:0 0 12px; font-size:15px;}
+  .item-form-heading{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;}
+  .item-form-heading h3{margin:0;}
   .form-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
   .form-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));}
   .manager-form label{display:block; min-width:0; color:var(--muted); font-size:11px; font-weight:650;}
@@ -104,7 +106,12 @@
   .manager-form textarea{min-height:68px; resize:vertical;}
   .manager-form input:focus,.manager-form select:focus,.manager-form textarea:focus{outline:2px solid var(--gold); outline-offset:1px;}
   .language-fields{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px;}
+  .language-switcher{display:flex; gap:3px; width:max-content; max-width:100%; margin-top:14px; padding:3px; border:1px solid var(--line); border-radius:7px; background:var(--bg);}
+  .language-switcher button{border:0; border-radius:4px; padding:7px 10px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:650; cursor:pointer;}
+  .language-switcher button[aria-pressed="true"]{background:var(--gold); color:#1a1408;}
+  .language-fields{margin-top:8px;}
   .language-card{min-width:0; border:1px solid var(--line); border-radius:6px; padding:10px;}
+  .language-card[hidden]{display:none;}
   .language-card legend{padding:0 5px; color:var(--gold); font-size:12px; font-weight:700;}
   .language-card[lang="ar"],.language-card[lang="ur"]{text-align:right;}
   .language-card[lang="ar"] input,.language-card[lang="ur"] input,.language-card[lang="ar"] textarea,.language-card[lang="ur"] textarea{direction:rtl;}
@@ -113,7 +120,8 @@
   .check-fields input{width:16px; height:16px; margin:0; accent-color:var(--gold);}
   .image-tools{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:10px; margin-top:14px;}
   .image-preview{display:flex; align-items:center; gap:12px; min-height:70px; margin-top:10px; color:var(--muted); font-size:12px;}
-  .image-preview img{width:72px; height:64px; object-fit:cover; border:1px solid var(--line); border-radius:6px; background:var(--bg);}
+  .item-form-heading .image-preview{flex:0 0 auto; min-height:0; margin:0;}
+  .image-preview img{width:88px; height:68px; object-fit:cover; border:1px solid var(--line); border-radius:6px; background:var(--bg);}
   .form-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px;}
   .action-btn{border:1px solid var(--line); border-radius:6px; padding:8px 12px; background:#26231f; color:var(--text); font:inherit; font-size:12px; font-weight:650; cursor:pointer;}
   .action-btn.primary{background:var(--gold); color:#1a1408; border-color:var(--gold);}
@@ -138,6 +146,7 @@
     .wrap{padding:14px;}
     .form-grid,.form-grid.compact{grid-template-columns:repeat(2,minmax(0,1fr));}
     .language-fields{grid-template-columns:1fr;}
+    .item-form-heading{align-items:flex-start;}
     .record{align-items:flex-start;}
     .record-actions{flex-direction:column;}
   }
@@ -186,18 +195,24 @@
 
     <section class="admin-panel" id="categoriesPanel" hidden>
       <div class="panel-title"><h2>Categories</h2><span class="count" id="categoryCount"></span></div>
-      <form class="manager-form" id="categoryForm">
+      <form class="manager-form" id="categoryForm" novalidate>
         <h3 id="categoryFormTitle">New category</h3>
         <input type="hidden" name="id" id="categoryId">
         <div class="form-grid compact">
           <label>Category key<input name="key" id="categoryKey" required maxlength="48" pattern="[a-z0-9]+([_-][a-z0-9]+)*" placeholder="e.g. side-dishes"></label>
           <label>Sort order<input name="sort_order" id="categorySort" type="number" min="0" step="1" value="0" required></label>
         </div>
+        <div class="language-switcher" role="group" aria-label="Category translation language">
+          <button type="button" data-language="en" aria-pressed="true">English</button>
+          <button type="button" data-language="ar" aria-pressed="false">العربية</button>
+          <button type="button" data-language="ur" aria-pressed="false">اردو</button>
+          <button type="button" data-language="zh" aria-pressed="false">中文</button>
+        </div>
         <div class="language-fields">
-          <fieldset class="language-card" lang="en"><legend>English</legend><label>Category name<input name="label_en" required></label></fieldset>
-          <fieldset class="language-card" lang="ar"><legend>العربية</legend><label>اسم الفئة<input name="label_ar" required></label></fieldset>
-          <fieldset class="language-card" lang="ur"><legend>اردو</legend><label>زمرے کا نام<input name="label_ur" required></label></fieldset>
-          <fieldset class="language-card" lang="zh"><legend>中文</legend><label>分类名称<input name="label_zh" required></label></fieldset>
+          <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Category name<input name="label_en" required></label></fieldset>
+          <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الفئة<input name="label_ar" required></label></fieldset>
+          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>زمرے کا نام<input name="label_ur" required></label></fieldset>
+          <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>分类名称<input name="label_zh" required></label></fieldset>
         </div>
         <div class="form-actions"><button class="action-btn primary" id="categorySubmit" type="submit">Create category</button><button class="action-btn" id="categoryCancel" type="button" hidden>Cancel edit</button><span class="form-note" id="categoryNote" role="status"></span></div>
       </form>
@@ -206,8 +221,11 @@
 
     <section class="admin-panel" id="menuPanel" hidden>
       <div class="panel-title"><h2>Menu items</h2><span class="count" id="menuCount"></span></div>
-      <form class="manager-form" id="itemForm">
-        <h3 id="itemFormTitle">New menu item</h3>
+      <form class="manager-form" id="itemForm" novalidate>
+        <div class="item-form-heading">
+          <h3 id="itemFormTitle">New menu item</h3>
+          <div class="image-preview" id="itemImagePreview"><img src="images/food.png" alt="Fallback food image"><span>Fallback food image</span></div>
+        </div>
         <input type="hidden" name="id" id="itemId">
         <div class="form-grid">
           <label>Category<select name="category_id" id="itemCategory" required></select></label>
@@ -216,11 +234,17 @@
           <label>Rating<input name="rating" id="itemRating" type="number" min="0" max="5" step="0.1"></label>
           <label>Popularity<input name="popularity" id="itemPopularity" type="number" min="0" step="1" value="0"></label>
         </div>
+        <div class="language-switcher" role="group" aria-label="Menu item translation language">
+          <button type="button" data-language="en" aria-pressed="true">English</button>
+          <button type="button" data-language="ar" aria-pressed="false">العربية</button>
+          <button type="button" data-language="ur" aria-pressed="false">اردو</button>
+          <button type="button" data-language="zh" aria-pressed="false">中文</button>
+        </div>
         <div class="language-fields">
-          <fieldset class="language-card" lang="en"><legend>English</legend><label>Item name<input name="name_en" required></label><label>Description<textarea name="description_en"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="ar"><legend>العربية</legend><label>اسم الطبق<input name="name_ar" required></label><label>الوصف<textarea name="description_ar"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="ur"><legend>اردو</legend><label>ڈش کا نام<input name="name_ur" required></label><label>تفصیل<textarea name="description_ur"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="zh"><legend>中文</legend><label>菜品名称<input name="name_zh" required></label><label>描述<textarea name="description_zh"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Item name<input name="name_en" required></label><label>Description<textarea name="description_en"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الطبق<input name="name_ar" required></label><label>الوصف<textarea name="description_ar"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>ڈش کا نام<input name="name_ur" required></label><label>تفصیل<textarea name="description_ur"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>菜品名称<input name="name_zh" required></label><label>描述<textarea name="description_zh"></textarea></label></fieldset>
         </div>
         <div class="check-fields">
           <label><input type="checkbox" name="is_available" id="itemAvailable" checked> Available to order</label>
@@ -230,7 +254,6 @@
           <label>Image URL<input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label>
           <div><label>Upload image<input id="itemImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><button class="action-btn" id="imageUploadBtn" type="button" disabled>Upload to Imgbb</button></div>
         </div>
-        <div class="image-preview" id="itemImagePreview"><span>No image selected</span></div>
         <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit">Create menu item</button><button class="action-btn" id="itemCancel" type="button" hidden>Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
       </form>
       <div class="toolbar"><span class="count" id="menuResultCount"></span><input class="search-input" id="menuSearch" type="search" placeholder="Search menu items"></div>
@@ -486,6 +509,32 @@ function setFormNote(id, message, isError = false){
   note.classList.toggle('error', isError);
 }
 
+function setActiveLanguage(form, language){
+  form.querySelectorAll('.language-switcher [data-language]').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.language === language));
+  });
+  form.querySelectorAll('[data-language-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.languagePanel !== language;
+  });
+}
+
+function validateAdminForm(form){
+  const invalidField = Array.from(form.querySelectorAll('input, select, textarea'))
+    .find(field => !field.checkValidity());
+  if(!invalidField) return true;
+  const languagePanel = invalidField.closest('[data-language-panel]');
+  if(languagePanel) setActiveLanguage(form, languagePanel.dataset.languagePanel);
+  invalidField.reportValidity();
+  return false;
+}
+
+document.querySelectorAll('.language-switcher').forEach(switcher => {
+  switcher.addEventListener('click', event => {
+    const button = event.target.closest('[data-language]');
+    if(button) setActiveLanguage(switcher.closest('form'), button.dataset.language);
+  });
+});
+
 /* ---------- categories ---------- */
 let categories = [];
 
@@ -521,6 +570,7 @@ function renderCategories(){
 function resetCategoryForm(){
   const form = document.getElementById('categoryForm');
   form.reset();
+  setActiveLanguage(form, 'en');
   document.getElementById('categoryId').value = '';
   document.getElementById('categoryFormTitle').textContent = 'New category';
   document.getElementById('categorySubmit').textContent = 'Create category';
@@ -531,6 +581,7 @@ function resetCategoryForm(){
 document.getElementById('categoryForm').addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.currentTarget;
+  if(!validateAdminForm(form)) return;
   const id = document.getElementById('categoryId').value;
   const payload = Object.fromEntries(new FormData(form).entries());
   const button = document.getElementById('categorySubmit');
@@ -626,36 +677,39 @@ function renderMenu(){
     records.innerHTML = `<div class="empty">${menuItems.length ? 'No matching menu items.' : 'No menu items yet.'}</div>`;
     return;
   }
-  records.innerHTML = filtered.map(item => `
-    <div class="record">
-      <div class="record-main">
-        ${item.image_path ? `<img class="record-thumb" src="${escapeHtml(item.image_path)}" alt="">` : ''}
-        <div class="record-copy">
-          <strong>${escapeHtml(item.name_en)}</strong>
-          <small>${escapeHtml(item.categories?.label_en || 'Uncategorized')} · ${money(item.price)}</small>
-          <div class="record-meta">
-            <span class="record-badge${item.is_available ? '' : ' unavailable'}">${item.is_available ? 'Available' : 'Unavailable'}</span>
-            ${item.is_offer ? '<span class="record-badge">Featured offer</span>' : ''}
+  records.innerHTML = filtered.map(item => {
+    const imageUrl = typeof item.image_path === 'string' ? item.image_path.trim() : '';
+    return `
+      <div class="record">
+        <div class="record-main">
+          <img class="record-thumb" src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(item.name_en || 'Menu item')}">
+          <div class="record-copy">
+            <strong>${escapeHtml(item.name_en)}</strong>
+            <small>${escapeHtml(item.categories?.label_en || 'Uncategorized')} · ${money(item.price)}</small>
+            <div class="record-meta">
+              <span class="record-badge${item.is_available ? '' : ' unavailable'}">${item.is_available ? 'Available' : 'Unavailable'}</span>
+              ${item.is_offer ? '<span class="record-badge">Featured offer</span>' : ''}
+            </div>
           </div>
         </div>
-      </div>
-      <div class="record-actions">
-        <button class="action-btn" type="button" data-menu-action="edit" data-id="${item.id}">Edit</button>
-        <button class="action-btn danger" type="button" data-menu-action="delete" data-id="${item.id}">Delete</button>
-      </div>
-    </div>`).join('');
+        <div class="record-actions">
+          <button class="action-btn" type="button" data-menu-action="edit" data-id="${item.id}">Edit</button>
+          <button class="action-btn danger" type="button" data-menu-action="delete" data-id="${item.id}">Delete</button>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function updateImagePreview(url){
   const preview = document.getElementById('itemImagePreview');
-  preview.innerHTML = url
-    ? `<img src="${escapeHtml(url)}" alt="Menu item preview"><span>Image preview</span>`
-    : '<span>No image selected</span>';
+  const imageUrl = typeof url === 'string' ? url.trim() : '';
+  preview.innerHTML = `<img src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${imageUrl ? 'Menu item preview' : 'Fallback food image'}"><span>${imageUrl ? 'Image preview' : 'Fallback food image'}</span>`;
 }
 
 function resetItemForm(){
   const form = document.getElementById('itemForm');
   form.reset();
+  setActiveLanguage(form, 'en');
   document.getElementById('itemId').value = '';
   renderCategoryOptions();
   document.getElementById('itemFormTitle').textContent = 'New menu item';
@@ -670,6 +724,7 @@ function resetItemForm(){
 document.getElementById('itemForm').addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.currentTarget;
+  if(!validateAdminForm(form)) return;
   const id = document.getElementById('itemId').value;
   const payload = Object.fromEntries(new FormData(form).entries());
   payload.is_available = document.getElementById('itemAvailable').checked;
