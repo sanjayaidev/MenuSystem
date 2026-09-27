@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Red House Catering</title>
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('redhouse_theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
 <link rel="preload" as="image" href="frames/frame_0001.jpg" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
@@ -13,6 +22,14 @@
     --gold:#e3b23c; --red:#b8352b;
     --text:#f4efe6; --muted:#a99f8f;
   }
+  /* Light theme — brand gold/red stay constant, surfaces flip */
+  html[data-theme="light"]{
+    --bg:#faf6ef; --surface:#ffffff; --line:#e6ddcf;
+    --text:#241f1a; --muted:#756b5c;
+  }
+  html[data-theme="light"] .icon-btn{background:rgba(0,0,0,.06);}
+  html[data-theme="light"] .qty-stepper .step-minus{background:rgba(0,0,0,.08);}
+  html[data-theme="light"] .empty-cart .empty-icon{background:rgba(0,0,0,.05);}
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -20,6 +37,7 @@
     font-family:'Poppins',sans-serif;
     padding-top:env(safe-area-inset-top,0px);
     padding-bottom:env(safe-area-inset-bottom,0px);
+    transition:background .2s ease, color .2s ease;
   }
   html[lang="ar"] body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
   html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Poppins',sans-serif;}
@@ -45,6 +63,14 @@
     cursor:pointer; transition:background .15s ease, color .15s ease;
   }
   .lang-pill.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .theme-toggle{
+    width:34px; height:34px; flex-shrink:0; border-radius:50%; border:1px solid #2c2925;
+    background:#000; color:var(--gold); display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .theme-toggle svg{width:17px; height:17px;}
+  .theme-toggle .icon-moon{display:none;}
+  html[data-theme="light"] .theme-toggle .icon-sun{display:none;}
+  html[data-theme="light"] .theme-toggle .icon-moon{display:block;}
 
   /* ===== HERO: autoplay frame loop ===== */
   .hero{position:relative; height:calc(100svh - 56px); min-height:280px; overflow:hidden; background:#000;}
@@ -283,6 +309,10 @@
       <button class="lang-pill" data-lang="ur">اردو</button>
       <button class="lang-pill" data-lang="zh">中文</button>
     </div>
+    <button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle light/dark theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
   </header>
 
   <section class="hero" id="hero" aria-label="Red House Catering">
@@ -568,36 +598,13 @@ const STR = {
        descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
 };
 
-const CATS = [
-  {key:'beef', price:11.99, label:{en:'Beef Meal', ar:'وجبة لحم بقر', ur:'بیف میل', zh:'牛肉套餐'}},
-  {key:'chicken', price:10.99, label:{en:'Chicken Meal', ar:'وجبة دجاج', ur:'چکن میل', zh:'鸡肉套餐'}},
-  {key:'shrimp', price:12.99, label:{en:'Shrimp Meal', ar:'وجبة روبيان', ur:'جھینگا میل', zh:'虾仁套餐'}},
-  {key:'tofu', price:9.99, label:{en:'Tofu & Noodle', ar:'توفو ونودلز', ur:'توفو اور نوڈلز', zh:'豆腐面食'}},
-  {key:'soup', price:8.99, label:{en:'Soup & Rice', ar:'شوربة وأرز', ur:'سوپ اور چاول', zh:'汤与米饭'}},
-  {key:'salad', price:7.99, label:{en:'Salad & Appetizer', ar:'سلطة ومقبلات', ur:'سلاد اور شروعات', zh:'沙拉与开胃菜'}},
-];
-const catInfo = k => CATS.find(c=>c.key===k);
-
-const ITEMS = [
-  {id:1,cat:'beef',pop:9,offer:false,cal:780,rating:4.6,name:{en:'Black Pepper Beef',ar:'لحم بقر بالفلفل الأسود',ur:'بلیک پیپر بیف',zh:'黑椒牛肉'}},
-  {id:2,cat:'beef',pop:10,offer:true,cal:1020,rating:4.9,name:{en:'Mongolian Beef',ar:'لحم بقر منغولي',ur:'منگولین بیف',zh:'蒙古牛肉'}},
-  {id:3,cat:'beef',pop:6,offer:false,cal:850,rating:4.4,name:{en:'Stir Fried Beef With Chili',ar:'لحم بقر مقلي بالفلفل الحار',ur:'مرچ کے ساتھ بیف',zh:'辣椒炒牛肉'}},
-  {id:4,cat:'tofu',pop:4,offer:false,cal:520,rating:4.2,name:{en:'Mandarin Tofu',ar:'توفو ماندرين',ur:'مینڈرن توفو',zh:'陈皮豆腐'}},
-  {id:5,cat:'tofu',pop:5,offer:false,cal:610,rating:4.3,name:{en:'Tofu With Minced Beef',ar:'توفو مع لحم مفروم',ur:'قیمہ کے ساتھ توفو',zh:'肉末豆腐'}},
-  {id:6,cat:'tofu',pop:7,offer:false,cal:720,rating:4.5,name:{en:'Chicken Fried Noodle',ar:'نودلز دجاج مقلية',ur:'چکن فرائیڈ نوڈلز',zh:'鸡肉炒面'}},
-  {id:7,cat:'chicken',pop:10,offer:true,cal:890,rating:4.8,name:{en:'Kung Pao Chicken',ar:'دجاج كونغ باو',ur:'کنگ پاؤ چکن',zh:'宫保鸡丁'}},
-  {id:8,cat:'chicken',pop:8,offer:false,cal:760,rating:4.5,name:{en:'Pineapple Chicken',ar:'دجاج بالأناناس',ur:'انناس چکن',zh:'菠萝鸡'}},
-  {id:9,cat:'chicken',pop:9,offer:false,cal:810,rating:4.6,name:{en:'Sweet & Sour Chicken',ar:'دجاج بالحلو والحامض',ur:'میٹھا اور کھٹا چکن',zh:'糖醋鸡'}},
-  {id:10,cat:'soup',pop:5,offer:false,cal:340,rating:4.3,name:{en:'Wonton Soup',ar:'شوربة ونتون',ur:'وونٹن سوپ',zh:'馄饨汤'}},
-  {id:11,cat:'soup',pop:6,offer:false,cal:610,rating:4.1,name:{en:'Vegetable Fried Rice',ar:'أرز مقلي بالخضار',ur:'ویجیٹیبل فرائیڈ رائس',zh:'蔬菜炒饭'}},
-  {id:12,cat:'soup',pop:7,offer:false,cal:640,rating:4.2,name:{en:'Egg Fried Rice',ar:'أرز مقلي بالبيض',ur:'انڈا فرائیڈ رائس',zh:'蛋炒饭'}},
-  {id:13,cat:'shrimp',pop:7,offer:false,cal:680,rating:4.5,name:{en:'Shrimp With Garlic Sauce',ar:'روبيان بصلصة الثوم',ur:'لہسن ساس کے ساتھ جھینگا',zh:'蒜香虾'}},
-  {id:14,cat:'shrimp',pop:6,offer:false,cal:700,rating:4.4,name:{en:'Sweet & Sour Shrimp',ar:'روبيان بالحلو والحامض',ur:'میٹھا اور کھٹا جھینگا',zh:'糖醋虾'}},
-  {id:15,cat:'shrimp',pop:8,offer:true,cal:730,rating:4.7,name:{en:'New Style Shrimp Spicy',ar:'روبيان حار بالطريقة الجديدة',ur:'نیو اسٹائل اسپائسی جھینگا',zh:'新派麻辣虾'}},
-  {id:16,cat:'salad',pop:5,offer:false,cal:310,rating:4.3,name:{en:'Spring Roll',ar:'سبرينغ رول',ur:'اسپرنگ رول',zh:'春卷'}},
-  {id:17,cat:'salad',pop:6,offer:false,cal:420,rating:4.4,name:{en:'Thai Chicken Salad',ar:'سلطة دجاج تايلاندية',ur:'تھائی چکن سلاد',zh:'泰式鸡肉沙拉'}},
-  {id:18,cat:'salad',pop:3,offer:false,cal:180,rating:4.0,name:{en:'Green Salad',ar:'سلطة خضراء',ur:'گرین سلاد',zh:'绿色沙拉'}},
-];
+// CATS and ITEMS are no longer hardcoded — they're loaded from the
+// real backend (GET /api/categories and GET /api/menu, which read
+// from Supabase) by loadMenuData(), called from init() near the
+// bottom of this script, before the first render().
+let CATS = [];
+let ITEMS = [];
+const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,zh:k} };
 
 let lang = 'en';
 
@@ -687,7 +694,7 @@ function render(){
   if(sort==='name') items.sort((a,b)=>a.name[lang].localeCompare(b.name[lang]));
   else if(sort==='time') items.sort((a,b)=>b.id-a.id);
   else if(sort==='offer') items.sort((a,b)=>(b.offer-a.offer) || (b.pop-a.pop));
-  else if(sort==='price') items.sort((a,b)=>catInfo(a.cat).price - catInfo(b.cat).price);
+  else if(sort==='price') items.sort((a,b)=>a.price - b.price);
   else if(sort==='popular') items.sort((a,b)=>b.pop-a.pop);
 
   if(!items.length){
@@ -696,7 +703,6 @@ function render(){
   }
 
   listEl.innerHTML = items.map(i=>{
-    const c = catInfo(i.cat);
     const name = i.name[lang];
     return `<button class="row" data-id="${i.id}">
       <div class="thumb">
@@ -705,7 +711,7 @@ function render(){
       </div>
       <div class="info">
         <p class="name">${i.offer ? `<span class="offer-tag">${STR[lang].offer}</span>` : ''}${name}</p>
-        <p class="price">$${c.price.toFixed(2)}</p>
+        <p class="price">$${i.price.toFixed(2)}</p>
       </div>
     </button>`;
   }).join('');
@@ -766,13 +772,62 @@ const API_BASE = window.location.origin;
 const WHATSAPP_NUMBER = 'YOUR_WHATSAPP_NUMBER';               // <-- e.g. '9665XXXXXXXX', no + or leading 00
 const BRANCH_NAME = 'Red House Trading';
 
+/* ---------- load categories + menu items from the real backend ---------- */
+async function loadMenuData(){
+  try{
+    const [catsRes, itemsRes] = await Promise.all([
+      fetch(`${API_BASE}/api/categories`),
+      fetch(`${API_BASE}/api/menu`),
+    ]);
+    if(!catsRes.ok) throw new Error(`GET /api/categories failed (${catsRes.status})`);
+    if(!itemsRes.ok) throw new Error(`GET /api/menu failed (${itemsRes.status})`);
+
+    const cats = await catsRes.json();
+    const items = await itemsRes.json();
+
+    CATS = cats.map(c => ({
+      key: c.key,
+      sort_order: c.sort_order,
+      label: { en:c.label_en, ar:c.label_ar, ur:c.label_ur, zh:c.label_zh },
+    }));
+
+    ITEMS = items.map(i => ({
+      id: i.id,
+      cat: i.categories ? i.categories.key : null,
+      pop: i.popularity ?? 0,
+      offer: Boolean(i.is_offer),
+      cal: i.calories ?? null,
+      rating: i.rating != null ? Number(i.rating) : null,
+      price: Number(i.price),
+      name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
+      desc: { en:i.description_en || null },
+    }));
+  }catch(err){
+    console.error('Failed to load menu from server:', err);
+    CATS = [];
+    ITEMS = [];
+    listEl.innerHTML = `<div class="empty">Unable to load the menu right now. Please check your connection and try again.</div>`;
+  }
+}
+
+/* ---------- theme (light/dark) ---------- */
+const THEME_KEY = 'redhouse_theme';
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  try{ localStorage.setItem(THEME_KEY, theme); }catch(e){ /* storage unavailable, ignore */ }
+}
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  applyTheme(isLight ? 'dark' : 'light');
+});
+
 /* ---------- cart state ---------- */
 let cart = {};          // { itemId: qty }
 let orderType = 'pickup'; // 'pickup' | 'delivery'
 let lastOrder = null;   // {id, items, subtotal, deliveryFee, total} set after a successful order
 
 function itemById(id){ return ITEMS.find(i=>i.id===id); }
-function itemPrice(item){ return catInfo(item.cat).price; }
+function itemPrice(item){ return item.price; }
 function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
 function cartLines(){
   return Object.entries(cart).map(([id,qty])=>{
@@ -801,12 +856,18 @@ function openItemModal(id){
   };
   modalImg.src = dishImgPath(modalItem.cat, modalItem.name.en);
   document.getElementById('itemModalCat').textContent = c.label[lang];
-  document.getElementById('itemModalCalories').textContent = `${modalItem.cal} ${STR[lang].calLabel}`;
-  document.getElementById('itemModalRating').textContent = `${modalItem.rating.toFixed(1)} ★`;
+  document.getElementById('itemModalCalories').textContent = modalItem.cal != null ? `${modalItem.cal} ${STR[lang].calLabel}` : '';
+  document.getElementById('itemModalCalories').style.display = modalItem.cal != null ? 'inline-block' : 'none';
+  document.getElementById('itemModalRating').textContent = modalItem.rating != null ? `${modalItem.rating.toFixed(1)} ★` : '';
+  document.getElementById('itemModalRating').style.display = modalItem.rating != null ? 'inline-block' : 'none';
   document.getElementById('itemModalName').textContent = modalItem.name[lang];
   document.getElementById('itemModalEnName').textContent = lang==='en' ? '' : modalItem.name.en;
   document.getElementById('itemModalEnName').style.display = lang==='en' ? 'none' : 'block';
-  document.getElementById('itemModalDesc').textContent = STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
+  // Prefer the real ingredient description from the DB (English only, for
+  // now — no ar/ur/zh descriptions have been entered yet); otherwise fall
+  // back to the generic template so every language still shows something.
+  const realDesc = lang==='en' && modalItem.desc && modalItem.desc.en;
+  document.getElementById('itemModalDesc').textContent = realDesc || STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
   document.getElementById('itemModalIncludesTitle').textContent = STR[lang].includesTitle;
   document.getElementById('itemModalIncludesText').textContent = STR[lang].includesText;
   document.getElementById('itemModalQty').textContent = modalQty;
@@ -1146,7 +1207,10 @@ Payment: confirmed (simulated)`;
   window.open(url, '_blank');
 }
 
-setLang('en');
+(async function init(){
+  await loadMenuData();
+  setLang('en');
+})();
 
 /* =====================================================================
    HERO: paint frame 1 instantly, preload the rest, then autoplay in a
