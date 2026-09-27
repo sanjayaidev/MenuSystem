@@ -21,7 +21,10 @@
     justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--line);
   }
   header h1{font-size:16px; margin:0; color:var(--gold); font-weight:700;}
+  .header-tools{display:flex; align-items:center; gap:12px;}
   header .who{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:10px;}
+  #adminLanguageSelect{background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:12px;}
+  .visually-hidden{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
   header button{
     background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;
     padding:8px 14px; font-size:12px; cursor:pointer;
@@ -156,10 +159,16 @@
 <body>
 
 <header>
-  <h1>Red House Catering — Admin</h1>
-  <div class="who" id="whoRow" style="display:none;">
-    <span id="whoEmail"></span>
-    <button id="signOutBtn">Sign out</button>
+  <h1>Red House Catering — <span data-ui="adminTitle">Admin</span></h1>
+  <div class="header-tools">
+    <label class="visually-hidden" for="adminLanguageSelect" data-ui="interfaceLanguage">Interface language</label>
+    <select id="adminLanguageSelect" aria-label="Interface language" data-ui-aria-label="interfaceLanguage">
+      <option value="en">English</option><option value="ar">العربية</option><option value="ur">اردو</option><option value="zh">中文</option>
+    </select>
+    <div class="who" id="whoRow" style="display:none;">
+      <span id="whoEmail"></span>
+      <button id="signOutBtn" data-ui="signOut">Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -167,42 +176,42 @@
 
   <!-- ===== LOGIN ===== -->
   <div id="loginView">
-    <h2>Staff sign in</h2>
-    <p class="hint">Sign in with a staff account that has admin access.</p>
-    <label class="field-label">Email</label>
+    <h2 data-ui="staffSignIn">Staff sign in</h2>
+    <p class="hint" data-ui="adminAccessHint">Sign in with a staff account that has admin access.</p>
+    <label class="field-label" for="loginEmail" data-ui="email">Email</label>
     <input class="field-input" id="loginEmail" type="email" autocomplete="email">
-    <label class="field-label">Password</label>
+    <label class="field-label" for="loginPassword" data-ui="password">Password</label>
     <input class="field-input" id="loginPassword" type="password" autocomplete="current-password">
-    <button class="primary-btn" id="loginBtn">Sign in</button>
+    <button class="primary-btn" id="loginBtn" data-ui="signIn">Sign in</button>
     <p class="status-msg" id="loginStatus"></p>
   </div>
 
   <!-- ===== DASHBOARD ===== -->
   <div id="dashboardView">
-    <nav class="admin-nav" aria-label="Admin sections">
-      <button class="admin-tab active" data-panel="ordersPanel" type="button">Orders</button>
-      <button class="admin-tab" data-panel="categoriesPanel" type="button">Categories</button>
-      <button class="admin-tab" data-panel="menuPanel" type="button">Menu items</button>
+    <nav class="admin-nav" aria-label="Admin sections" data-ui-aria-label="adminSections">
+      <button class="admin-tab active" data-panel="ordersPanel" type="button" data-ui="orders">Orders</button>
+      <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
+      <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
     </nav>
     <section class="admin-panel" id="ordersPanel">
     <div class="filters" id="statusFilters"></div>
     <div class="toolbar">
       <span class="count" id="orderCount"></span>
-      <button id="refreshBtn" style="background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer;">Refresh</button>
+      <button id="refreshBtn" style="background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer;" data-ui="refresh">Refresh</button>
     </div>
     <div id="ordersList"></div>
     </section>
 
     <section class="admin-panel" id="categoriesPanel" hidden>
-      <div class="panel-title"><h2>Categories</h2><span class="count" id="categoryCount"></span></div>
+      <div class="panel-title"><h2 data-ui="categories">Categories</h2><span class="count" id="categoryCount"></span></div>
       <form class="manager-form" id="categoryForm" novalidate>
-        <h3 id="categoryFormTitle">New category</h3>
+        <h3 id="categoryFormTitle" data-ui="newCategory">New category</h3>
         <input type="hidden" name="id" id="categoryId">
         <div class="form-grid compact">
-          <label>Category key<input name="key" id="categoryKey" required maxlength="48" pattern="[a-z0-9]+([_-][a-z0-9]+)*" placeholder="e.g. side-dishes"></label>
-          <label>Sort order<input name="sort_order" id="categorySort" type="number" min="0" step="1" value="0" required></label>
+          <label><span data-ui="categoryKey">Category key</span><input name="key" id="categoryKey" required maxlength="48" pattern="[a-z0-9]+([_-][a-z0-9]+)*" placeholder="e.g. side-dishes" data-ui-placeholder="categoryKeyPlaceholder"></label>
+          <label><span data-ui="sortOrder">Sort order</span><input name="sort_order" id="categorySort" type="number" min="0" step="1" value="0" required></label>
         </div>
-        <div class="language-switcher" role="group" aria-label="Category translation language">
+        <div class="language-switcher" role="group" aria-label="Category translation language" data-ui-aria-label="categoryTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
           <button type="button" data-language="ur" aria-pressed="false">اردو</button>
@@ -214,27 +223,27 @@
           <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>زمرے کا نام<input name="label_ur" required></label></fieldset>
           <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>分类名称<input name="label_zh" required></label></fieldset>
         </div>
-        <div class="form-actions"><button class="action-btn primary" id="categorySubmit" type="submit">Create category</button><button class="action-btn" id="categoryCancel" type="button" hidden>Cancel edit</button><span class="form-note" id="categoryNote" role="status"></span></div>
+        <div class="form-actions"><button class="action-btn primary" id="categorySubmit" type="submit" data-ui="createCategory">Create category</button><button class="action-btn" id="categoryCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="categoryNote" role="status"></span></div>
       </form>
       <div class="records" id="categoryRecords"></div>
     </section>
 
     <section class="admin-panel" id="menuPanel" hidden>
-      <div class="panel-title"><h2>Menu items</h2><span class="count" id="menuCount"></span></div>
+      <div class="panel-title"><h2 data-ui="menuItems">Menu items</h2><span class="count" id="menuCount"></span></div>
       <form class="manager-form" id="itemForm" novalidate>
         <div class="item-form-heading">
-          <h3 id="itemFormTitle">New menu item</h3>
-          <div class="image-preview" id="itemImagePreview"><img src="images/food.png" alt="Fallback food image"><span>Fallback food image</span></div>
+          <h3 id="itemFormTitle" data-ui="newMenuItem">New menu item</h3>
+          <div class="image-preview" id="itemImagePreview"><img src="images/food.png" alt="Fallback food image"><span data-ui="fallbackFoodImage">Fallback food image</span></div>
         </div>
         <input type="hidden" name="id" id="itemId">
         <div class="form-grid">
-          <label>Category<select name="category_id" id="itemCategory" required></select></label>
-          <label>Price<input name="price" id="itemPrice" type="number" min="0" step="0.01" required></label>
-          <label>Calories<input name="calories" id="itemCalories" type="number" min="0" step="1"></label>
-          <label>Rating<input name="rating" id="itemRating" type="number" min="0" max="5" step="0.1"></label>
-          <label>Popularity<input name="popularity" id="itemPopularity" type="number" min="0" step="1" value="0"></label>
+          <label><span data-ui="category">Category</span><select name="category_id" id="itemCategory" required></select></label>
+          <label><span data-ui="price">Price</span><input name="price" id="itemPrice" type="number" min="0" step="0.01" required></label>
+          <label><span data-ui="calories">Calories</span><input name="calories" id="itemCalories" type="number" min="0" step="1"></label>
+          <label><span data-ui="rating">Rating</span><input name="rating" id="itemRating" type="number" min="0" max="5" step="0.1"></label>
+          <label><span data-ui="popularity">Popularity</span><input name="popularity" id="itemPopularity" type="number" min="0" step="1" value="0"></label>
         </div>
-        <div class="language-switcher" role="group" aria-label="Menu item translation language">
+        <div class="language-switcher" role="group" aria-label="Menu item translation language" data-ui-aria-label="itemTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
           <button type="button" data-language="ur" aria-pressed="false">اردو</button>
@@ -247,16 +256,16 @@
           <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>菜品名称<input name="name_zh" required></label><label>描述<textarea name="description_zh"></textarea></label></fieldset>
         </div>
         <div class="check-fields">
-          <label><input type="checkbox" name="is_available" id="itemAvailable" checked> Available to order</label>
-          <label><input type="checkbox" name="is_offer" id="itemOffer"> Featured offer</label>
+          <label><input type="checkbox" name="is_available" id="itemAvailable" checked> <span data-ui="availableToOrder">Available to order</span></label>
+          <label><input type="checkbox" name="is_offer" id="itemOffer"> <span data-ui="featuredOffer">Featured offer</span></label>
         </div>
         <div class="image-tools">
-          <label>Image URL<input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label>
-          <div><label>Upload image<input id="itemImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><button class="action-btn" id="imageUploadBtn" type="button" disabled>Upload to Imgbb</button></div>
+          <label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label>
+          <div><label><span data-ui="uploadImage">Upload image</span><input id="itemImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><button class="action-btn" id="imageUploadBtn" type="button" disabled data-ui="uploadToImgbb">Upload to Imgbb</button></div>
         </div>
-        <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit">Create menu item</button><button class="action-btn" id="itemCancel" type="button" hidden>Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
+        <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit" data-ui="createMenuItem">Create menu item</button><button class="action-btn" id="itemCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
       </form>
-      <div class="toolbar"><span class="count" id="menuResultCount"></span><input class="search-input" id="menuSearch" type="search" placeholder="Search menu items"></div>
+      <div class="toolbar"><span class="count" id="menuResultCount"></span><input class="search-input" id="menuSearch" type="search" placeholder="Search menu items" data-ui-placeholder="searchMenuItems"></div>
       <div class="records" id="menuRecords"></div>
     </section>
   </div>
@@ -266,12 +275,201 @@
 <script>
 const API_BASE = window.location.origin;
 const TOKEN_KEY = 'redhouse_admin_token';
+const ADMIN_LANGUAGE_KEY = 'redhouse_admin_language';
 const STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
 const AUTO_REFRESH_MS = 25000;
+const ADMIN_UI_STRINGS = {
+  en: {
+    adminTitle:'Admin', interfaceLanguage:'Interface language', signOut:'Sign out',
+    staffSignIn:'Staff sign in', adminAccessHint:'Sign in with a staff account that has admin access.',
+    email:'Email', password:'Password', signIn:'Sign in', adminSections:'Admin sections',
+    orders:'Orders', categories:'Categories', menuItems:'Menu items', refresh:'Refresh',
+    newCategory:'New category', editCategory:'Edit category', categoryKey:'Category key',
+    categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'Sort order', categoryTranslationLanguage:'Category translation language',
+    createCategory:'Create category', saveCategory:'Save category', cancelEdit:'Cancel edit',
+    newMenuItem:'New menu item', editMenuItem:'Edit menu item', fallbackFoodImage:'Fallback food image',
+    category:'Category', chooseCategory:'Choose a category', price:'Price', calories:'Calories', rating:'Rating', popularity:'Popularity',
+    itemTranslationLanguage:'Menu item translation language', availableToOrder:'Available to order', featuredOffer:'Featured offer',
+    imageUrl:'Image URL', uploadImage:'Upload image', uploadToImgbb:'Upload to Imgbb', createMenuItem:'Create menu item',
+    saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', edit:'Edit', delete:'Delete',
+    all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', completed:'Completed', cancelled:'Cancelled',
+    orderCount:'{count} orders', orderCountOne:'1 order', paid:'Paid', unpaid:'Unpaid',
+    contact:'Contact', items:'Items', deliveryAddressLine:'Delivery — {address}', pickup:'Pickup', subtotal:'Subtotal', total:'Total', payment:'Payment',
+    noOrders:'No orders here yet.', failedLoadOrders:'Failed to load orders.', saving:'Saving…', saved:'Saved.', failedSave:'Failed to save.',
+    loadingCategories:'Loading categories…', failedLoadCategories:'Failed to load categories.', noCategories:'No categories yet.',
+    categoryCount:'{count} categories', categoryCountOne:'1 category',
+    loadingMenuItems:'Loading menu items…', failedLoadMenuItems:'Failed to load menu items.', noMenuItems:'No menu items yet.',
+    noMatchingMenuItems:'No matching menu items.', menuItemCount:'{count} items', menuItemCountOne:'1 item', shownCount:'{count} shown',
+    uncategorized:'Uncategorized', available:'Available', unavailable:'Unavailable',
+    enterCredentials:'Enter your email and password.', signingIn:'Signing in…', noAdminAccess:"This account doesn't have admin access.",
+    couldNotVerifyAccess:'Could not verify admin access.', signInFailed:'Sign-in failed.', sessionExpired:'Your session expired. Please sign in again.',
+    creatingCategory:'Creating category…', savingChanges:'Saving changes…', categoryUpdated:'Category updated.', categoryCreated:'Category created.',
+    couldNotSaveCategory:'Could not save category.', deleteCategoryConfirm:'Delete category “{name}”?', couldNotDeleteCategory:'Could not delete category.',
+    creatingMenuItem:'Creating menu item…', menuItemUpdated:'Menu item updated.', menuItemCreated:'Menu item created.',
+    couldNotSaveMenuItem:'Could not save menu item.', deleteMenuItemConfirm:'Delete menu item “{name}”?', couldNotDeleteMenuItem:'Could not delete menu item.',
+    imageTooLarge:'Image must be smaller than 5 MB.', uploadingImage:'Uploading image…', imageUploaded:'Image uploaded.', imageUploadFailed:'Image upload failed.',
+    imagePreview:'Image preview', requestFailed:'Request failed (HTTP {status}).', fallbackFoodImageAlt:'Fallback food image', menuItemAlt:'Menu item',
+    categoryKeyInUse:'That category key is already in use.', recordInUse:'This record is still in use.', categoryHasItems:'Move or delete this category’s menu items first.',
+    imageServiceMissing:'Image upload is not configured on the server.', unsupportedImageType:'Choose a JPEG, PNG, WebP, or GIF image.',
+  },
+  ar: {
+    adminTitle:'الإدارة', interfaceLanguage:'لغة الواجهة', signOut:'تسجيل الخروج',
+    staffSignIn:'دخول الموظفين', adminAccessHint:'سجّل الدخول بحساب موظف لديه صلاحية الإدارة.',
+    email:'البريد الإلكتروني', password:'كلمة المرور', signIn:'دخول', adminSections:'أقسام الإدارة',
+    orders:'الطلبات', categories:'الفئات', menuItems:'أصناف القائمة', refresh:'تحديث',
+    newCategory:'فئة جديدة', editCategory:'تعديل الفئة', categoryKey:'مفتاح الفئة',
+    categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'ترتيب العرض', categoryTranslationLanguage:'لغة ترجمة الفئة',
+    createCategory:'إنشاء فئة', saveCategory:'حفظ الفئة', cancelEdit:'إلغاء التعديل',
+    newMenuItem:'صنف جديد', editMenuItem:'تعديل الصنف', fallbackFoodImage:'صورة الطعام الافتراضية',
+    category:'الفئة', chooseCategory:'اختر فئة', price:'السعر', calories:'السعرات الحرارية', rating:'التقييم', popularity:'الشعبية',
+    itemTranslationLanguage:'لغة ترجمة الصنف', availableToOrder:'متاح للطلب', featuredOffer:'عرض مميز',
+    imageUrl:'رابط الصورة', uploadImage:'رفع صورة', uploadToImgbb:'رفع إلى Imgbb', createMenuItem:'إنشاء صنف',
+    saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', edit:'تعديل', delete:'حذف',
+    all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', completed:'مكتمل', cancelled:'ملغي',
+    orderCount:'عدد الطلبات: {count}', orderCountOne:'طلب واحد', paid:'مدفوع', unpaid:'غير مدفوع',
+    contact:'التواصل', items:'الأصناف', deliveryAddressLine:'توصيل — {address}', pickup:'استلام', subtotal:'المجموع الفرعي', total:'الإجمالي', payment:'الدفع',
+    noOrders:'لا توجد طلبات حالياً.', failedLoadOrders:'تعذر تحميل الطلبات.', saving:'جارٍ الحفظ…', saved:'تم الحفظ.', failedSave:'تعذر الحفظ.',
+    loadingCategories:'جارٍ تحميل الفئات…', failedLoadCategories:'تعذر تحميل الفئات.', noCategories:'لا توجد فئات بعد.',
+    categoryCount:'عدد الفئات: {count}', categoryCountOne:'فئة واحدة',
+    loadingMenuItems:'جارٍ تحميل الأصناف…', failedLoadMenuItems:'تعذر تحميل الأصناف.', noMenuItems:'لا توجد أصناف بعد.',
+    noMatchingMenuItems:'لا توجد أصناف مطابقة.', menuItemCount:'عدد الأصناف: {count}', menuItemCountOne:'صنف واحد', shownCount:'المعروض: {count}',
+    uncategorized:'بلا فئة', available:'متاح', unavailable:'غير متاح',
+    enterCredentials:'أدخل البريد الإلكتروني وكلمة المرور.', signingIn:'جارٍ تسجيل الدخول…', noAdminAccess:'هذا الحساب لا يملك صلاحية الإدارة.',
+    couldNotVerifyAccess:'تعذر التحقق من صلاحية الإدارة.', signInFailed:'تعذر تسجيل الدخول.', sessionExpired:'انتهت الجلسة. سجّل الدخول مجدداً.',
+    creatingCategory:'جارٍ إنشاء الفئة…', savingChanges:'جارٍ حفظ التعديلات…', categoryUpdated:'تم تحديث الفئة.', categoryCreated:'تم إنشاء الفئة.',
+    couldNotSaveCategory:'تعذر حفظ الفئة.', deleteCategoryConfirm:'حذف الفئة «{name}»؟', couldNotDeleteCategory:'تعذر حذف الفئة.',
+    creatingMenuItem:'جارٍ إنشاء الصنف…', menuItemUpdated:'تم تحديث الصنف.', menuItemCreated:'تم إنشاء الصنف.',
+    couldNotSaveMenuItem:'تعذر حفظ الصنف.', deleteMenuItemConfirm:'حذف الصنف «{name}»؟', couldNotDeleteMenuItem:'تعذر حذف الصنف.',
+    imageTooLarge:'يجب أن يكون حجم الصورة أقل من 5 ميغابايت.', uploadingImage:'جارٍ رفع الصورة…', imageUploaded:'تم رفع الصورة.', imageUploadFailed:'تعذر رفع الصورة.',
+    imagePreview:'معاينة الصورة', requestFailed:'فشل الطلب (HTTP {status}).', fallbackFoodImageAlt:'صورة الطعام الافتراضية', menuItemAlt:'صنف القائمة',
+    categoryKeyInUse:'مفتاح الفئة مستخدم بالفعل.', recordInUse:'لا يزال هذا السجل مستخدماً.', categoryHasItems:'انقل أصناف هذه الفئة أو احذفها أولاً.',
+    imageServiceMissing:'رفع الصور غير مهيأ على الخادم.', unsupportedImageType:'اختر صورة JPEG أو PNG أو WebP أو GIF.',
+  },
+  ur: {
+    adminTitle:'ایڈمن', interfaceLanguage:'انٹرفیس کی زبان', signOut:'سائن آؤٹ',
+    staffSignIn:'اسٹاف سائن اِن', adminAccessHint:'ایڈمن رسائی والے اسٹاف اکاؤنٹ سے سائن اِن کریں۔',
+    email:'ای میل', password:'پاس ورڈ', signIn:'سائن اِن', adminSections:'ایڈمن کے حصے',
+    orders:'آرڈرز', categories:'زمرے', menuItems:'مینو آئٹمز', refresh:'ریفریش',
+    newCategory:'نیا زمرہ', editCategory:'زمرہ تبدیل کریں', categoryKey:'زمرے کی کلید',
+    categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'ترتیب', categoryTranslationLanguage:'زمرے کی ترجمہ زبان',
+    createCategory:'زمرہ بنائیں', saveCategory:'زمرہ محفوظ کریں', cancelEdit:'ترمیم منسوخ کریں',
+    newMenuItem:'نیا مینو آئٹم', editMenuItem:'مینو آئٹم تبدیل کریں', fallbackFoodImage:'متبادل کھانے کی تصویر',
+    category:'زمرہ', chooseCategory:'زمرہ منتخب کریں', price:'قیمت', calories:'کیلوریز', rating:'ریٹنگ', popularity:'مقبولیت',
+    itemTranslationLanguage:'مینو آئٹم کی ترجمہ زبان', availableToOrder:'آرڈر کے لیے دستیاب', featuredOffer:'نمایاں آفر',
+    imageUrl:'تصویر کا URL', uploadImage:'تصویر اپ لوڈ کریں', uploadToImgbb:'Imgbb پر اپ لوڈ کریں', createMenuItem:'مینو آئٹم بنائیں',
+    saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', edit:'ترمیم', delete:'حذف',
+    all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', completed:'مکمل', cancelled:'منسوخ',
+    orderCount:'آرڈرز: {count}', orderCountOne:'ایک آرڈر', paid:'ادا شدہ', unpaid:'غیر ادا شدہ',
+    contact:'رابطہ', items:'آئٹمز', deliveryAddressLine:'ڈیلیوری — {address}', pickup:'پک اَپ', subtotal:'ذیلی مجموعہ', total:'کل', payment:'ادائیگی',
+    noOrders:'ابھی کوئی آرڈر نہیں۔', failedLoadOrders:'آرڈرز لوڈ نہیں ہو سکے۔', saving:'محفوظ ہو رہا ہے…', saved:'محفوظ ہو گیا۔', failedSave:'محفوظ نہیں ہو سکا۔',
+    loadingCategories:'زمرے لوڈ ہو رہے ہیں…', failedLoadCategories:'زمرے لوڈ نہیں ہو سکے۔', noCategories:'ابھی کوئی زمرہ نہیں۔',
+    categoryCount:'زمرے: {count}', categoryCountOne:'ایک زمرہ',
+    loadingMenuItems:'مینو آئٹمز لوڈ ہو رہے ہیں…', failedLoadMenuItems:'مینو آئٹمز لوڈ نہیں ہو سکے۔', noMenuItems:'ابھی کوئی مینو آئٹم نہیں۔',
+    noMatchingMenuItems:'کوئی مماثل مینو آئٹم نہیں۔', menuItemCount:'آئٹمز: {count}', menuItemCountOne:'ایک آئٹم', shownCount:'دکھائے گئے: {count}',
+    uncategorized:'بغیر زمرے کے', available:'دستیاب', unavailable:'دستیاب نہیں',
+    enterCredentials:'ای میل اور پاس ورڈ درج کریں۔', signingIn:'سائن اِن ہو رہا ہے…', noAdminAccess:'اس اکاؤنٹ کو ایڈمن رسائی نہیں ہے۔',
+    couldNotVerifyAccess:'ایڈمن رسائی کی تصدیق نہیں ہو سکی۔', signInFailed:'سائن اِن ناکام ہوا۔', sessionExpired:'سیشن ختم ہو گیا۔ دوبارہ سائن اِن کریں۔',
+    creatingCategory:'زمرہ بنایا جا رہا ہے…', savingChanges:'تبدیلیاں محفوظ ہو رہی ہیں…', categoryUpdated:'زمرہ اپ ڈیٹ ہو گیا۔', categoryCreated:'زمرہ بن گیا۔',
+    couldNotSaveCategory:'زمرہ محفوظ نہیں ہو سکا۔', deleteCategoryConfirm:'“{name}” زمرہ حذف کریں؟', couldNotDeleteCategory:'زمرہ حذف نہیں ہو سکا۔',
+    creatingMenuItem:'مینو آئٹم بنایا جا رہا ہے…', menuItemUpdated:'مینو آئٹم اپ ڈیٹ ہو گیا۔', menuItemCreated:'مینو آئٹم بن گیا۔',
+    couldNotSaveMenuItem:'مینو آئٹم محفوظ نہیں ہو سکا۔', deleteMenuItemConfirm:'“{name}” مینو آئٹم حذف کریں؟', couldNotDeleteMenuItem:'مینو آئٹم حذف نہیں ہو سکا۔',
+    imageTooLarge:'تصویر 5 MB سے چھوٹی ہونی چاہیے۔', uploadingImage:'تصویر اپ لوڈ ہو رہی ہے…', imageUploaded:'تصویر اپ لوڈ ہو گئی۔', imageUploadFailed:'تصویر اپ لوڈ نہیں ہو سکی۔',
+    imagePreview:'تصویر کا پیش منظر', requestFailed:'درخواست ناکام ہوئی (HTTP {status})۔', fallbackFoodImageAlt:'متبادل کھانے کی تصویر', menuItemAlt:'مینو آئٹم',
+    categoryKeyInUse:'یہ زمرے کی کلید پہلے سے استعمال ہو رہی ہے۔', recordInUse:'یہ ریکارڈ ابھی استعمال میں ہے۔', categoryHasItems:'پہلے اس زمرے کے آئٹمز منتقل یا حذف کریں۔',
+    imageServiceMissing:'سرور پر تصویر اپ لوڈ کی سہولت ترتیب نہیں دی گئی۔', unsupportedImageType:'JPEG، PNG، WebP یا GIF تصویر منتخب کریں۔',
+  },
+  zh: {
+    adminTitle:'管理后台', interfaceLanguage:'界面语言', signOut:'退出登录',
+    staffSignIn:'员工登录', adminAccessHint:'请使用具有管理员权限的员工账户登录。',
+    email:'电子邮箱', password:'密码', signIn:'登录', adminSections:'管理栏目',
+    orders:'订单', categories:'分类', menuItems:'菜单商品', refresh:'刷新',
+    newCategory:'新建分类', editCategory:'编辑分类', categoryKey:'分类键',
+    categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'排序', categoryTranslationLanguage:'分类翻译语言',
+    createCategory:'创建分类', saveCategory:'保存分类', cancelEdit:'取消编辑',
+    newMenuItem:'新建菜单商品', editMenuItem:'编辑菜单商品', fallbackFoodImage:'默认食物图片',
+    category:'分类', chooseCategory:'选择分类', price:'价格', calories:'卡路里', rating:'评分', popularity:'人气',
+    itemTranslationLanguage:'商品翻译语言', availableToOrder:'可供下单', featuredOffer:'精选优惠',
+    imageUrl:'图片网址', uploadImage:'上传图片', uploadToImgbb:'上传到 Imgbb', createMenuItem:'创建商品',
+    saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', edit:'编辑', delete:'删除',
+    all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', completed:'已完成', cancelled:'已取消',
+    orderCount:'共 {count} 个订单', orderCountOne:'1 个订单', paid:'已付款', unpaid:'未付款',
+    contact:'联系方式', items:'商品', deliveryAddressLine:'配送 — {address}', pickup:'自取', subtotal:'小计', total:'总计', payment:'付款',
+    noOrders:'暂无订单。', failedLoadOrders:'无法加载订单。', saving:'正在保存…', saved:'已保存。', failedSave:'保存失败。',
+    loadingCategories:'正在加载分类…', failedLoadCategories:'无法加载分类。', noCategories:'暂无分类。',
+    categoryCount:'共 {count} 个分类', categoryCountOne:'1 个分类',
+    loadingMenuItems:'正在加载菜单商品…', failedLoadMenuItems:'无法加载菜单商品。', noMenuItems:'暂无菜单商品。',
+    noMatchingMenuItems:'没有匹配的菜单商品。', menuItemCount:'共 {count} 个商品', menuItemCountOne:'1 个商品', shownCount:'显示 {count} 项',
+    uncategorized:'未分类', available:'可下单', unavailable:'不可下单',
+    enterCredentials:'请输入电子邮箱和密码。', signingIn:'正在登录…', noAdminAccess:'此账户没有管理员权限。',
+    couldNotVerifyAccess:'无法验证管理员权限。', signInFailed:'登录失败。', sessionExpired:'登录已过期，请重新登录。',
+    creatingCategory:'正在创建分类…', savingChanges:'正在保存更改…', categoryUpdated:'分类已更新。', categoryCreated:'分类已创建。',
+    couldNotSaveCategory:'无法保存分类。', deleteCategoryConfirm:'确定删除分类“{name}”吗？', couldNotDeleteCategory:'无法删除分类。',
+    creatingMenuItem:'正在创建菜单商品…', menuItemUpdated:'菜单商品已更新。', menuItemCreated:'菜单商品已创建。',
+    couldNotSaveMenuItem:'无法保存菜单商品。', deleteMenuItemConfirm:'确定删除菜单商品“{name}”吗？', couldNotDeleteMenuItem:'无法删除菜单商品。',
+    imageTooLarge:'图片必须小于 5 MB。', uploadingImage:'正在上传图片…', imageUploaded:'图片已上传。', imageUploadFailed:'图片上传失败。',
+    imagePreview:'图片预览', requestFailed:'请求失败（HTTP {status}）。', fallbackFoodImageAlt:'默认食物图片', menuItemAlt:'菜单商品',
+    categoryKeyInUse:'该分类键已被使用。', recordInUse:'该记录仍在使用中。', categoryHasItems:'请先移动或删除此分类下的商品。',
+    imageServiceMissing:'服务器尚未配置图片上传。', unsupportedImageType:'请选择 JPEG、PNG、WebP 或 GIF 图片。',
+  },
+};
 
 let token = localStorage.getItem(TOKEN_KEY) || '';
+let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
 let currentFilter = 'all';
 let autoRefreshTimer = null;
+let currentOrders = [];
+let ordersLoaded = false;
+let loginStatusKey = '';
+const ADMIN_DATE_LOCALES = { en:'en-US', ar:'ar-SA', ur:'ur-PK', zh:'zh-CN' };
+
+function adminText(key, values = {}){
+  const strings = ADMIN_UI_STRINGS[adminUiLanguage] || ADMIN_UI_STRINGS.en;
+  const locale = ADMIN_DATE_LOCALES[adminUiLanguage] || ADMIN_DATE_LOCALES.en;
+  return (strings[key] || ADMIN_UI_STRINGS.en[key] || key).replace(/\{(\w+)\}/g, (_, name) => {
+    const value = values[name];
+    return typeof value === 'number' ? new Intl.NumberFormat(locale).format(value) : value ?? '';
+  });
+}
+
+function applyAdminUiLanguage(language){
+  adminUiLanguage = ADMIN_UI_STRINGS[language] ? language : 'en';
+  localStorage.setItem(ADMIN_LANGUAGE_KEY, adminUiLanguage);
+  document.documentElement.lang = adminUiLanguage;
+  document.documentElement.dir = ['ar', 'ur'].includes(adminUiLanguage) ? 'rtl' : 'ltr';
+  document.getElementById('adminLanguageSelect').value = adminUiLanguage;
+  document.title = `Red House Catering — ${adminText('adminTitle')}`;
+  if(loginStatusKey) document.getElementById('loginStatus').textContent = adminText(loginStatusKey);
+
+  document.querySelectorAll('[data-ui]').forEach(element => {
+    element.textContent = adminText(element.dataset.ui);
+  });
+  document.querySelectorAll('[data-ui-placeholder]').forEach(element => {
+    element.placeholder = adminText(element.dataset.uiPlaceholder);
+  });
+  document.querySelectorAll('[data-ui-aria-label]').forEach(element => {
+    element.setAttribute('aria-label', adminText(element.dataset.uiAriaLabel));
+  });
+
+  const categoryEditing = Boolean(document.getElementById('categoryId').value);
+  document.getElementById('categoryFormTitle').textContent = adminText(categoryEditing ? 'editCategory' : 'newCategory');
+  document.getElementById('categorySubmit').textContent = adminText(categoryEditing ? 'saveCategory' : 'createCategory');
+  const itemEditing = Boolean(document.getElementById('itemId').value);
+  document.getElementById('itemFormTitle').textContent = adminText(itemEditing ? 'editMenuItem' : 'newMenuItem');
+  document.getElementById('itemSubmit').textContent = adminText(itemEditing ? 'saveMenuItem' : 'createMenuItem');
+  updateImagePreview(document.getElementById('itemImageUrl').value);
+
+  renderFilters();
+  if(ordersLoaded) renderOrders(currentOrders);
+  if(!document.getElementById('categoriesPanel').hidden) renderCategories();
+  if(!document.getElementById('menuPanel').hidden){
+    renderCategoryOptions(document.getElementById('itemCategory').value);
+    renderMenu();
+  }
+}
+
+document.getElementById('adminLanguageSelect').addEventListener('change', event => {
+  applyAdminUiLanguage(event.currentTarget.value);
+});
 
 function authHeaders(){ return token ? { Authorization: `Bearer ${token}` } : {}; }
 function money(n){ return `$${Number(n).toFixed(2)}`; }
@@ -286,7 +484,8 @@ async function readApiJson(response){
 }
 
 /* ---------- view switching ---------- */
-function showLogin(message = '', isError = false){
+function showLogin(message = '', isError = false, messageKey = ''){
+  loginStatusKey = messageKey;
   document.getElementById('loginView').style.display = 'block';
   document.getElementById('dashboardView').style.display = 'none';
   document.getElementById('whoRow').style.display = 'none';
@@ -296,6 +495,7 @@ function showLogin(message = '', isError = false){
   if(autoRefreshTimer){ clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
 }
 function showDashboard(email){
+  loginStatusKey = '';
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('dashboardView').style.display = 'block';
   document.getElementById('whoRow').style.display = 'flex';
@@ -310,11 +510,11 @@ function showDashboard(email){
 document.getElementById('loginBtn').addEventListener('click', async () => {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  if(!email || !password){ showLogin('Enter your email and password.', true); return; }
+  if(!email || !password){ showLogin(adminText('enterCredentials'), true, 'enterCredentials'); return; }
 
   const btn = document.getElementById('loginBtn');
   btn.disabled = true;
-  showLogin('Signing in…');
+  showLogin(adminText('signingIn'), false, 'signingIn');
 
   try{
     const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -333,14 +533,14 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     if(check.status === 403){
       token = '';
       localStorage.removeItem(TOKEN_KEY);
-      showLogin("This account doesn't have admin access.", true);
+      showLogin(adminText('noAdminAccess'), true, 'noAdminAccess');
       return;
     }
-    if(!check.ok) throw new Error('Could not verify admin access.');
+    if(!check.ok){ showLogin(adminText('couldNotVerifyAccess'), true, 'couldNotVerifyAccess'); return; }
 
     showDashboard(email);
   }catch(err){
-    showLogin(err.message || 'Sign-in failed.', true);
+    showLogin(adminText('signInFailed'), true, 'signInFailed');
   }finally{
     btn.disabled = false;
   }
@@ -357,7 +557,7 @@ function renderFilters(){
   const wrap = document.getElementById('statusFilters');
   const options = ['all', ...STATUSES];
   wrap.innerHTML = options.map(s =>
-    `<button data-status="${s}" class="${s===currentFilter?'active':''}">${s==='all' ? 'All' : s[0].toUpperCase()+s.slice(1)}</button>`
+    `<button data-status="${s}" class="${s===currentFilter?'active':''}">${adminText(s)}</button>`
   ).join('');
   wrap.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -378,53 +578,57 @@ async function loadOrders(){
     if(res.status === 401 || res.status === 403){
       token = '';
       localStorage.removeItem(TOKEN_KEY);
-      showLogin('Your session expired. Please sign in again.', true);
+      showLogin(adminText('sessionExpired'), true, 'sessionExpired');
       return;
     }
     if(!res.ok) throw new Error('Failed to load orders.');
     const { orders } = await res.json();
     renderOrders(orders);
   }catch(err){
-    listEl.innerHTML = `<div class="empty">${err.message || 'Failed to load orders.'}</div>`;
+    listEl.innerHTML = `<div class="empty">${adminText('failedLoadOrders')}</div>`;
   }
 }
 
 function renderOrders(orders){
-  document.getElementById('orderCount').textContent = `${orders.length} order${orders.length===1?'':'s'}`;
+  currentOrders = orders;
+  ordersLoaded = true;
+  document.getElementById('orderCount').textContent = orders.length === 1
+    ? adminText('orderCountOne')
+    : adminText('orderCount', { count: orders.length });
   const listEl = document.getElementById('ordersList');
   if(!orders.length){
-    listEl.innerHTML = `<div class="empty">No orders here yet.</div>`;
+    listEl.innerHTML = `<div class="empty">${adminText('noOrders')}</div>`;
     return;
   }
 
   listEl.innerHTML = orders.map(order => {
     const items = (order.order_items || []).map(i => `<li>${i.quantity} × ${escapeHtml(i.name_snapshot)} — ${money(i.line_total)}</li>`).join('');
     const typeLine = order.delivery_type === 'delivery'
-      ? `Delivery — ${escapeHtml(order.delivery_address || '')}`
-      : 'Pickup';
-    const statusOptions = STATUSES.map(s => `<option value="${s}" ${s===order.status?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('');
+      ? adminText('deliveryAddressLine', { address: escapeHtml(order.delivery_address || '') })
+      : adminText('pickup');
+    const statusOptions = STATUSES.map(s => `<option value="${s}" ${s===order.status?'selected':''}>${adminText(s)}</option>`).join('');
 
     return `
       <div class="order-card" data-id="${order.id}">
         <div class="order-head">
           <div>
             <div class="id">#${order.id} — ${escapeHtml(order.customer_name)}</div>
-            <div class="time">${new Date(order.created_at).toLocaleString()}</div>
+            <div class="time">${new Date(order.created_at).toLocaleString(ADMIN_DATE_LOCALES[adminUiLanguage])}</div>
           </div>
-          <span class="badge ${order.status}">${order.status}</span>
+          <span class="badge ${order.status}">${adminText(order.status)}</span>
         </div>
         <div class="order-body">
           <div class="col">
-            <strong>Contact</strong>
+            <strong>${adminText('contact')}</strong>
             ${escapeHtml(order.customer_phone)}<br>${typeLine}
           </div>
           <div class="col">
-            <strong>Items</strong>
+            <strong>${adminText('items')}</strong>
             <ul class="order-items">${items}</ul>
           </div>
         </div>
         <div class="order-totals">
-          Subtotal ${money(order.subtotal)} · Total <b>${money(order.total)}</b> · Payment: ${escapeHtml(order.payment_status)}
+          ${adminText('subtotal')} ${money(order.subtotal)} · ${adminText('total')} <b>${money(order.total)}</b> · ${adminText('payment')}: ${escapeHtml(adminText(order.payment_status))}
         </div>
         <div class="status-row">
           <select data-id="${order.id}">${statusOptions}</select>
@@ -443,7 +647,7 @@ async function updateStatus(select){
   const newStatus = select.value;
   const note = select.closest('.status-row').querySelector('.save-note');
   select.disabled = true;
-  note.textContent = 'Saving…';
+  note.textContent = adminText('saving');
 
   try{
     const res = await fetch(`${API_BASE}/api/admin/orders/${id}/status`, {
@@ -454,13 +658,13 @@ async function updateStatus(select){
     const result = await res.json();
     if(!res.ok) throw new Error(result.error || 'Failed to update status.');
 
-    note.textContent = 'Saved.';
+    note.textContent = adminText('saved');
     const badge = select.closest('.order-card').querySelector('.badge');
     badge.className = `badge ${newStatus}`;
-    badge.textContent = newStatus;
+    badge.textContent = adminText(newStatus);
     setTimeout(() => { note.textContent = ''; }, 2000);
   }catch(err){
-    note.textContent = err.message || 'Failed to save.';
+    note.textContent = adminText('failedSave');
   }finally{
     select.disabled = false;
   }
@@ -492,14 +696,30 @@ async function adminRequest(path, options = {}){
     ...options,
     headers: { ...authHeaders(), ...(options.headers || {}) },
   });
-  const result = await readApiJson(response);
+  let result;
+  try{
+    result = await readApiJson(response);
+  }catch{
+    throw new Error(adminText('requestFailed', { status: response.status }));
+  }
   if(response.status === 401 || response.status === 403){
     token = '';
     localStorage.removeItem(TOKEN_KEY);
-    showLogin('Your session expired. Please sign in again.', true);
-    throw new Error(result.error || 'Admin access is required.');
+    showLogin(adminText('sessionExpired'), true, 'sessionExpired');
+    throw new Error(adminText('sessionExpired'));
   }
-  if(!response.ok) throw new Error(result.error || `Request failed (HTTP ${response.status}).`);
+  if(!response.ok){
+    const message = result.error || '';
+    let key = 'requestFailed';
+    if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
+    else if(message.includes('This record is still in use')) key = 'recordInUse';
+    else if(message.includes("Move or delete this category's menu items first")) key = 'categoryHasItems';
+    else if(message.includes('IMGBB_API_KEY is not configured')) key = 'imageServiceMissing';
+    else if(message.includes('Choose a JPEG, PNG, WebP, or GIF image')) key = 'unsupportedImageType';
+    else if(message.includes('Image must be smaller than 5 MB')) key = 'imageTooLarge';
+    else if(message.includes('Image upload failed')) key = 'imageUploadFailed';
+    throw new Error(adminText(key, { status: response.status }));
+  }
   return result;
 }
 
@@ -540,29 +760,31 @@ let categories = [];
 
 async function loadCategories(){
   const records = document.getElementById('categoryRecords');
-  records.innerHTML = '<div class="empty">Loading categories…</div>';
+  records.innerHTML = `<div class="empty">${adminText('loadingCategories')}</div>`;
   try{
     const result = await adminRequest('/categories');
     categories = result.categories || [];
     renderCategories();
   }catch(error){
-    records.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Failed to load categories.')}</div>`;
+    records.innerHTML = `<div class="empty">${adminText('failedLoadCategories')}</div>`;
   }
 }
 
 function renderCategories(){
-  document.getElementById('categoryCount').textContent = `${categories.length} categor${categories.length === 1 ? 'y' : 'ies'}`;
+  document.getElementById('categoryCount').textContent = categories.length === 1
+    ? adminText('categoryCountOne')
+    : adminText('categoryCount', { count: categories.length });
   const records = document.getElementById('categoryRecords');
   if(!categories.length){
-    records.innerHTML = '<div class="empty">No categories yet.</div>';
+    records.innerHTML = `<div class="empty">${adminText('noCategories')}</div>`;
     return;
   }
   records.innerHTML = categories.map(category => `
     <div class="record">
-      <div class="record-copy"><strong>${escapeHtml(category.label_en)}</strong><small>${escapeHtml(category.key)} · Sort ${category.sort_order}</small></div>
+      <div class="record-copy"><strong>${escapeHtml(category[`label_${adminUiLanguage}`] || category.label_en)}</strong><small>${escapeHtml(category.key)} · ${adminText('sortOrder')} ${category.sort_order}</small></div>
       <div class="record-actions">
-        <button class="action-btn" type="button" data-category-action="edit" data-id="${category.id}">Edit</button>
-        <button class="action-btn danger" type="button" data-category-action="delete" data-id="${category.id}">Delete</button>
+        <button class="action-btn" type="button" data-category-action="edit" data-id="${category.id}">${adminText('edit')}</button>
+        <button class="action-btn danger" type="button" data-category-action="delete" data-id="${category.id}">${adminText('delete')}</button>
       </div>
     </div>`).join('');
 }
@@ -572,8 +794,8 @@ function resetCategoryForm(){
   form.reset();
   setActiveLanguage(form, 'en');
   document.getElementById('categoryId').value = '';
-  document.getElementById('categoryFormTitle').textContent = 'New category';
-  document.getElementById('categorySubmit').textContent = 'Create category';
+  document.getElementById('categoryFormTitle').textContent = adminText('newCategory');
+  document.getElementById('categorySubmit').textContent = adminText('createCategory');
   document.getElementById('categoryCancel').hidden = true;
   setFormNote('categoryNote', '');
 }
@@ -586,7 +808,7 @@ document.getElementById('categoryForm').addEventListener('submit', async event =
   const payload = Object.fromEntries(new FormData(form).entries());
   const button = document.getElementById('categorySubmit');
   button.disabled = true;
-  setFormNote('categoryNote', id ? 'Saving changes…' : 'Creating category…');
+  setFormNote('categoryNote', id ? adminText('savingChanges') : adminText('creatingCategory'));
   try{
     await adminRequest(id ? `/categories/${encodeURIComponent(id)}` : '/categories', {
       method: id ? 'PATCH' : 'POST',
@@ -594,10 +816,10 @@ document.getElementById('categoryForm').addEventListener('submit', async event =
       body: JSON.stringify(payload),
     });
     resetCategoryForm();
-    setFormNote('categoryNote', id ? 'Category updated.' : 'Category created.');
+    setFormNote('categoryNote', id ? adminText('categoryUpdated') : adminText('categoryCreated'));
     await loadCategories();
   }catch(error){
-    setFormNote('categoryNote', error.message || 'Could not save category.', true);
+    setFormNote('categoryNote', error.message || adminText('couldNotSaveCategory'), true);
   }finally{
     button.disabled = false;
   }
@@ -617,21 +839,21 @@ document.getElementById('categoryRecords').addEventListener('click', async event
     for(const language of ['en', 'ar', 'ur', 'zh']){
       document.querySelector(`[name="label_${language}"]`).value = category[`label_${language}`] || '';
     }
-    document.getElementById('categoryFormTitle').textContent = 'Edit category';
-    document.getElementById('categorySubmit').textContent = 'Save category';
+    document.getElementById('categoryFormTitle').textContent = adminText('editCategory');
+    document.getElementById('categorySubmit').textContent = adminText('saveCategory');
     document.getElementById('categoryCancel').hidden = false;
     setFormNote('categoryNote', '');
     document.getElementById('categoryForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
 
-  if(!window.confirm(`Delete category “${category.label_en}”?`)) return;
+  if(!window.confirm(adminText('deleteCategoryConfirm', { name: category[`label_${adminUiLanguage}`] || category.label_en }))) return;
   button.disabled = true;
   try{
     await adminRequest(`/categories/${encodeURIComponent(category.id)}`, { method: 'DELETE' });
     await loadCategories();
   }catch(error){
-    window.alert(error.message || 'Could not delete category.');
+    window.alert(error.message || adminText('couldNotDeleteCategory'));
   }finally{
     button.disabled = false;
   }
@@ -642,7 +864,7 @@ let menuItems = [];
 
 async function loadMenu(){
   const records = document.getElementById('menuRecords');
-  records.innerHTML = '<div class="empty">Loading menu items…</div>';
+  records.innerHTML = `<div class="empty">${adminText('loadingMenuItems')}</div>`;
   try{
     const [categoryResult, menuResult] = await Promise.all([
       adminRequest('/categories'),
@@ -653,28 +875,30 @@ async function loadMenu(){
     renderCategoryOptions();
     renderMenu();
   }catch(error){
-    records.innerHTML = `<div class="empty">${escapeHtml(error.message || 'Failed to load menu items.')}</div>`;
+    records.innerHTML = `<div class="empty">${adminText('failedLoadMenuItems')}</div>`;
   }
 }
 
 function renderCategoryOptions(selectedId = ''){
   const select = document.getElementById('itemCategory');
-  select.innerHTML = '<option value="">Choose a category</option>' + categories.map(category =>
-    `<option value="${category.id}" ${String(category.id) === String(selectedId) ? 'selected' : ''}>${escapeHtml(category.label_en)}</option>`
+  select.innerHTML = `<option value="">${adminText('chooseCategory')}</option>` + categories.map(category =>
+    `<option value="${category.id}" ${String(category.id) === String(selectedId) ? 'selected' : ''}>${escapeHtml(category[`label_${adminUiLanguage}`] || category.label_en)}</option>`
   ).join('');
 }
 
 function renderMenu(){
-  document.getElementById('menuCount').textContent = `${menuItems.length} item${menuItems.length === 1 ? '' : 's'}`;
+  document.getElementById('menuCount').textContent = menuItems.length === 1
+    ? adminText('menuItemCountOne')
+    : adminText('menuItemCount', { count: menuItems.length });
   const query = document.getElementById('menuSearch').value.trim().toLocaleLowerCase();
   const filtered = menuItems.filter(item =>
-    [item.name_en, item.name_ar, item.name_ur, item.name_zh, item.categories?.label_en]
+    [item.name_en, item.name_ar, item.name_ur, item.name_zh, item.categories?.label_en, item.categories?.label_ar, item.categories?.label_ur, item.categories?.label_zh]
       .some(value => String(value || '').toLocaleLowerCase().includes(query))
   );
-  document.getElementById('menuResultCount').textContent = `${filtered.length} shown`;
+  document.getElementById('menuResultCount').textContent = adminText('shownCount', { count: filtered.length });
   const records = document.getElementById('menuRecords');
   if(!filtered.length){
-    records.innerHTML = `<div class="empty">${menuItems.length ? 'No matching menu items.' : 'No menu items yet.'}</div>`;
+    records.innerHTML = `<div class="empty">${adminText(menuItems.length ? 'noMatchingMenuItems' : 'noMenuItems')}</div>`;
     return;
   }
   records.innerHTML = filtered.map(item => {
@@ -682,19 +906,19 @@ function renderMenu(){
     return `
       <div class="record">
         <div class="record-main">
-          <img class="record-thumb" src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(item.name_en || 'Menu item')}">
+          <img class="record-thumb" src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en || adminText('menuItemAlt'))}">
           <div class="record-copy">
-            <strong>${escapeHtml(item.name_en)}</strong>
-            <small>${escapeHtml(item.categories?.label_en || 'Uncategorized')} · ${money(item.price)}</small>
+            <strong>${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en)}</strong>
+            <small>${escapeHtml(item.categories?.[`label_${adminUiLanguage}`] || item.categories?.label_en || adminText('uncategorized'))} · ${money(item.price)}</small>
             <div class="record-meta">
-              <span class="record-badge${item.is_available ? '' : ' unavailable'}">${item.is_available ? 'Available' : 'Unavailable'}</span>
-              ${item.is_offer ? '<span class="record-badge">Featured offer</span>' : ''}
+              <span class="record-badge${item.is_available ? '' : ' unavailable'}">${adminText(item.is_available ? 'available' : 'unavailable')}</span>
+              ${item.is_offer ? `<span class="record-badge">${adminText('featuredOffer')}</span>` : ''}
             </div>
           </div>
         </div>
         <div class="record-actions">
-          <button class="action-btn" type="button" data-menu-action="edit" data-id="${item.id}">Edit</button>
-          <button class="action-btn danger" type="button" data-menu-action="delete" data-id="${item.id}">Delete</button>
+          <button class="action-btn" type="button" data-menu-action="edit" data-id="${item.id}">${adminText('edit')}</button>
+          <button class="action-btn danger" type="button" data-menu-action="delete" data-id="${item.id}">${adminText('delete')}</button>
         </div>
       </div>`;
   }).join('');
@@ -703,7 +927,8 @@ function renderMenu(){
 function updateImagePreview(url){
   const preview = document.getElementById('itemImagePreview');
   const imageUrl = typeof url === 'string' ? url.trim() : '';
-  preview.innerHTML = `<img src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${imageUrl ? 'Menu item preview' : 'Fallback food image'}"><span>${imageUrl ? 'Image preview' : 'Fallback food image'}</span>`;
+  const label = adminText(imageUrl ? 'imagePreview' : 'fallbackFoodImage');
+  preview.innerHTML = `<img src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(label)}"><span>${label}</span>`;
 }
 
 function resetItemForm(){
@@ -712,8 +937,8 @@ function resetItemForm(){
   setActiveLanguage(form, 'en');
   document.getElementById('itemId').value = '';
   renderCategoryOptions();
-  document.getElementById('itemFormTitle').textContent = 'New menu item';
-  document.getElementById('itemSubmit').textContent = 'Create menu item';
+  document.getElementById('itemFormTitle').textContent = adminText('newMenuItem');
+  document.getElementById('itemSubmit').textContent = adminText('createMenuItem');
   document.getElementById('itemCancel').hidden = true;
   document.getElementById('itemImageFile').value = '';
   document.getElementById('imageUploadBtn').disabled = true;
@@ -731,7 +956,7 @@ document.getElementById('itemForm').addEventListener('submit', async event => {
   payload.is_offer = document.getElementById('itemOffer').checked;
   const button = document.getElementById('itemSubmit');
   button.disabled = true;
-  setFormNote('itemNote', id ? 'Saving changes…' : 'Creating menu item…');
+  setFormNote('itemNote', id ? adminText('savingChanges') : adminText('creatingMenuItem'));
   try{
     await adminRequest(id ? `/menu/${encodeURIComponent(id)}` : '/menu', {
       method: id ? 'PATCH' : 'POST',
@@ -739,10 +964,10 @@ document.getElementById('itemForm').addEventListener('submit', async event => {
       body: JSON.stringify(payload),
     });
     resetItemForm();
-    setFormNote('itemNote', id ? 'Menu item updated.' : 'Menu item created.');
+    setFormNote('itemNote', id ? adminText('menuItemUpdated') : adminText('menuItemCreated'));
     await loadMenu();
   }catch(error){
-    setFormNote('itemNote', error.message || 'Could not save menu item.', true);
+    setFormNote('itemNote', error.message || adminText('couldNotSaveMenuItem'), true);
   }finally{
     button.disabled = false;
   }
@@ -764,8 +989,8 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
     }
     document.getElementById('itemAvailable').checked = item.is_available;
     document.getElementById('itemOffer').checked = item.is_offer;
-    document.getElementById('itemFormTitle').textContent = 'Edit menu item';
-    document.getElementById('itemSubmit').textContent = 'Save menu item';
+    document.getElementById('itemFormTitle').textContent = adminText('editMenuItem');
+    document.getElementById('itemSubmit').textContent = adminText('saveMenuItem');
     document.getElementById('itemCancel').hidden = false;
     updateImagePreview(item.image_path || '');
     setFormNote('itemNote', '');
@@ -773,13 +998,13 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
     return;
   }
 
-  if(!window.confirm(`Delete menu item “${item.name_en}”?`)) return;
+  if(!window.confirm(adminText('deleteMenuItemConfirm', { name: item[`name_${adminUiLanguage}`] || item.name_en }))) return;
   button.disabled = true;
   try{
     await adminRequest(`/menu/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
     await loadMenu();
   }catch(error){
-    window.alert(error.message || 'Could not delete menu item.');
+    window.alert(error.message || adminText('couldNotDeleteMenuItem'));
   }finally{
     button.disabled = false;
   }
@@ -794,17 +1019,17 @@ document.getElementById('imageUploadBtn').addEventListener('click', async event 
   const file = document.getElementById('itemImageFile').files[0];
   if(!file) return;
   if(file.size > 5 * 1024 * 1024){
-    setFormNote('itemNote', 'Image must be smaller than 5 MB.', true);
+    setFormNote('itemNote', adminText('imageTooLarge'), true);
     return;
   }
   const button = event.currentTarget;
   button.disabled = true;
-  setFormNote('itemNote', 'Uploading image…');
+  setFormNote('itemNote', adminText('uploadingImage'));
   try{
     const dataUrl = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Could not read the selected image.'));
+      reader.onerror = () => reject(new Error(adminText('imageUploadFailed')));
       reader.readAsDataURL(file);
     });
     const result = await adminRequest('/images', {
@@ -814,15 +1039,16 @@ document.getElementById('imageUploadBtn').addEventListener('click', async event 
     });
     document.getElementById('itemImageUrl').value = result.url;
     updateImagePreview(result.url);
-    setFormNote('itemNote', 'Image uploaded.');
+    setFormNote('itemNote', adminText('imageUploaded'));
   }catch(error){
-    setFormNote('itemNote', error.message || 'Image upload failed.', true);
+    setFormNote('itemNote', error.message || adminText('imageUploadFailed'), true);
   }finally{
     button.disabled = !document.getElementById('itemImageFile').files.length;
   }
 });
 
 /* ---------- boot ---------- */
+applyAdminUiLanguage(adminUiLanguage);
 if(token){
   // We don't know the signed-in email until /me responds; show a
   // generic label immediately and let loadOrders() validate the token.
