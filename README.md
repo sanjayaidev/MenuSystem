@@ -34,6 +34,7 @@ cp .env.example .env
 | `SUPABASE_URL` | yes | Your project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Server-side only, bypasses RLS |
 | `SUPABASE_ANON_KEY` | yes | Used only to verify login credentials on a client isolated from the service-role one (prevents a logged-in user's session from leaking into other requests) |
+| `IMGBB_API_KEY` | yes for menu image uploads | Imgbb API key used by the admin image upload proxy; never exposed to the browser |
 | `PORT` | no (default 3000) | Local port |
 | `APP_URL` | yes | Used for the keep-alive pinger **and** as the base for the password-reset redirect link (see below) |
 | `ALLOWED_ORIGINS` | recommended | Comma-separated list of origins allowed to call this API cross-origin, e.g. `https://your-service.onrender.com,https://yourdomain.com`. Falls back to `APP_URL` alone if unset. Requests with no `Origin` header (curl, same-origin page loads) are always allowed regardless. |
@@ -109,15 +110,19 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `POST /cart/merge` — `{ items:[{menu_item_id, quantity}] }`, called once right after login to fold a guest's cart into their account (adds on top of anything already saved, doesn't overwrite)
 
 **Admin** (`/api/admin`, Bearer token from an account with `profiles.is_admin = true`)
+- `GET /categories`, `POST /categories`, `PATCH /categories/:id`, `DELETE /categories/:id`
+- `GET /menu`, `POST /menu`, `PATCH /menu/:id`, `DELETE /menu/:id`
+- `POST /images` — text/plain image data URL; uploads through Imgbb and returns `{ url }`
 - `GET /orders?status=<pending|confirmed|preparing|ready|completed|cancelled>` — omit `status` for all orders
 - `GET /orders/:id`
 - `PATCH /orders/:id/status` — `{ status }`
 
 ## Admin dashboard
 `frontend/admin.html`, served at `/admin`. Staff sign in with their normal email/password
-(must have `is_admin = true` — see section 1); shows orders filterable by status, with a
-dropdown per order to move it through `pending → confirmed → preparing → ready →
-completed` (or `cancelled`), polling every 25s.
+(must have `is_admin = true` — see section 1). The dashboard manages orders, categories,
+and menu items; category and item names/descriptions support English, Arabic, Urdu, and
+Chinese. Menu image uploads use `IMGBB_API_KEY` on the server. Category deletion is
+blocked while it contains menu items, and menu item deletion keeps existing order snapshots.
 
 ## Order + WhatsApp flow (as built)
 1. Customer browses the live menu (fetched from Supabase via `/api/categories` + `/api/menu`) → taps an item → item detail modal.
