@@ -1,6 +1,12 @@
 -- Red House Catering: indexes, uniqueness and row-level security.
 -- Run after 01_create_tables.sql.
 
+-- Bring databases created with the older scripts up to the current schema.
+alter table profiles add column if not exists is_admin boolean not null default false;
+alter table orders add column if not exists order_token uuid not null default gen_random_uuid();
+alter table menu_items add column if not exists calories int;
+alter table menu_items add column if not exists rating numeric(2,1);
+
 create index if not exists idx_menu_items_category on menu_items(category_id);
 create index if not exists idx_order_items_order on order_items(order_id);
 create index if not exists idx_orders_user_id on orders(user_id);

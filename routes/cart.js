@@ -5,12 +5,17 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 // Every route here requires a signed-in user — guests use localStorage
-// on the client instead (see homepage.html).
-router.use(requireAuth);
+// on the client instead (see homepage.html). NOTE: this router is mounted
+// at the bare '/api' prefix in server.js (its own routes already start
+// with '/cart'), so requireAuth must be applied per-route below rather
+// than via a blanket router.use(requireAuth) — a blanket use() with no
+// path matches every request that reaches this router, which previously
+// blocked unrelated routes like /api/auth/login and /api/admin/* before
+// they ever reached their own handlers.
 
 // GET /api/cart — current cart, joined with live menu item data
 // (name/price/availability), so the client always shows up-to-date info.
-router.get('/cart', async (req, res) => {
+router.get('/cart', requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from('cart_items')
     .select('menu_item_id, quantity, menu_items(id, name_en, name_ar, name_ur, name_zh, price, is_available, categories(key))')
@@ -22,7 +27,7 @@ router.get('/cart', async (req, res) => {
 
 // POST /api/cart  { menu_item_id, quantity }
 // Upserts a line. quantity <= 0 deletes the line.
-router.post('/cart', async (req, res) => {
+router.post('/cart', requireAuth, async (req, res) => {
   const menu_item_id = Number(req.body.menu_item_id);
   const quantity = Number(req.body.quantity);
 
@@ -57,7 +62,7 @@ router.post('/cart', async (req, res) => {
 });
 
 // DELETE /api/cart/:menuItemId
-router.delete('/cart/:menuItemId', async (req, res) => {
+router.delete('/cart/:menuItemId', requireAuth, async (req, res) => {
   const menu_item_id = Number(req.params.menuItemId);
   if (!Number.isInteger(menu_item_id)) {
     return res.status(400).json({ error: 'menuItemId must be an integer' });
@@ -77,7 +82,7 @@ router.delete('/cart/:menuItemId', async (req, res) => {
 // Called once, right after login, to fold a guest's localStorage cart
 // into their DB cart. Quantities are added on top of whatever is
 // already saved server-side (not overwritten).
-router.post('/cart/merge', async (req, res) => {
+router.post('/cart/merge', requireAuth, async (req, res) => {
   const items = Array.isArray(req.body.items) ? req.body.items : [];
   if (!items.length) return res.json({ items: [] });
 
