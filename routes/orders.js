@@ -1,10 +1,25 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const supabase = require('../db/supabase');
 const { getAuthUser } = require('../middleware/auth');
 
 const router = express.Router();
 
-const DELIVERY_FEE = 20; // keep in sync with homepage.html's DELIVERY_FEE constant
+// Single source of truth for the delivery fee — set DELIVERY_FEE in your
+// .env / Render dashboard. homepage.html reads the same value from
+// GET /api/config instead of hardcoding its own copy.
+const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 20);
+
+// Order creation hits Supabase, sends (eventually) a WhatsApp handoff, and
+// has no auth requirement (guests can order) — so it's the endpoint most
+// worth protecting from being hammered by a script. Limit by IP.
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many orders from this connection. Please wait a while and try again.' },
+});
 
 // POST /api/orders
 // body: {
@@ -12,7 +27,7 @@ const DELIVERY_FEE = 20; // keep in sync with homepage.html's DELIVERY_FEE const
 //   delivery_address (required if delivery_type === 'delivery'),
 //   items: [{ menu_item_id, quantity }]
 // }
-router.post('/orders', async (req, res) => {
+router.post('/orders', orderLimiter, async (req, res) => {
   const {
     customer_name,
     customer_phone,
@@ -26,6 +41,9 @@ router.post('/orders', async (req, res) => {
   }
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items must be a non-empty array' });
+  }
+  if (items.length > 50) {
+    return res.status(400).json({ error: 'Too many line items in one order' });
   }
   if (delivery_type === 'delivery' && !delivery_address) {
     return res.status(400).json({ error: 'delivery_address is required for home delivery' });
@@ -52,7 +70,7 @@ router.post('/orders', async (req, res) => {
     if (!dbItem || !dbItem.is_available) {
       return res.status(400).json({ error: `Menu item ${line.menu_item_id} is not available` });
     }
-    if (!Number.isInteger(qty) || qty <= 0) {
+    if (!Number.isInteger(qty) || qty <= 0 || qty > 50) {
       return res.status(400).json({ error: `Invalid quantity for item ${line.menu_item_id}` });
     }
     const lineTotal = dbItem.price * qty;
@@ -102,6 +120,7 @@ router.post('/orders', async (req, res) => {
 
   res.status(201).json({
     id: order.id,
+    order_token: order.order_token, // keep this client-side to look the order up later
     subtotal,
     deliveryFee,
     total,
@@ -110,7 +129,12 @@ router.post('/orders', async (req, res) => {
   });
 });
 
-// GET /api/orders/:id — handy for confirmation screens / support lookups
+// GET /api/orders/:id?token=<order_token> — for confirmation/support lookups.
+// Order ids are small sequential integers, so without this check anyone
+// could just walk them and read other customers' names/phones/addresses.
+// Access is allowed if the caller supplies the order's own order_token
+// (returned once at creation, meant for guest checkout confirmation
+// screens), or is signed in as the order's owner, or is an admin.
 router.get('/orders/:id', async (req, res) => {
   const { data: order, error } = await supabase
     .from('orders')
@@ -118,8 +142,30 @@ router.get('/orders/:id', async (req, res) => {
     .eq('id', req.params.id)
     .single();
 
-  if (error) return res.status(404).json({ error: 'Order not found' });
-  res.json(order);
+  if (error || !order) return res.status(404).json({ error: 'Order not found' });
+
+  const { token } = req.query;
+  const isOwnerByToken = typeof token === 'string' && token.length > 0 && token === order.order_token;
+
+  const authUser = await getAuthUser(req);
+  const isOwnerByAuth = Boolean(authUser && order.user_id && authUser.id === order.user_id);
+
+  let isAdmin = false;
+  if (authUser && !isOwnerByAuth) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', authUser.id)
+      .maybeSingle();
+    isAdmin = Boolean(profile?.is_admin);
+  }
+
+  if (!isOwnerByToken && !isOwnerByAuth && !isAdmin) {
+    return res.status(403).json({ error: 'Not authorized to view this order' });
+  }
+
+  const { order_token, ...safeOrder } = order; // never echo the token back out
+  res.json(safeOrder);
 });
 
 module.exports = router;

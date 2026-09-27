@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red House Catering — Admin</title>
+<style>
+  :root{
+    --bg:#121110; --surface:#1c1a18; --line:#2c2925;
+    --gold:#e3b23c; --red:#b8352b; --green:#4caf7d;
+    --text:#f4efe6; --muted:#a99f8f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;
+  }
+  header{
+    background:#000; padding:14px 20px; display:flex; align-items:center;
+    justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--line);
+  }
+  header h1{font-size:16px; margin:0; color:var(--gold); font-weight:700;}
+  header .who{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:10px;}
+  header button{
+    background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;
+    padding:8px 14px; font-size:12px; cursor:pointer;
+  }
+  .wrap{max-width:1000px; margin:0 auto; padding:20px;}
+
+  /* ---------- login ---------- */
+  #loginView{max-width:360px; margin:60px auto; padding:24px; background:var(--surface); border:1px solid var(--line); border-radius:14px;}
+  #loginView h2{margin:0 0 6px; font-size:18px;}
+  #loginView p.hint{color:var(--muted); font-size:13px; margin:0 0 20px;}
+  .field-label{font-size:12px; color:var(--gold); font-weight:600; margin:12px 0 6px; display:block;}
+  .field-input{
+    width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px;
+    padding:11px 12px; color:var(--text); font-size:14px;
+  }
+  .primary-btn{
+    width:100%; margin-top:18px; background:var(--gold); color:#1a1408; border:none; border-radius:10px;
+    padding:13px; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .primary-btn:disabled{opacity:.6; cursor:default;}
+  .status-msg{font-size:13px; margin-top:12px; min-height:16px;}
+  .status-msg.error{color:var(--red);}
+  .status-msg.ok{color:var(--green);}
+
+  /* ---------- dashboard ---------- */
+  #dashboardView{display:none;}
+  .filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+  .filters button{
+    background:var(--surface); border:1px solid var(--line); color:var(--muted); border-radius:999px;
+    padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .filters button.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  .toolbar .count{color:var(--muted); font-size:13px;}
+
+  .order-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px;
+  }
+  .order-head{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;}
+  .order-head .id{font-weight:700; font-size:15px;}
+  .order-head .time{color:var(--muted); font-size:12px; margin-top:2px;}
+  .badge{
+    display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px;
+    text-transform:uppercase; letter-spacing:.02em;
+  }
+  .badge.pending{background:rgba(227,178,60,.15); color:var(--gold);}
+  .badge.confirmed{background:rgba(80,150,220,.15); color:#5a9fe0;}
+  .badge.preparing{background:rgba(227,178,60,.15); color:var(--gold);}
+  .badge.ready{background:rgba(76,175,125,.15); color:var(--green);}
+  .badge.completed{background:rgba(76,175,125,.15); color:var(--green);}
+  .badge.cancelled{background:rgba(184,53,43,.15); color:var(--red);}
+
+  .order-body{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; font-size:13px;}
+  .order-body .col strong{display:block; margin-bottom:4px; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em;}
+  .order-items{margin:0; padding:0; list-style:none; color:var(--text);}
+  .order-items li{padding:2px 0;}
+  .order-totals{margin-top:10px; font-size:13px; color:var(--muted);}
+  .order-totals b{color:var(--gold);}
+
+  .status-row{display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap;}
+  .status-row select{
+    background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; font-size:13px;
+  }
+  .status-row .save-note{font-size:12px; color:var(--muted);}
+  .empty{text-align:center; color:var(--muted); padding:50px 10px; font-size:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Red House Catering — Admin</h1>
+  <div class="who" id="whoRow" style="display:none;">
+    <span id="whoEmail"></span>
+    <button id="signOutBtn">Sign out</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===== LOGIN ===== -->
+  <div id="loginView">
+    <h2>Staff sign in</h2>
+    <p class="hint">Sign in with a staff account that has admin access.</p>
+    <label class="field-label">Email</label>
+    <input class="field-input" id="loginEmail" type="email" autocomplete="email">
+    <label class="field-label">Password</label>
+    <input class="field-input" id="loginPassword" type="password" autocomplete="current-password">
+    <button class="primary-btn" id="loginBtn">Sign in</button>
+    <p class="status-msg" id="loginStatus"></p>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboardView">
+    <div class="filters" id="statusFilters"></div>
+    <div class="toolbar">
+      <span class="count" id="orderCount"></span>
+      <button id="refreshBtn" style="background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer;">Refresh</button>
+    </div>
+    <div id="ordersList"></div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+const TOKEN_KEY = 'redhouse_admin_token';
+const STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+const AUTO_REFRESH_MS = 25000;
+
+let token = localStorage.getItem(TOKEN_KEY) || '';
+let currentFilter = 'all';
+let autoRefreshTimer = null;
+
+function authHeaders(){ return token ? { Authorization: `Bearer ${token}` } : {}; }
+function money(n){ return `$${Number(n).toFixed(2)}`; }
+
+/* ---------- view switching ---------- */
+function showLogin(message = '', isError = false){
+  document.getElementById('loginView').style.display = 'block';
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('whoRow').style.display = 'none';
+  const status = document.getElementById('loginStatus');
+  status.textContent = message;
+  status.className = 'status-msg' + (isError ? ' error' : '');
+  if(autoRefreshTimer){ clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+function showDashboard(email){
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('dashboardView').style.display = 'block';
+  document.getElementById('whoRow').style.display = 'flex';
+  document.getElementById('whoEmail').textContent = email || '';
+  renderFilters();
+  loadOrders();
+  if(autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(loadOrders, AUTO_REFRESH_MS);
+}
+
+/* ---------- login ---------- */
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if(!email || !password){ showLogin('Enter your email and password.', true); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  showLogin('Signing in…');
+
+  try{
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Sign-in failed.');
+
+    token = result.access_token;
+    localStorage.setItem(TOKEN_KEY, token);
+
+    // Confirm this account actually has admin access before showing the dashboard.
+    const check = await fetch(`${API_BASE}/api/admin/orders`, { headers: authHeaders() });
+    if(check.status === 403){
+      token = '';
+      localStorage.removeItem(TOKEN_KEY);
+      showLogin("This account doesn't have admin access.", true);
+      return;
+    }
+    if(!check.ok) throw new Error('Could not verify admin access.');
+
+    showDashboard(email);
+  }catch(err){
+    showLogin(err.message || 'Sign-in failed.', true);
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  token = '';
+  localStorage.removeItem(TOKEN_KEY);
+  showLogin();
+});
+
+/* ---------- filters ---------- */
+function renderFilters(){
+  const wrap = document.getElementById('statusFilters');
+  const options = ['all', ...STATUSES];
+  wrap.innerHTML = options.map(s =>
+    `<button data-status="${s}" class="${s===currentFilter?'active':''}">${s==='all' ? 'All' : s[0].toUpperCase()+s.slice(1)}</button>`
+  ).join('');
+  wrap.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.status;
+      renderFilters();
+      loadOrders();
+    });
+  });
+}
+document.getElementById('refreshBtn').addEventListener('click', loadOrders);
+
+/* ---------- orders ---------- */
+async function loadOrders(){
+  const listEl = document.getElementById('ordersList');
+  try{
+    const qs = currentFilter === 'all' ? '' : `?status=${encodeURIComponent(currentFilter)}`;
+    const res = await fetch(`${API_BASE}/api/admin/orders${qs}`, { headers: authHeaders() });
+    if(res.status === 401 || res.status === 403){
+      token = '';
+      localStorage.removeItem(TOKEN_KEY);
+      showLogin('Your session expired. Please sign in again.', true);
+      return;
+    }
+    if(!res.ok) throw new Error('Failed to load orders.');
+    const { orders } = await res.json();
+    renderOrders(orders);
+  }catch(err){
+    listEl.innerHTML = `<div class="empty">${err.message || 'Failed to load orders.'}</div>`;
+  }
+}
+
+function renderOrders(orders){
+  document.getElementById('orderCount').textContent = `${orders.length} order${orders.length===1?'':'s'}`;
+  const listEl = document.getElementById('ordersList');
+  if(!orders.length){
+    listEl.innerHTML = `<div class="empty">No orders here yet.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = orders.map(order => {
+    const items = (order.order_items || []).map(i => `<li>${i.quantity} × ${escapeHtml(i.name_snapshot)} — ${money(i.line_total)}</li>`).join('');
+    const typeLine = order.delivery_type === 'delivery'
+      ? `Delivery — ${escapeHtml(order.delivery_address || '')}`
+      : 'Pickup';
+    const statusOptions = STATUSES.map(s => `<option value="${s}" ${s===order.status?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('');
+
+    return `
+      <div class="order-card" data-id="${order.id}">
+        <div class="order-head">
+          <div>
+            <div class="id">#${order.id} — ${escapeHtml(order.customer_name)}</div>
+            <div class="time">${new Date(order.created_at).toLocaleString()}</div>
+          </div>
+          <span class="badge ${order.status}">${order.status}</span>
+        </div>
+        <div class="order-body">
+          <div class="col">
+            <strong>Contact</strong>
+            ${escapeHtml(order.customer_phone)}<br>${typeLine}
+          </div>
+          <div class="col">
+            <strong>Items</strong>
+            <ul class="order-items">${items}</ul>
+          </div>
+        </div>
+        <div class="order-totals">
+          Subtotal ${money(order.subtotal)} · Total <b>${money(order.total)}</b> · Payment: ${escapeHtml(order.payment_status)}
+        </div>
+        <div class="status-row">
+          <select data-id="${order.id}">${statusOptions}</select>
+          <span class="save-note"></span>
+        </div>
+      </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.status-row select').forEach(select => {
+    select.addEventListener('change', () => updateStatus(select));
+  });
+}
+
+async function updateStatus(select){
+  const id = select.dataset.id;
+  const newStatus = select.value;
+  const note = select.closest('.status-row').querySelector('.save-note');
+  select.disabled = true;
+  note.textContent = 'Saving…';
+
+  try{
+    const res = await fetch(`${API_BASE}/api/admin/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Failed to update status.');
+
+    note.textContent = 'Saved.';
+    const badge = select.closest('.order-card').querySelector('.badge');
+    badge.className = `badge ${newStatus}`;
+    badge.textContent = newStatus;
+    setTimeout(() => { note.textContent = ''; }, 2000);
+  }catch(err){
+    note.textContent = err.message || 'Failed to save.';
+  }finally{
+    select.disabled = false;
+  }
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+/* ---------- boot ---------- */
+if(token){
+  // We don't know the signed-in email until /me responds; show a
+  // generic label immediately and let loadOrders() validate the token.
+  showDashboard('Signed in');
+}else{
+  showLogin();
+}
+</script>
+</body>
+</html>

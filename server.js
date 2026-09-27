@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const http = require('http');
 const https = require('https');
 const path = require('path');
@@ -8,13 +9,43 @@ const path = require('path');
 const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
 const authRoutes = require('./routes/auth');
+const cartRoutes = require('./routes/cart');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const APP_URL = process.env.APP_URL;
 const PING_INTERVAL_MS = 10 * 60 * 1000;
 
-app.use(cors());       // tighten this to your frontend's origin before going live
+// ---------- CORS ----------
+// ALLOWED_ORIGINS: comma-separated list, e.g.
+//   ALLOWED_ORIGINS=https://your-service.onrender.com,https://yourdomain.com
+// Falls back to APP_URL alone if ALLOWED_ORIGINS isn't set. Requests with
+// no Origin header (curl, server-to-server, same-origin page loads) are
+// always allowed since the browser only sends Origin for cross-origin
+// fetches — this only restricts *other websites'* JS from calling the API.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.APP_URL || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
+  })
+);
+
+app.use(helmet({
+  // the app serves its own inline <script>/<style> tags in homepage.html,
+  // so a default strict CSP would break it; leave CSP off here and add a
+  // tuned policy later if you split JS/CSS into separate files.
+  contentSecurityPolicy: false,
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
@@ -22,11 +53,28 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'homepage.html'));
 });
 
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'admin.html'));
+});
+
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Public, non-secret runtime config the frontend needs. Keeps
+// WHATSAPP_NUMBER/BRANCH_NAME/DELIVERY_FEE defined once, server-side,
+// instead of hardcoded in homepage.html.
+app.get('/api/config', (req, res) => {
+  res.json({
+    whatsappNumber: process.env.WHATSAPP_NUMBER || '',
+    branchName: process.env.BRANCH_NAME || 'Red House Trading',
+    deliveryFee: Number(process.env.DELIVERY_FEE || 20),
+  });
+});
 
 app.use('/api', menuRoutes);
 app.use('/api', orderRoutes);
+app.use('/api', cartRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Red House Catering server running on port ${PORT}`);

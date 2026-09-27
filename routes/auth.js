@@ -1,8 +1,19 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const supabase = require('../db/supabase');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Login/register/password-reset are the endpoints someone could try to
+// brute-force or spam with guessed credentials/emails. Limit by IP.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait a while and try again.' },
+});
 
 async function getOrCreateProfile(user) {
   const { data: profile, error: profileError } = await supabase
@@ -24,7 +35,7 @@ async function getOrCreateProfile(user) {
   return createdProfile;
 }
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   const { email, password, display_name = '' } = req.body;
 
   if (!email || !password) {
@@ -52,7 +63,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });
@@ -117,6 +128,54 @@ router.get('/orders', requireAuth, async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   res.json({ orders });
+});
+
+// POST /api/auth/request-password-reset  { email }
+// Uses Supabase Auth's own password-recovery email. The link it sends
+// redirects to APP_URL/reset-password.html with a recovery token in
+// the URL fragment. See README.md for the one-time Supabase dashboard
+// setup this depends on (Site URL / Redirect URLs allowlist).
+router.post('/request-password-reset', authLimiter, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'email is required' });
+
+  if (!process.env.APP_URL) {
+    return res.status(500).json({ error: 'APP_URL is not configured on the server' });
+  }
+  const redirectTo = new URL('/reset-password.html', process.env.APP_URL).toString();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  // Always report success even if the email doesn't exist, so this
+  // endpoint can't be used to enumerate registered accounts.
+  if (error) console.error('resetPasswordForEmail error:', error.message);
+  res.json({ ok: true });
+});
+
+// POST /api/auth/reset-password  { access_token, new_password }
+// access_token is the recovery token Supabase put in the redirect URL's
+// fragment (reset-password.html reads it and sends it here). We verify
+// it identifies a real user, then set the new password with the
+// service-role admin API — no anon key / client-side Supabase SDK needed.
+router.post('/reset-password', async (req, res) => {
+  const { access_token, new_password } = req.body;
+  if (!access_token || !new_password) {
+    return res.status(400).json({ error: 'access_token and new_password are required' });
+  }
+  if (new_password.length < 8) {
+    return res.status(400).json({ error: 'password must be at least 8 characters' });
+  }
+
+  const { data, error } = await supabase.auth.getUser(access_token);
+  if (error || !data.user) {
+    return res.status(401).json({ error: 'This reset link is invalid or has expired. Please request a new one.' });
+  }
+
+  const { error: updateError } = await supabase.auth.admin.updateUserById(data.user.id, {
+    password: new_password,
+  });
+  if (updateError) return res.status(500).json({ error: updateError.message });
+
+  res.json({ ok: true });
 });
 
 module.exports = router;
