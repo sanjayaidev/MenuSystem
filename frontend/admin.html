@@ -197,6 +197,7 @@
     <div class="filters" id="statusFilters"></div>
     <div class="toolbar">
       <span class="count" id="orderCount"></span>
+      <input class="search-input" id="orderSearch" type="search" placeholder="Search order no. or phone" data-ui-placeholder="searchOrders">
       <button id="refreshBtn" style="background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer;" data-ui="refresh">Refresh</button>
     </div>
     <div id="ordersList"></div>
@@ -291,7 +292,7 @@ const ADMIN_UI_STRINGS = {
     category:'Category', chooseCategory:'Choose a category', price:'Price', calories:'Calories', rating:'Rating', popularity:'Popularity',
     itemTranslationLanguage:'Menu item translation language', availableToOrder:'Available to order', featuredOffer:'Featured offer',
     imageUrl:'Image URL', uploadImage:'Upload image', uploadToImgbb:'Upload to Imgbb', createMenuItem:'Create menu item',
-    saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', edit:'Edit', delete:'Delete',
+    saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', searchOrders:'Search order no. or phone', edit:'Edit', delete:'Delete',
     all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', completed:'Completed', cancelled:'Cancelled',
     orderCount:'{count} orders', orderCountOne:'1 order', paid:'Paid', unpaid:'Unpaid',
     contact:'Contact', items:'Items', deliveryAddressLine:'Delivery — {address}', pickup:'Pickup', subtotal:'Subtotal', total:'Total', payment:'Payment',
@@ -324,7 +325,7 @@ const ADMIN_UI_STRINGS = {
     category:'الفئة', chooseCategory:'اختر فئة', price:'السعر', calories:'السعرات الحرارية', rating:'التقييم', popularity:'الشعبية',
     itemTranslationLanguage:'لغة ترجمة الصنف', availableToOrder:'متاح للطلب', featuredOffer:'عرض مميز',
     imageUrl:'رابط الصورة', uploadImage:'رفع صورة', uploadToImgbb:'رفع إلى Imgbb', createMenuItem:'إنشاء صنف',
-    saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', edit:'تعديل', delete:'حذف',
+    saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', searchOrders:'بحث برقم الطلب أو الهاتف', edit:'تعديل', delete:'حذف',
     all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', completed:'مكتمل', cancelled:'ملغي',
     orderCount:'عدد الطلبات: {count}', orderCountOne:'طلب واحد', paid:'مدفوع', unpaid:'غير مدفوع',
     contact:'التواصل', items:'الأصناف', deliveryAddressLine:'توصيل — {address}', pickup:'استلام', subtotal:'المجموع الفرعي', total:'الإجمالي', payment:'الدفع',
@@ -357,7 +358,7 @@ const ADMIN_UI_STRINGS = {
     category:'زمرہ', chooseCategory:'زمرہ منتخب کریں', price:'قیمت', calories:'کیلوریز', rating:'ریٹنگ', popularity:'مقبولیت',
     itemTranslationLanguage:'مینو آئٹم کی ترجمہ زبان', availableToOrder:'آرڈر کے لیے دستیاب', featuredOffer:'نمایاں آفر',
     imageUrl:'تصویر کا URL', uploadImage:'تصویر اپ لوڈ کریں', uploadToImgbb:'Imgbb پر اپ لوڈ کریں', createMenuItem:'مینو آئٹم بنائیں',
-    saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', edit:'ترمیم', delete:'حذف',
+    saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', searchOrders:'آرڈر نمبر یا فون سے تلاش کریں', edit:'ترمیم', delete:'حذف',
     all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', completed:'مکمل', cancelled:'منسوخ',
     orderCount:'آرڈرز: {count}', orderCountOne:'ایک آرڈر', paid:'ادا شدہ', unpaid:'غیر ادا شدہ',
     contact:'رابطہ', items:'آئٹمز', deliveryAddressLine:'ڈیلیوری — {address}', pickup:'پک اَپ', subtotal:'ذیلی مجموعہ', total:'کل', payment:'ادائیگی',
@@ -390,7 +391,7 @@ const ADMIN_UI_STRINGS = {
     category:'分类', chooseCategory:'选择分类', price:'价格', calories:'卡路里', rating:'评分', popularity:'人气',
     itemTranslationLanguage:'商品翻译语言', availableToOrder:'可供下单', featuredOffer:'精选优惠',
     imageUrl:'图片网址', uploadImage:'上传图片', uploadToImgbb:'上传到 Imgbb', createMenuItem:'创建商品',
-    saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', edit:'编辑', delete:'删除',
+    saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', searchOrders:'按订单号或电话搜索', edit:'编辑', delete:'删除',
     all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', completed:'已完成', cancelled:'已取消',
     orderCount:'共 {count} 个订单', orderCountOne:'1 个订单', paid:'已付款', unpaid:'未付款',
     contact:'联系方式', items:'商品', deliveryAddressLine:'配送 — {address}', pickup:'自取', subtotal:'小计', total:'总计', payment:'付款',
@@ -568,12 +569,21 @@ function renderFilters(){
   });
 }
 document.getElementById('refreshBtn').addEventListener('click', loadOrders);
+let orderSearchTimer;
+document.getElementById('orderSearch').addEventListener('input', () => {
+  clearTimeout(orderSearchTimer);
+  orderSearchTimer = setTimeout(loadOrders, 300); // debounce typing
+});
 
 /* ---------- orders ---------- */
 async function loadOrders(){
   const listEl = document.getElementById('ordersList');
   try{
-    const qs = currentFilter === 'all' ? '' : `?status=${encodeURIComponent(currentFilter)}`;
+    const params = new URLSearchParams();
+    if(currentFilter !== 'all') params.set('status', currentFilter);
+    const search = document.getElementById('orderSearch').value.trim();
+    if(search) params.set('q', search);
+    const qs = params.toString() ? `?${params}` : '';
     const res = await fetch(`${API_BASE}/api/admin/orders${qs}`, { headers: authHeaders() });
     if(res.status === 401 || res.status === 403){
       token = '';
@@ -612,7 +622,7 @@ function renderOrders(orders){
       <div class="order-card" data-id="${order.id}">
         <div class="order-head">
           <div>
-            <div class="id">#${order.id} — ${escapeHtml(order.customer_name)}</div>
+            <div class="id">${escapeHtml(order.order_number || '#'+order.id)} — ${escapeHtml(order.customer_name)}</div>
             <div class="time">${new Date(order.created_at).toLocaleString(ADMIN_DATE_LOCALES[adminUiLanguage])}</div>
           </div>
           <span class="badge ${order.status}">${adminText(order.status)}</span>

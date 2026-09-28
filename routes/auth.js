@@ -143,7 +143,7 @@ router.patch('/me', requireAuth, async (req, res) => {
 router.get('/orders', requireAuth, async (req, res) => {
   const { data: orders, error } = await supabase
     .from('orders')
-    .select('id, delivery_type, status, payment_status, total, created_at, order_items(name_snapshot, quantity, line_total)')
+    .select('id, order_number, delivery_type, status, payment_status, total, created_at, order_items(name_snapshot, quantity, line_total)')
     .eq('user_id', req.authUser.id)
     .order('created_at', { ascending: false });
 

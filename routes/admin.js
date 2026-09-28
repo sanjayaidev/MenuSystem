@@ -1,5 +1,6 @@
 const express = require('express');
 const supabase = require('../db/supabase');
+const { parseOrderRef, sanitizeSearch } = require('../db/order-ref');
 const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -217,14 +218,19 @@ router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), async
   res.status(201).json({ url: result.data.display_url || result.data.url });
 }));
 
-// GET /api/admin/orders?status=pending
-// Omit ?status for every order, newest first.
+// GET /api/admin/orders?status=pending&q=RH-2609&date=2026-09-28
+// Omit everything for every order, newest first.
+//   status  exact status filter
+//   q       partial match on order number (RH-2609 = all of Sept 2026,
+//           0042 = any order ending 0042) OR customer phone / name
+//   date    single day, YYYY-MM-DD (India time), matches the order number date
 router.get('/orders', async (req, res) => {
-  const { status } = req.query;
+  const { status, date } = req.query;
+  const q = sanitizeSearch(req.query.q);
 
   let query = supabase
     .from('orders')
-    .select('id, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, notes, created_at, updated_at, order_items(id, name_snapshot, unit_price, quantity, line_total)')
+    .select('id, order_number, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, notes, created_at, updated_at, order_items(id, name_snapshot, unit_price, quantity, line_total)')
     .order('created_at', { ascending: false });
 
   if (status) {
@@ -234,26 +240,43 @@ router.get('/orders', async (req, res) => {
     query = query.eq('status', status);
   }
 
+  if (date) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) {
+      return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
+    }
+    const yymmdd = String(date).slice(2).replace(/-/g, '');
+    query = query.like('order_number', `RH-${yymmdd}-%`);
+  }
+
+  if (q) {
+    query = query.or(`order_number.ilike.%${q}%,customer_phone.ilike.%${q}%,customer_name.ilike.%${q}%`);
+  }
+
   const { data: orders, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   res.json({ orders });
 });
 
-// GET /api/admin/orders/:id — full detail for one order
+// GET /api/admin/orders/:ref — full detail for one order (order number or id)
 router.get('/orders/:id', async (req, res) => {
+  const ref = parseOrderRef(req.params.id);
+  if (!ref) return res.status(404).json({ error: 'Order not found' });
+
   const { data: order, error } = await supabase
     .from('orders')
     .select('*, order_items(*)')
-    .eq('id', req.params.id)
+    .eq(ref.column, ref.value)
     .single();
 
   if (error || !order) return res.status(404).json({ error: 'Order not found' });
   res.json(order);
 });
 
-// PATCH /api/admin/orders/:id/status  { status }
+// PATCH /api/admin/orders/:ref/status  { status }
 router.patch('/orders/:id/status', async (req, res) => {
   const { status } = req.body;
+  const ref = parseOrderRef(req.params.id);
+  if (!ref) return res.status(404).json({ error: 'Order not found' });
   if (!VALID_STATUSES.includes(status)) {
     return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
   }
@@ -261,7 +284,7 @@ router.patch('/orders/:id/status', async (req, res) => {
   const { data: order, error } = await supabase
     .from('orders')
     .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', req.params.id)
+    .eq(ref.column, ref.value)
     .select()
     .single();
 

@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const supabase = require('../db/supabase');
 const { getAuthUser } = require('../middleware/auth');
+const { parseOrderRef } = require('../db/order-ref');
 
 const router = express.Router();
 
@@ -120,6 +121,7 @@ router.post('/orders', orderLimiter, async (req, res) => {
 
   res.status(201).json({
     id: order.id,
+    order_number: order.order_number, // e.g. RH-260928-0042 — show this to the customer
     order_token: order.order_token, // keep this client-side to look the order up later
     subtotal,
     deliveryFee,
@@ -129,17 +131,21 @@ router.post('/orders', orderLimiter, async (req, res) => {
   });
 });
 
-// GET /api/orders/:id?token=<order_token> — for confirmation/support lookups.
+// GET /api/orders/:ref?token=<order_token> — for confirmation/support lookups.
+// :ref is the order number (RH-260928-0042) or the legacy numeric id.
 // Order ids are small sequential integers, so without this check anyone
 // could just walk them and read other customers' names/phones/addresses.
 // Access is allowed if the caller supplies the order's own order_token
 // (returned once at creation, meant for guest checkout confirmation
 // screens), or is signed in as the order's owner, or is an admin.
 router.get('/orders/:id', async (req, res) => {
+  const ref = parseOrderRef(req.params.id);
+  if (!ref) return res.status(404).json({ error: 'Order not found' });
+
   const { data: order, error } = await supabase
     .from('orders')
     .select('*, order_items(*)')
-    .eq('id', req.params.id)
+    .eq(ref.column, ref.value)
     .single();
 
   if (error || !order) return res.status(404).json({ error: 'Order not found' });

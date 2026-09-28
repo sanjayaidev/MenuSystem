@@ -293,6 +293,18 @@
   footer.tabs button.active{color:var(--gold);}
   footer.tabs .icon{width:22px; height:22px;}
   footer.tabs .icon svg{width:100%; height:100%;}
+  footer.tabs .icon{position:relative; overflow:visible;}
+  /* cart count badge on the Basket tab icon */
+  .cart-badge{
+    position:absolute; top:-7px; inset-inline-end:-10px; min-width:20px; height:20px; padding:0 4px; box-sizing:border-box;
+    border-radius:999px; background:var(--red); color:#fff; font-size:11px; font-weight:700; line-height:16px;
+    text-align:center; border:2px solid var(--surface); pointer-events:none;
+    transform:scale(1); transition:transform .15s ease;
+  }
+  .cart-badge[hidden]{display:none;}
+  .cart-badge.pop{animation:cartBadgePop .3s ease;}
+  @keyframes cartBadgePop{0%{transform:scale(1);}45%{transform:scale(1.35);}100%{transform:scale(1);}}
+  @media (prefers-reduced-motion:reduce){.cart-badge.pop{animation:none;}}
 </style>
 </head>
 <body>
@@ -345,7 +357,7 @@
     <footer class="tabs">
       <button class="active" data-tab="home"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span><span data-i18n="navHome">Home</span></button>
       <button data-tab="menu"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2v9"/><path d="M8 3v6"/><path d="M4 6h4"/><path d="M18 3c-1.7 0-3 2-3 5s1.3 5 3 5v8"/></svg></span><span data-i18n="navMenu">Menu</span></button>
-      <button data-tab="basket"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span data-i18n="navBasket">Basket</span></button>
+      <button data-tab="basket"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="cart-badge" id="cartBadge" hidden>0</span></span><span data-i18n="navBasket">Basket</span></button>
       <button data-tab="profile"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span data-i18n="navProfile">Profile</span></button>
     </footer>
   </div>
@@ -879,6 +891,7 @@ function saveGuestCart(){
 function cartSet(id, qty){
   id = Number(id);
   if(qty <= 0){ delete cart[id]; } else { cart[id] = qty; }
+  updateCartBadge();
 
   if(authToken){
     const request = qty <= 0
@@ -899,6 +912,7 @@ function cartSet(id, qty){
 async function clearCart(){
   const ids = Object.keys(cart).map(Number);
   cart = {};
+  updateCartBadge();
   if(authToken){
     try{
       await Promise.all(ids.map(id => fetch(`${API_BASE}/api/cart/${id}`, { method:'DELETE', headers:authHeaders() })));
@@ -917,6 +931,7 @@ async function loadCartFromServer(){
     const { items } = await res.json();
     cart = {};
     items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+    updateCartBadge();
   }catch(err){
     console.error('Failed to load cart from server:', err);
   }
@@ -945,11 +960,29 @@ async function mergeGuestCartIntoServer(){
     console.error('Failed to merge guest cart into server cart:', err);
   }
   try{ localStorage.removeItem(GUEST_CART_KEY); }catch(e){ /* ignore */ }
+  updateCartBadge();
 }
 
 function itemById(id){ return ITEMS.find(i=>i.id===id); }
 function itemPrice(item){ return item.price; }
 function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+
+// Red count bubble on the Basket tab. Total quantity across all lines
+// (2 burgers + 1 juice = 3). Hidden at 0, capped at 99+, pops on increase.
+let lastBadgeCount = 0;
+function updateCartBadge(){
+  const badge = document.getElementById('cartBadge');
+  if(!badge) return;
+  const count = cartCount();
+  badge.hidden = count <= 0;
+  badge.textContent = count > 99 ? '99+' : String(count);
+  if(count > lastBadgeCount){
+    badge.classList.remove('pop');
+    void badge.offsetWidth; // restart the animation
+    badge.classList.add('pop');
+  }
+  lastBadgeCount = count;
+}
 function cartLines(){
   return Object.entries(cart).map(([id,qty])=>{
     const item = itemById(Number(id));
@@ -1173,7 +1206,7 @@ async function loadProfileOrders(){
   if(!orders.length){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].noOrders)}</p>`; return; }
   ordersEl.innerHTML = orders.map(order => {
     const items = order.order_items.map(item => `${item.quantity} × ${escapeHtml(item.name_snapshot)}`).join(', ');
-    return `<div class="profile-order"><div class="profile-order-head"><span>#${order.id}</span><span>${escapeHtml(money(Number(order.total)))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
+    return `<div class="profile-order"><div class="profile-order-head"><span>${escapeHtml(order.order_number || '#'+order.id)}</span><span>${escapeHtml(money(Number(order.total)))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
   }).join('');
 }
 function openProfile(){
@@ -1246,6 +1279,7 @@ document.getElementById('profileLogoutBtn').addEventListener('click', ()=>{
   // Signing out starts a fresh guest cart on this device rather than
   // keeping whatever was synced from the account.
   cart = {};
+  updateCartBadge();
   try{ localStorage.removeItem(GUEST_CART_KEY); }catch(e){ /* ignore */ }
   if(cartOverlay.classList.contains('is-open')) renderCart();
 });
@@ -1352,7 +1386,7 @@ function sendOrderToWhatsApp(order, contact){
     ? `Home delivery\nAddress: ${contact.address}`
     : `Pick-up from the branch`;
   const message =
-`New order #${order.id} — ${BRANCH_NAME}
+`New order ${order.order_number || '#'+order.id} — ${BRANCH_NAME}
 ${typeLine}
 
 Name: ${contact.name}
@@ -1377,6 +1411,7 @@ Payment: confirmed (simulated)`;
   }else{
     cart = loadGuestCart();
   }
+  updateCartBadge();
   setLang('en');
 })();
 
