@@ -14,6 +14,11 @@ const adminRoutes = require('./routes/admin');
 const bannerRoutes = require('./routes/banner');
 
 const app = express();
+
+// Render (like most hosts) runs the app behind one reverse proxy that sets
+// X-Forwarded-For. Trusting exactly 1 hop lets express-rate-limit see each
+// visitor's real IP instead of treating everyone as the proxy's IP.
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const APP_URL = process.env.APP_URL;
 const PING_INTERVAL_MS = 10 * 60 * 1000;
