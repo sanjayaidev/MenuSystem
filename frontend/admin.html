@@ -193,6 +193,7 @@
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
       <button class="admin-tab" data-panel="bannerPanel" type="button" data-ui="banner">Banner</button>
+      <button class="admin-tab" data-panel="contactPanel" type="button" data-ui="cdTab">Contact</button>
     </nav>
     <section class="admin-panel" id="ordersPanel">
     <div class="filters" id="statusFilters"></div>
@@ -247,6 +248,20 @@
         </div>
         <p class="form-note" style="margin:10px 0 0;" data-ui="bannerHint">Only the first 10 seconds are used. Higher fps and width look smoother but make the homepage heavier to load. The new banner is temporary: it is replaced by the default after the next deploy or server restart.</p>
         <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="bannerUploadBtn">Upload &amp; convert</button><span class="form-note" id="bannerNote" role="status"></span></div>
+      </form>
+    </section>
+
+    <section class="admin-panel" id="contactPanel" hidden>
+      <div class="panel-title"><h2 data-ui="cdTitle">Contact details</h2></div>
+      <form class="manager-form" id="contactForm" novalidate>
+        <p class="form-note" style="margin:0 0 12px;" data-ui="cdHint">Shown to customers when they tap the call button on the homepage.</p>
+        <div class="form-grid compact">
+          <label><span data-ui="cdPhone">Phone number</span><input name="phone" id="contactPhone" type="tel" required maxlength="30" autocomplete="off" placeholder="+966 50 000 0000"></label>
+        </div>
+        <div style="margin-top:12px;">
+          <label><span data-ui="cdAddress">Address</span><textarea name="address" id="contactAddress" required maxlength="300" placeholder="Street, area, city"></textarea></label>
+        </div>
+        <div class="form-actions"><button class="action-btn primary" id="contactSubmit" type="submit" data-ui="cdSave">Save contact details</button><span class="form-note" id="contactNote" role="status"></span></div>
       </form>
     </section>
 
@@ -474,6 +489,31 @@ const ADMIN_UI_STRINGS = {
     bannerSaveFailed:'帧已生成，但无法保存。',
   },
 };
+
+// Strings for the Contact tab (merged into each language above).
+const CONTACT_ADMIN_STRINGS = {
+  en: { cdTab:'Contact', cdTitle:'Contact details', cdHint:'Shown to customers when they tap the call button on the homepage.',
+        cdPhone:'Phone number', cdAddress:'Address', cdSave:'Save contact details', cdSaved:'Contact details saved.',
+        cdLoadFailed:'Could not load the current contact details.', cdSaveFailed:'Could not save contact details.',
+        cdInvalidPhone:'Enter a valid phone number (digits, spaces, +, -, brackets).', cdInvalidAddress:'Address is required (max 300 characters).',
+        cdTableMissing:'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' },
+  ar: { cdTab:'التواصل', cdTitle:'بيانات التواصل', cdHint:'تظهر للعملاء عند الضغط على زر الاتصال في الصفحة الرئيسية.',
+        cdPhone:'رقم الهاتف', cdAddress:'العنوان', cdSave:'حفظ بيانات التواصل', cdSaved:'تم حفظ بيانات التواصل.',
+        cdLoadFailed:'تعذّر تحميل بيانات التواصل الحالية.', cdSaveFailed:'تعذّر حفظ بيانات التواصل.',
+        cdInvalidPhone:'أدخل رقم هاتف صالحاً (أرقام ومسافات و+ و- وأقواس).', cdInvalidAddress:'العنوان مطلوب (بحد أقصى 300 حرف).',
+        cdTableMissing:'جدول site_settings غير موجود. شغّل db/06_site_settings.sql في Supabase.' },
+  ur: { cdTab:'رابطہ', cdTitle:'رابطے کی تفصیلات', cdHint:'ہوم پیج پر کال بٹن دبانے پر گاہکوں کو دکھائی جاتی ہیں۔',
+        cdPhone:'فون نمبر', cdAddress:'پتہ', cdSave:'رابطے کی تفصیلات محفوظ کریں', cdSaved:'رابطے کی تفصیلات محفوظ ہو گئیں۔',
+        cdLoadFailed:'موجودہ رابطے کی تفصیلات لوڈ نہیں ہو سکیں۔', cdSaveFailed:'رابطے کی تفصیلات محفوظ نہیں ہو سکیں۔',
+        cdInvalidPhone:'درست فون نمبر درج کریں (ہندسے، خالی جگہ، +، -، بریکٹ)۔', cdInvalidAddress:'پتہ ضروری ہے (زیادہ سے زیادہ 300 حروف)۔',
+        cdTableMissing:'site_settings ٹیبل موجود نہیں۔ Supabase میں db/06_site_settings.sql چلائیں۔' },
+  zh: { cdTab:'联系方式', cdTitle:'联系方式', cdHint:'顾客点击首页的电话按钮时显示。',
+        cdPhone:'电话号码', cdAddress:'地址', cdSave:'保存联系方式', cdSaved:'联系方式已保存。',
+        cdLoadFailed:'无法加载当前联系方式。', cdSaveFailed:'无法保存联系方式。',
+        cdInvalidPhone:'请输入有效的电话号码（数字、空格、+、-、括号）。', cdInvalidAddress:'地址为必填项（最多 300 个字符）。',
+        cdTableMissing:'缺少 site_settings 表。请在 Supabase 中运行 db/06_site_settings.sql。' },
+};
+Object.keys(CONTACT_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS[code]));
 
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
@@ -763,6 +803,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'categoriesPanel') loadCategories();
     if(tab.dataset.panel === 'menuPanel') loadMenu();
     if(tab.dataset.panel === 'bannerPanel') loadBanner();
+    if(tab.dataset.panel === 'contactPanel') loadContact();
   });
 });
 
@@ -786,6 +827,7 @@ async function adminRequest(path, options = {}){
   if(!response.ok){
     const message = result.error || '';
     if(path.startsWith('/banner')) throw new Error(bannerErrorText(message));
+    if(path.startsWith('/contact')) throw new Error(contactErrorText(message));
     let key = 'requestFailed';
     if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
     else if(message.includes('This record is still in use')) key = 'recordInUse';
@@ -1189,6 +1231,52 @@ document.getElementById('bannerReset').addEventListener('click', async event => 
     setFormNote('bannerNote', adminText('bannerResetDone'));
   }catch(error){
     setFormNote('bannerNote', error.message || adminText('bannerResetFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+/* ---------- contact details (homepage call button) ---------- */
+function contactErrorText(message){
+  const known = [
+    ['valid phone number', 'cdInvalidPhone'],
+    ['Address is required', 'cdInvalidAddress'],
+    ['site_settings table is missing', 'cdTableMissing'],
+  ];
+  const hit = known.find(([text]) => (message || '').includes(text));
+  return adminText(hit ? hit[1] : 'cdSaveFailed');
+}
+async function loadContact(){
+  try{
+    const response = await fetch(`${API_BASE}/api/contact`, { cache: 'no-store' });
+    if(!response.ok) throw new Error();
+    const contact = await response.json();
+    document.getElementById('contactPhone').value = contact.phone || '';
+    document.getElementById('contactAddress').value = contact.address || '';
+    setFormNote('contactNote', '');
+  }catch{
+    setFormNote('contactNote', adminText('cdLoadFailed'), true);
+  }
+}
+document.getElementById('contactForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('contactSubmit');
+  button.disabled = true;
+  setFormNote('contactNote', adminText('saving'));
+  try{
+    const result = await adminRequest('/contact', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: document.getElementById('contactPhone').value,
+        address: document.getElementById('contactAddress').value,
+      }),
+    });
+    document.getElementById('contactPhone').value = result.contact.phone;
+    document.getElementById('contactAddress').value = result.contact.address;
+    setFormNote('contactNote', adminText('cdSaved'));
+  }catch(error){
+    setFormNote('contactNote', error.message || adminText('cdSaveFailed'), true);
   }finally{
     button.disabled = false;
   }

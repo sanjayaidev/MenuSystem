@@ -281,8 +281,28 @@
   html[dir="rtl"] .floating{right:auto; left:14px;}
   .fab{width:46px; height:46px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.4);}
   .fab svg{width:20px; height:20px;}
-  .fab-chat{background:var(--surface); color:var(--gold); border:1px solid var(--line);}
   .fab-call{background:var(--gold); color:#1a1408;}
+
+  /* ===== CONTACT CARD (opened by the call button) ===== */
+  #contactOverlay{
+    position:fixed; inset: auto auto calc(58px + env(safe-area-inset-bottom,0px)) 50%;
+    width:min(480px, 100%); transform:translateX(-50%); border:1px solid var(--line); border-bottom:none;
+    border-radius:18px 18px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.35); overflow:hidden;
+  }
+  .contact-body{padding:4px 18px 22px; display:flex; flex-direction:column; gap:12px;}
+  .contact-row{
+    display:flex; align-items:flex-start; gap:12px; background:var(--surface);
+    border:1px solid var(--line); border-radius:12px; padding:14px;
+  }
+  .contact-row .ico{width:20px; height:20px; color:var(--gold); flex-shrink:0; margin-top:2px;}
+  .contact-label{font-size:12px; color:var(--muted); margin:0 0 3px;}
+  .contact-value{font-size:15px; font-weight:600; margin:0; line-height:1.5; overflow-wrap:anywhere;}
+  .contact-actions{display:flex; gap:10px;}
+  .contact-btn{
+    flex:1; text-align:center; text-decoration:none; font-family:inherit; font-size:14px; font-weight:700;
+    border-radius:12px; padding:13px 10px; border:1px solid var(--gold); color:var(--gold); background:transparent;
+  }
+  .contact-btn.primary{background:var(--gold); color:#1a1408;}
 
   /* ===== FOOTER: Home, Menu, Basket, Profile ===== */
   footer.tabs{
@@ -350,8 +370,7 @@
     <main id="list"></main>
 
     <div class="floating">
-      <button class="fab fab-chat" aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.2-4.3A8 8 0 1 1 21 12Z"/></svg></button>
-      <button class="fab fab-call" aria-label="Call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg></button>
+      <button class="fab fab-call" id="callFab" aria-label="Call" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg></button>
     </div>
 
     <footer class="tabs">
@@ -360,6 +379,31 @@
       <button data-tab="basket"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="cart-badge" id="cartBadge" hidden>0</span></span><span data-i18n="navBasket">Basket</span></button>
       <button data-tab="profile"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span data-i18n="navProfile">Profile</span></button>
     </footer>
+  </div>
+
+  <!-- ===== CONTACT CARD (call button) ===== -->
+  <div class="overlay" id="contactOverlay" role="dialog" aria-labelledby="contactTitle">
+    <div class="overlay-head">
+      <button class="icon-btn" id="contactClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="overlay-title" id="contactTitle" data-i18n="contactTitle">Contact us</span>
+      <span style="width:38px;flex-shrink:0;"></span>
+    </div>
+    <div class="contact-body">
+      <div class="contact-row">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg>
+        <div><p class="contact-label" data-i18n="contactPhone">Phone</p><p class="contact-value" id="contactPhone" dir="ltr"></p></div>
+      </div>
+      <div class="contact-row">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        <div><p class="contact-label" data-i18n="contactAddress">Address</p><p class="contact-value" id="contactAddress"></p></div>
+      </div>
+      <div class="contact-actions">
+        <a class="contact-btn primary" id="contactCallLink" href="#" data-i18n="contactCallNow">Call now</a>
+        <a class="contact-btn" id="contactMapLink" href="#" target="_blank" rel="noopener" data-i18n="contactOpenMap">Open in Maps</a>
+      </div>
+    </div>
   </div>
 
   <!-- ===== ITEM DETAIL MODAL ===== -->
@@ -615,6 +659,15 @@ const STR = {
        descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
 };
 
+// Strings for the call-button contact card.
+const CONTACT_STR = {
+  en:{ contactTitle:'Contact us', contactPhone:'Phone', contactAddress:'Address', contactCallNow:'Call now', contactOpenMap:'Open in Maps' },
+  ar:{ contactTitle:'تواصل معنا', contactPhone:'الهاتف', contactAddress:'العنوان', contactCallNow:'اتصل الآن', contactOpenMap:'افتح في الخرائط' },
+  ur:{ contactTitle:'ہم سے رابطہ کریں', contactPhone:'فون', contactAddress:'پتہ', contactCallNow:'ابھی کال کریں', contactOpenMap:'نقشے میں کھولیں' },
+  zh:{ contactTitle:'联系我们', contactPhone:'电话', contactAddress:'地址', contactCallNow:'立即致电', contactOpenMap:'在地图中打开' },
+};
+Object.keys(CONTACT_STR).forEach(code => Object.assign(STR[code], CONTACT_STR[code]));
+
 // CATS and ITEMS are no longer hardcoded — they're loaded from the
 // real backend (GET /api/categories and GET /api/menu, which read
 // from Supabase) by loadMenuData(), called from init() near the
@@ -755,7 +808,7 @@ categorySelect.addEventListener('change', render);
 sortSelect.addEventListener('change', render);
 
 /* ---------- overlay and tab state ---------- */
-const overlayElements = ['itemModal', 'cartOverlay', 'profileOverlay', 'checkoutOverlay']
+const overlayElements = ['itemModal', 'cartOverlay', 'profileOverlay', 'checkoutOverlay', 'contactOverlay']
   .map(id => document.getElementById(id));
 function resetOverlayScroll(overlay){
   overlay.scrollTop = 0;
@@ -815,6 +868,47 @@ async function loadConfig(){
     console.error('Failed to load server config, using defaults:', err);
   }
 }
+
+/* ---------- contact details (call button) ---------- */
+// Editable from the admin "Contact" tab; served by GET /api/contact.
+let CONTACT = { phone:'', address:'' };
+
+async function loadContact(){
+  try{
+    const res = await fetch(`${API_BASE}/api/contact`, { cache:'no-store' });
+    if(!res.ok) throw new Error(`GET /api/contact failed (${res.status})`);
+    const data = await res.json();
+    CONTACT = { phone: String(data.phone || ''), address: String(data.address || '') };
+  }catch(err){
+    console.error('Failed to load contact details:', err);
+  }
+}
+
+function renderContact(){
+  document.getElementById('contactPhone').textContent = CONTACT.phone;
+  document.getElementById('contactAddress').textContent = CONTACT.address;
+  // tel: links only accept digits and a leading +
+  const dialable = CONTACT.phone.replace(/[^\d+]/g, '');
+  const callLink = document.getElementById('contactCallLink');
+  callLink.href = dialable ? `tel:${dialable}` : '#';
+  callLink.hidden = !dialable;
+  const mapLink = document.getElementById('contactMapLink');
+  mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONTACT.address)}`;
+  mapLink.hidden = !CONTACT.address;
+}
+
+const contactOverlay = document.getElementById('contactOverlay');
+async function openContact(){
+  renderContact();                 // show what we have instantly...
+  openOverlay(contactOverlay);
+  await loadContact();             // ...then pick up any admin edit made since page load
+  renderContact();
+}
+document.getElementById('callFab').addEventListener('click', openContact);
+document.getElementById('contactClose').addEventListener('click', ()=> closeOverlay(contactOverlay));
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && contactOverlay.classList.contains('is-open')) closeOverlay(contactOverlay);
+});
 
 /* ---------- load categories + menu items from the real backend ---------- */
 async function loadMenuData(){
@@ -1405,7 +1499,7 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await Promise.all([loadMenuData(), loadConfig()]);
+  await Promise.all([loadMenuData(), loadConfig(), loadContact()]);
   if(authToken){
     await loadCartFromServer();
   }else{
