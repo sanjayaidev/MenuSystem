@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/orders');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const adminRoutes = require('./routes/admin');
+const bannerRoutes = require('./routes/banner');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +74,7 @@ app.get('/api/config', (req, res) => {
 app.use('/api', menuRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', cartRoutes);
+app.use('/api', bannerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 

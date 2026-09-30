@@ -192,6 +192,7 @@
       <button class="admin-tab active" data-panel="ordersPanel" type="button" data-ui="orders">Orders</button>
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
+      <button class="admin-tab" data-panel="bannerPanel" type="button" data-ui="banner">Banner</button>
     </nav>
     <section class="admin-panel" id="ordersPanel">
     <div class="filters" id="statusFilters"></div>
@@ -227,6 +228,26 @@
         <div class="form-actions"><button class="action-btn primary" id="categorySubmit" type="submit" data-ui="createCategory">Create category</button><button class="action-btn" id="categoryCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="categoryNote" role="status"></span></div>
       </form>
       <div class="records" id="categoryRecords"></div>
+    </section>
+
+    <section class="admin-panel" id="bannerPanel" hidden>
+      <div class="panel-title"><h2 data-ui="bannerTitle">Homepage banner</h2><span class="count" id="bannerInfo"></span></div>
+      <div class="manager-form">
+        <h3 data-ui="bannerCurrent">Current banner</h3>
+        <img id="bannerPreview" alt="Current banner first frame" style="display:block; width:100%; max-width:480px; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:#000; margin-bottom:12px;">
+        <p class="form-note" id="bannerSource" style="margin:0 0 4px;"></p>
+        <div class="form-actions"><button class="action-btn danger" id="bannerReset" type="button" hidden data-ui="bannerRestore">Restore default banner</button></div>
+      </div>
+      <form class="manager-form" id="bannerForm" novalidate>
+        <h3 data-ui="bannerUploadHeading">Upload a new banner video</h3>
+        <div class="form-grid compact">
+          <label><span data-ui="bannerVideoLabel">Video file (MP4 recommended, max 300 MB)</span><input type="file" id="bannerFile" accept="video/*,.mp4,.mov,.webm,.mkv,.avi,.m4v" required></label>
+          <label><span data-ui="bannerFpsLabel">Frames per second (1-60)</span><input type="number" id="bannerFps" min="1" max="60" step="1" value="24"></label>
+          <label><span data-ui="bannerWidthLabel">Frame width in px (320-1920)</span><input type="number" id="bannerWidth" min="320" max="1920" step="10" value="1280"></label>
+        </div>
+        <p class="form-note" style="margin:10px 0 0;" data-ui="bannerHint">Only the first 10 seconds are used. Higher fps and width look smoother but make the homepage heavier to load. The new banner is temporary: it is replaced by the default after the next deploy or server restart.</p>
+        <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="bannerUploadBtn">Upload &amp; convert</button><span class="form-note" id="bannerNote" role="status"></span></div>
+      </form>
     </section>
 
     <section class="admin-panel" id="menuPanel" hidden>
@@ -312,6 +333,16 @@ const ADMIN_UI_STRINGS = {
     imagePreview:'Image preview', requestFailed:'Request failed (HTTP {status}).', fallbackFoodImageAlt:'Fallback food image', menuItemAlt:'Menu item',
     categoryKeyInUse:'That category key is already in use.', recordInUse:'This record is still in use.', categoryHasItems:'Move or delete this category’s menu items first.',
     imageServiceMissing:'Image upload is not configured on the server.', unsupportedImageType:'Choose a JPEG, PNG, WebP, or GIF image.',
+    banner:'Banner', bannerTitle:'Homepage banner', bannerCurrent:'Current banner',
+    bannerFrames:'{count} frames', bannerDefault:'Using the default banner.', bannerCustom:'Custom banner - {count} frames at {fps} fps.',
+    bannerRestore:'Restore default banner', bannerUploadHeading:'Upload a new banner video', bannerVideoLabel:'Video file (MP4 recommended, max 300 MB)',
+    bannerFpsLabel:'Frames per second (1-60)', bannerWidthLabel:'Frame width in px (320-1920)', bannerHint:'Only the first 10 seconds are used. Higher fps and width look smoother but make the homepage heavier to load. The new banner is temporary: it is replaced by the default after the next deploy or server restart.',
+    bannerUploadBtn:'Upload & convert', bannerChooseVideo:'Choose a video first.', bannerUploading:'Uploading and converting - this can take a minute...',
+    bannerUpdated:'Banner updated. Refresh the homepage to see it.', bannerResetDone:'Default banner restored.', bannerLoadFailed:'Could not load the current banner.',
+    bannerUploadFailed:'Banner upload failed.', bannerResetFailed:'Could not restore the default banner.', bannerConfirmReset:'Restore the default banner?',
+    bannerPreviewAlt:'First frame of the current banner', bannerTooLarge:'Video must be smaller than 300 MB.', bannerUnsupported:'Unsupported video type. Allowed: MP4, MOV, WEBM, MKV, AVI, M4V.',
+    bannerBusy:'A banner is already being processed. Please wait.', bannerProcessFailed:'Could not process this video. Try a different file (MP4 works best).', bannerNoFrames:'No frames could be extracted from this video.',
+    bannerSaveFailed:'Frames were created but could not be saved.',
   },
   ar: {
     adminTitle:'الإدارة', interfaceLanguage:'لغة الواجهة', signOut:'تسجيل الخروج',
@@ -345,6 +376,16 @@ const ADMIN_UI_STRINGS = {
     imagePreview:'معاينة الصورة', requestFailed:'فشل الطلب (HTTP {status}).', fallbackFoodImageAlt:'صورة الطعام الافتراضية', menuItemAlt:'صنف القائمة',
     categoryKeyInUse:'مفتاح الفئة مستخدم بالفعل.', recordInUse:'لا يزال هذا السجل مستخدماً.', categoryHasItems:'انقل أصناف هذه الفئة أو احذفها أولاً.',
     imageServiceMissing:'رفع الصور غير مهيأ على الخادم.', unsupportedImageType:'اختر صورة JPEG أو PNG أو WebP أو GIF.',
+    banner:'البانر', bannerTitle:'بانر الصفحة الرئيسية', bannerCurrent:'البانر الحالي',
+    bannerFrames:'{count} إطار', bannerDefault:'يتم استخدام البانر الافتراضي.', bannerCustom:'بانر مخصص - {count} إطار بمعدل {fps} إطار/ثانية.',
+    bannerRestore:'استعادة البانر الافتراضي', bannerUploadHeading:'رفع فيديو بانر جديد', bannerVideoLabel:'ملف الفيديو (يفضّل MP4، بحد أقصى 300 ميغابايت)',
+    bannerFpsLabel:'عدد الإطارات في الثانية (1-60)', bannerWidthLabel:'عرض الإطار بالبكسل (320-1920)', bannerHint:'يتم استخدام أول 10 ثوانٍ فقط. كلما زاد عدد الإطارات والعرض كانت الحركة أسلس، لكن تحميل الصفحة الرئيسية يصبح أثقل. البانر الجديد مؤقت: يُستبدل بالافتراضي بعد النشر التالي أو إعادة تشغيل الخادم.',
+    bannerUploadBtn:'رفع وتحويل', bannerChooseVideo:'اختر فيديو أولاً.', bannerUploading:'جارٍ الرفع والتحويل - قد يستغرق ذلك دقيقة...',
+    bannerUpdated:'تم تحديث البانر. حدّث الصفحة الرئيسية لرؤيته.', bannerResetDone:'تمت استعادة البانر الافتراضي.', bannerLoadFailed:'تعذّر تحميل البانر الحالي.',
+    bannerUploadFailed:'فشل رفع البانر.', bannerResetFailed:'تعذّرت استعادة البانر الافتراضي.', bannerConfirmReset:'هل تريد استعادة البانر الافتراضي؟',
+    bannerPreviewAlt:'الإطار الأول من البانر الحالي', bannerTooLarge:'يجب أن يكون الفيديو أصغر من 300 ميغابايت.', bannerUnsupported:'نوع الفيديو غير مدعوم. الأنواع المسموحة: MP4 وMOV وWEBM وMKV وAVI وM4V.',
+    bannerBusy:'تتم معالجة بانر آخر حالياً. يرجى الانتظار.', bannerProcessFailed:'تعذّرت معالجة هذا الفيديو. جرّب ملفاً آخر (يفضّل MP4).', bannerNoFrames:'تعذّر استخراج أي إطارات من هذا الفيديو.',
+    bannerSaveFailed:'تم إنشاء الإطارات لكن تعذّر حفظها.',
   },
   ur: {
     adminTitle:'ایڈمن', interfaceLanguage:'انٹرفیس کی زبان', signOut:'سائن آؤٹ',
@@ -378,6 +419,16 @@ const ADMIN_UI_STRINGS = {
     imagePreview:'تصویر کا پیش منظر', requestFailed:'درخواست ناکام ہوئی (HTTP {status})۔', fallbackFoodImageAlt:'متبادل کھانے کی تصویر', menuItemAlt:'مینو آئٹم',
     categoryKeyInUse:'یہ زمرے کی کلید پہلے سے استعمال ہو رہی ہے۔', recordInUse:'یہ ریکارڈ ابھی استعمال میں ہے۔', categoryHasItems:'پہلے اس زمرے کے آئٹمز منتقل یا حذف کریں۔',
     imageServiceMissing:'سرور پر تصویر اپ لوڈ کی سہولت ترتیب نہیں دی گئی۔', unsupportedImageType:'JPEG، PNG، WebP یا GIF تصویر منتخب کریں۔',
+    banner:'بینر', bannerTitle:'ہوم پیج بینر', bannerCurrent:'موجودہ بینر',
+    bannerFrames:'{count} فریمز', bannerDefault:'ڈیفالٹ بینر استعمال ہو رہا ہے۔', bannerCustom:'حسبِ ضرورت بینر - {count} فریمز، {fps} فریم فی سیکنڈ۔',
+    bannerRestore:'ڈیفالٹ بینر بحال کریں', bannerUploadHeading:'نئی بینر ویڈیو اپ لوڈ کریں', bannerVideoLabel:'ویڈیو فائل (MP4 بہتر ہے، زیادہ سے زیادہ 300 MB)',
+    bannerFpsLabel:'فریم فی سیکنڈ (1-60)', bannerWidthLabel:'فریم کی چوڑائی پکسلز میں (320-1920)', bannerHint:'صرف پہلے 10 سیکنڈ استعمال ہوتے ہیں۔ زیادہ فریم ریٹ اور چوڑائی سے ویڈیو زیادہ ہموار نظر آتی ہے مگر ہوم پیج دیر سے لوڈ ہوتا ہے۔ نیا بینر عارضی ہے: اگلی ڈیپلائمنٹ یا سرور ری اسٹارٹ کے بعد ڈیفالٹ بینر واپس آ جائے گا۔',
+    bannerUploadBtn:'اپ لوڈ اور تبدیل کریں', bannerChooseVideo:'پہلے ویڈیو منتخب کریں۔', bannerUploading:'اپ لوڈ اور تبدیلی جاری ہے - اس میں ایک منٹ لگ سکتا ہے...',
+    bannerUpdated:'بینر اپ ڈیٹ ہو گیا۔ دیکھنے کے لیے ہوم پیج ری فریش کریں۔', bannerResetDone:'ڈیفالٹ بینر بحال ہو گیا۔', bannerLoadFailed:'موجودہ بینر لوڈ نہیں ہو سکا۔',
+    bannerUploadFailed:'بینر اپ لوڈ ناکام ہو گیا۔', bannerResetFailed:'ڈیفالٹ بینر بحال نہیں ہو سکا۔', bannerConfirmReset:'کیا ڈیفالٹ بینر بحال کریں؟',
+    bannerPreviewAlt:'موجودہ بینر کا پہلا فریم', bannerTooLarge:'ویڈیو 300 MB سے چھوٹی ہونی چاہیے۔', bannerUnsupported:'ویڈیو کی یہ قسم معاون نہیں۔ اجازت شدہ اقسام: MP4، MOV، WEBM، MKV، AVI، M4V۔',
+    bannerBusy:'ایک اور بینر پر کام جاری ہے۔ براہِ کرم انتظار کریں۔', bannerProcessFailed:'یہ ویڈیو پروسیس نہیں ہو سکی۔ کوئی اور فائل آزمائیں (MP4 بہتر ہے)۔', bannerNoFrames:'اس ویڈیو سے کوئی فریم حاصل نہیں ہو سکا۔',
+    bannerSaveFailed:'فریمز بن گئے لیکن محفوظ نہیں ہو سکے۔',
   },
   zh: {
     adminTitle:'管理后台', interfaceLanguage:'界面语言', signOut:'退出登录',
@@ -411,6 +462,16 @@ const ADMIN_UI_STRINGS = {
     imagePreview:'图片预览', requestFailed:'请求失败（HTTP {status}）。', fallbackFoodImageAlt:'默认食物图片', menuItemAlt:'菜单商品',
     categoryKeyInUse:'该分类键已被使用。', recordInUse:'该记录仍在使用中。', categoryHasItems:'请先移动或删除此分类下的商品。',
     imageServiceMissing:'服务器尚未配置图片上传。', unsupportedImageType:'请选择 JPEG、PNG、WebP 或 GIF 图片。',
+    banner:'横幅', bannerTitle:'首页横幅', bannerCurrent:'当前横幅',
+    bannerFrames:'{count} 帧', bannerDefault:'正在使用默认横幅。', bannerCustom:'自定义横幅 - {count} 帧，{fps} 帧/秒。',
+    bannerRestore:'恢复默认横幅', bannerUploadHeading:'上传新的横幅视频', bannerVideoLabel:'视频文件（推荐 MP4，最大 300 MB）',
+    bannerFpsLabel:'每秒帧数（1-60）', bannerWidthLabel:'帧宽度，单位像素（320-1920）', bannerHint:'仅使用前 10 秒。帧率和宽度越高画面越流畅，但首页加载会更慢。新横幅是临时的：下次部署或服务器重启后将恢复为默认横幅。',
+    bannerUploadBtn:'上传并转换', bannerChooseVideo:'请先选择视频。', bannerUploading:'正在上传并转换，可能需要一分钟...',
+    bannerUpdated:'横幅已更新。刷新首页即可查看。', bannerResetDone:'已恢复默认横幅。', bannerLoadFailed:'无法加载当前横幅。',
+    bannerUploadFailed:'横幅上传失败。', bannerResetFailed:'无法恢复默认横幅。', bannerConfirmReset:'要恢复默认横幅吗？',
+    bannerPreviewAlt:'当前横幅的第一帧', bannerTooLarge:'视频必须小于 300 MB。', bannerUnsupported:'不支持此视频类型。允许的类型：MP4、MOV、WEBM、MKV、AVI、M4V。',
+    bannerBusy:'正在处理另一个横幅，请稍候。', bannerProcessFailed:'无法处理此视频，请换一个文件（推荐 MP4）。', bannerNoFrames:'无法从此视频中提取任何帧。',
+    bannerSaveFailed:'帧已生成，但无法保存。',
   },
 };
 
@@ -458,6 +519,9 @@ function applyAdminUiLanguage(language){
   document.getElementById('itemFormTitle').textContent = adminText(itemEditing ? 'editMenuItem' : 'newMenuItem');
   document.getElementById('itemSubmit').textContent = adminText(itemEditing ? 'saveMenuItem' : 'createMenuItem');
   updateImagePreview(document.getElementById('itemImageUrl').value);
+
+  document.getElementById('bannerPreview').alt = adminText('bannerPreviewAlt');
+  if(currentBannerData) renderBanner(currentBannerData);
 
   renderFilters();
   if(ordersLoaded) renderOrders(currentOrders);
@@ -698,6 +762,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
 
     if(tab.dataset.panel === 'categoriesPanel') loadCategories();
     if(tab.dataset.panel === 'menuPanel') loadMenu();
+    if(tab.dataset.panel === 'bannerPanel') loadBanner();
   });
 });
 
@@ -720,6 +785,7 @@ async function adminRequest(path, options = {}){
   }
   if(!response.ok){
     const message = result.error || '';
+    if(path.startsWith('/banner')) throw new Error(bannerErrorText(message));
     let key = 'requestFailed';
     if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
     else if(message.includes('This record is still in use')) key = 'recordInUse';
@@ -1054,6 +1120,77 @@ document.getElementById('imageUploadBtn').addEventListener('click', async event 
     setFormNote('itemNote', error.message || adminText('imageUploadFailed'), true);
   }finally{
     button.disabled = !document.getElementById('itemImageFile').files.length;
+  }
+});
+
+/* ---------- homepage banner ---------- */
+let currentBannerData = null;
+function bannerErrorText(message){
+  const known = [
+    ['smaller than 300 MB', 'bannerTooLarge'],
+    ['Unsupported video type', 'bannerUnsupported'],
+    ['being processed', 'bannerBusy'],
+    ['Could not process this video', 'bannerProcessFailed'],
+    ['No frames could be extracted', 'bannerNoFrames'],
+    ['No video file received', 'bannerChooseVideo'],
+    ['could not be saved', 'bannerSaveFailed'],
+  ];
+  const hit = known.find(([text]) => (message || '').includes(text));
+  return adminText(hit ? hit[1] : 'bannerUploadFailed');
+}
+async function loadBanner(){
+  try{
+    const response = await fetch(`${API_BASE}/api/banner`, { cache: 'no-store' });
+    const banner = await response.json();
+    renderBanner(banner);
+  }catch{
+    setFormNote('bannerNote', adminText('bannerLoadFailed'), true);
+  }
+}
+function renderBanner(banner){
+  currentBannerData = banner;
+  const first = `${API_BASE}/${banner.base}/frame_0001.jpg?v=${banner.version || 0}`;
+  document.getElementById('bannerPreview').src = first;
+  document.getElementById('bannerInfo').textContent = adminText('bannerFrames', { count: banner.count });
+  document.getElementById('bannerSource').textContent = banner.custom
+    ? adminText('bannerCustom', { count: banner.count, fps: banner.fps })
+    : adminText('bannerDefault');
+  document.getElementById('bannerReset').hidden = !banner.custom;
+}
+document.getElementById('bannerForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const file = document.getElementById('bannerFile').files[0];
+  if(!file){ setFormNote('bannerNote', adminText('bannerChooseVideo'), true); return; }
+  const button = document.getElementById('bannerSubmit');
+  const body = new FormData();
+  body.append('fps', document.getElementById('bannerFps').value);
+  body.append('width', document.getElementById('bannerWidth').value);
+  body.append('video', file); // file last so the text fields are parsed first
+  button.disabled = true;
+  setFormNote('bannerNote', adminText('bannerUploading'));
+  try{
+    const result = await adminRequest('/banner', { method: 'POST', body });
+    renderBanner(result.banner);
+    document.getElementById('bannerForm').reset();
+    setFormNote('bannerNote', adminText('bannerUpdated'));
+  }catch(error){
+    setFormNote('bannerNote', error.message || adminText('bannerUploadFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+});
+document.getElementById('bannerReset').addEventListener('click', async event => {
+  if(!confirm(adminText('bannerConfirmReset'))) return;
+  const button = event.currentTarget;
+  button.disabled = true;
+  try{
+    const result = await adminRequest('/banner/reset', { method: 'POST' });
+    renderBanner(result.banner);
+    setFormNote('bannerNote', adminText('bannerResetDone'));
+  }catch(error){
+    setFormNote('bannerNote', error.message || adminText('bannerResetFailed'), true);
+  }finally{
+    button.disabled = false;
   }
 });
 

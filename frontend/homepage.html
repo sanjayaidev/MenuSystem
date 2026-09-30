@@ -1420,10 +1420,13 @@ Payment: confirmed (simulated)`;
    continuous loop. Point FRAME_URL / TOTAL_FRAMES at your real frames.
    ===================================================================== */
 (() => {
-  const FRAME_URL = (n) => `frames/frame_${String(n).padStart(4, '0')}.jpg`;
-  const TOTAL_FRAMES = 60;   // set to your actual exported frame count
+  // Banner source comes from /api/banner (admin can upload a new video).
+  // These are only fallbacks if that request fails.
+  let BASE = 'frames', VERSION = 0;
+  let TOTAL_FRAMES = 60;
+  let FPS = 24;
+  const FRAME_URL = (n) => `${BASE}/frame_${String(n).padStart(4, '0')}.jpg${VERSION ? `?v=${VERSION}` : ''}`;
   const CONCURRENCY = 6;
-  const FPS = 24;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const hero = document.getElementById('hero');
@@ -1481,8 +1484,30 @@ Payment: confirmed (simulated)`;
     requestAnimationFrame(loopTick);
   }
 
+  async function loadBannerConfig(){
+    try{
+      const res = await fetch(`${API_BASE}/api/banner`, { cache:'no-store' });
+      if(!res.ok) throw new Error('banner config unavailable');
+      const cfg = await res.json();
+      if(cfg.count > 0){
+        BASE = cfg.base; VERSION = cfg.version || 0;
+        TOTAL_FRAMES = cfg.count;
+        FPS = cfg.fps || FPS;
+        if(cfg.custom) document.getElementById('heroPoster').src = FRAME_URL(1);
+      }
+    }catch(e){
+      // fall back to the default frames' manifest, then to the constants above
+      try{
+        const res = await fetch('frames/manifest.json');
+        const m = await res.json();
+        if(m.count > 0) TOTAL_FRAMES = m.count;
+      }catch(_){}
+    }
+  }
+
   async function start(){
     resizeCanvas();
+    await loadBannerConfig();
     try{
       frames[0] = await loadImage(FRAME_URL(1));
       done++; showLoading();

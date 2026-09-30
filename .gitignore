@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# banner videos are processed at runtime; the ffmpeg binary in the repo root IS committed
+frontend/banner/
+frontend/banner_tmp/
