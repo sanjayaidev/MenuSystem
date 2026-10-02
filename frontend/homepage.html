@@ -339,6 +339,9 @@
     position:fixed; left:50%; bottom:0; transform:translateX(-50%); width:min(480px,100%); z-index:10; background:var(--surface); border-top:1px solid var(--line);
     display:flex; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));
   }
+  footer.tabs{transition:transform .25s ease, opacity .25s ease;}
+  footer.tabs:not(.show){transform:translate(-50%,110%); opacity:0; pointer-events:none; visibility:hidden;}
+  footer.tabs.show{transform:translateX(-50%); opacity:1; visibility:visible;}
   footer.tabs button{flex:1; background:none; border:none; color:var(--muted); font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; padding:6px 0; cursor:pointer;}
   footer.tabs button.active{color:var(--gold);}
   footer.tabs .icon{width:22px; height:22px;}
@@ -415,7 +418,7 @@
       <button class="fab fab-call" id="callFab" aria-label="Call" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg></button>
     </div>
 
-    <footer class="tabs">
+    <footer class="tabs" id="tabsBar">
       <button class="active" data-tab="home"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span><span data-i18n="navHome">Home</span></button>
       <button data-tab="menu"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2v9"/><path d="M8 3v6"/><path d="M4 6h4"/><path d="M18 3c-1.7 0-3 2-3 5s1.3 5 3 5v8"/></svg></span><span data-i18n="navMenu">Menu</span></button>
       <button data-tab="basket"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="cart-badge" id="cartBadge" hidden>0</span></span><span data-i18n="navBasket">Basket</span></button>
@@ -899,6 +902,7 @@ function openOverlay(overlay){
 function closeOverlay(overlay){
   overlay.classList.remove('is-open');
   resetOverlayScroll(overlay);
+  syncFooter();
 }
 function scrollToTab(tab){
   closeAllOverlays();
@@ -910,7 +914,27 @@ function scrollToTab(tab){
     app.classList.remove('menu-mode');
     window.scrollTo({top:0, behavior:'smooth'});
   }
+  syncFooter();
 }
+
+/* Footer tabs appear only once the menu section is reached (normal scroll)
+   or the Menu tab is tapped (menu-mode). Hidden on the hero / specials. */
+function syncFooter(){
+  const bar = document.getElementById('tabsBar');
+  const app = document.querySelector('.app');
+  const menuEl = document.getElementById('menu');
+  if(!bar || !menuEl) return;
+  const reached = app.classList.contains('menu-mode') || menuEl.getBoundingClientRect().top <= innerHeight * 0.5;
+  const overlayOpen = !!document.querySelector('.overlay.is-open');
+  bar.classList.toggle('show', reached || overlayOpen);
+  if(!overlayOpen){
+    bar.querySelectorAll('button').forEach(b=>{
+      if(b.dataset.tab === 'home' || b.dataset.tab === 'menu') b.classList.toggle('active', b.dataset.tab === (reached ? 'menu' : 'home'));
+    });
+  }
+}
+addEventListener('scroll', syncFooter, {passive:true});
+addEventListener('resize', syncFooter);
 
 /* ---------- footer tabs ---------- */
 document.querySelectorAll('footer.tabs button').forEach(btn=>{
@@ -926,6 +950,21 @@ document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDe
 
 document.getElementById('specialRow').addEventListener('click', e=>{
   const card = e.target.closest('.special-card');
+  const addBtn = e.target.closest('.special-add');
+  if(card && addBtn){
+    e.stopPropagation();
+    // Add the product currently shown in the video (2 s per product).
+    const items = SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items || [];
+    const item = items[Number(card.dataset.idx) || 0] || items[0];
+    if(!item || !itemById(Number(item.id))) return;
+    cartSet(item.id, (cart[Number(item.id)] || 0) + 1);
+    const label = addBtn.querySelector('span');
+    const original = STR[lang].addToCart;
+    label.textContent = '✓';
+    clearTimeout(addBtn._t);
+    addBtn._t = setTimeout(()=>{ label.textContent = original; }, 800);
+    return;
+  }
   if(!card || card.dataset.drag) return;
   categorySelect.value = card.dataset.cat;
   render();
@@ -1615,6 +1654,7 @@ Payment: confirmed (simulated)`;
   }
   updateCartBadge();
   setLang('en');
+  syncFooter();
   renderSpecial();
 })();
 
@@ -1728,6 +1768,7 @@ Payment: confirmed (simulated)`;
       if(!state.items.length || !duration()) return;
       const index=Math.min(state.items.length-1,Math.floor(state.current*duration()/2));
       const item=state.items[index];
+      state.card.dataset.idx=String(index);
       const price=Number(item?.price);
       state.priceLabel.textContent=Number.isFinite(price)?money(price):'';
       state.foodRows.forEach((food,rowIndex)=>food.classList.toggle('is-current',rowIndex===index));

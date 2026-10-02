@@ -30,7 +30,9 @@ function categoryValues(body = {}) {
 
   const values = { key, sort_order: sortOrder };
   for (const language of LANGUAGES) {
-    const label = body[`label_${language}`];
+    let label = body[`label_${language}`];
+    // Urdu is hidden in the UI for now: fall back to the English label.
+    if (language === 'ur' && (typeof label !== 'string' || !label.trim())) label = body.label_en;
     if (typeof label !== 'string' || !label.trim()) {
       return { error: `Category name is required for ${language.toUpperCase()}.` };
     }
@@ -67,8 +69,10 @@ function menuItemValues(body = {}) {
     image_path: typeof body.image_path === 'string' && body.image_path.trim() ? body.image_path.trim() : null,
   };
   for (const language of LANGUAGES) {
-    const name = body[`name_${language}`];
+    let name = body[`name_${language}`];
     const description = body[`description_${language}`];
+    // Urdu is hidden in the UI for now: fall back to the English name.
+    if (language === 'ur' && (typeof name !== 'string' || !name.trim())) name = body.name_en;
     if (typeof name !== 'string' || !name.trim()) {
       return { error: `Item name is required for ${language.toUpperCase()}.` };
     }

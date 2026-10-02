@@ -166,7 +166,7 @@
   <div class="header-tools">
     <label class="visually-hidden" for="adminLanguageSelect" data-ui="interfaceLanguage">Interface language</label>
     <select id="adminLanguageSelect" aria-label="Interface language" data-ui-aria-label="interfaceLanguage">
-      <option value="en">English</option><option value="ar">العربية</option><option value="ur">اردو</option><option value="zh">中文</option>
+      <option value="en">English</option><option value="ar">العربية</option><!-- <option value="ur">اردو</option> --><option value="zh">中文</option>
     </select>
     <div class="who" id="whoRow" style="display:none;">
       <span id="whoEmail"></span>
@@ -220,13 +220,13 @@
         <div class="language-switcher" role="group" aria-label="Category translation language" data-ui-aria-label="categoryTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
-          <button type="button" data-language="ur" aria-pressed="false">اردو</button>
+          <!-- <button type="button" data-language="ur" aria-pressed="false">اردو</button> -->
           <button type="button" data-language="zh" aria-pressed="false">中文</button>
         </div>
         <div class="language-fields">
           <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Category name<input name="label_en" required></label></fieldset>
           <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الفئة<input name="label_ar" required></label></fieldset>
-          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>زمرے کا نام<input name="label_ur" required></label></fieldset>
+          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>زمرے کا نام<input name="label_ur"></label></fieldset>
           <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>分类名称<input name="label_zh" required></label></fieldset>
         </div>
         <div class="form-actions"><button class="action-btn primary" id="categorySubmit" type="submit" data-ui="createCategory">Create category</button><button class="action-btn" id="categoryCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="categoryNote" role="status"></span></div>
@@ -284,13 +284,13 @@
         <div class="language-switcher" role="group" aria-label="Menu item translation language" data-ui-aria-label="itemTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
-          <button type="button" data-language="ur" aria-pressed="false">اردو</button>
+          <!-- <button type="button" data-language="ur" aria-pressed="false">اردو</button> -->
           <button type="button" data-language="zh" aria-pressed="false">中文</button>
         </div>
         <div class="language-fields">
           <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Item name<input name="name_en" required></label><label>Description<textarea name="description_en"></textarea></label></fieldset>
           <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الطبق<input name="name_ar" required></label><label>الوصف<textarea name="description_ar"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>ڈش کا نام<input name="name_ur" required></label><label>تفصیل<textarea name="description_ur"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>ڈش کا نام<input name="name_ur"></label><label>تفصیل<textarea name="description_ur"></textarea></label></fieldset>
           <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>菜品名称<input name="name_zh" required></label><label>描述<textarea name="description_zh"></textarea></label></fieldset>
         </div>
         <div class="check-fields">
@@ -558,6 +558,7 @@ Object.keys(CONTACT_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRING
 
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
+if(adminUiLanguage === 'ur') adminUiLanguage = 'en'; // Urdu hidden for now
 let currentFilter = 'all';
 let autoRefreshTimer = null;
 let currentOrders = [];
