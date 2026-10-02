@@ -110,6 +110,7 @@
   .special-card .hint i{font-style:normal; color:var(--gold); font-size:18px; line-height:1;}
   .special-card .category-name{margin:8px 2px 0; font-size:15px; font-weight:600;}
   .special-card .category-action{margin:2px 2px 0; color:var(--muted); font-size:12px;}
+  .special-add{margin:10px 2px 0; border:0; background:var(--gold); color:#1a1408; padding:8px 13px; font:600 12px 'Poppins',sans-serif; cursor:pointer;}
   .special-foods{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 14px; margin:8px 2px 0; padding-inline-start:20px; color:var(--muted); font-size:11px; line-height:1.4;}
   .special-foods li{min-width:0; overflow-wrap:anywhere;}
   .special-row.hints-off .hint{opacity:0;}
@@ -734,10 +735,11 @@ function renderSpecial(){
     const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
     const label = category.label[lang] || category.label.en || category.key;
     const foods = (config?.items || []).map(item=>item[`name_${lang}`] || item.name_en).filter(Boolean);
-    return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}" role="button" tabindex="0" aria-label="${escapeHtml(label)}">
+    return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}">
       <div class="special-video"><video poster="images/offer-demo.png" muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div></div>
       <p class="category-name">${escapeHtml(label)}</p><p class="category-action">${escapeHtml(STR[lang].specialHint)}</p>
       ${foods.length ? `<ol class="special-foods">${foods.map(food=>`<li>${escapeHtml(food)}</li>`).join('')}</ol>` : ''}
+      <button class="special-add" type="button">${escapeHtml(STR[lang].addToCart)}</button>
     </article>`;
   }).join('');
 }
@@ -1736,6 +1738,12 @@ Payment: confirmed (simulated)`;
     const goTo=position=>{if(!duration()) return; state.target=clamp(position,0,1); state.pos=state.target; specialRow.classList.add('hints-off'); kick();};
     clip.addEventListener('loadedmetadata',()=>{state.current=state.target=state.pos;state.lastSeek=-1;state.bar.style.transform=`scaleX(${state.current})`;if(state.pos)kick();});
     clip.addEventListener('loadeddata',()=>clip.play().then(()=>{clip.pause();if(state.live){state.lastSeek=-1;kick();}}).catch(()=>{}));
+    clip.addEventListener('error',()=>{
+      if(state.live && clip.dataset.sourceKind==='bucket'){
+        clip.dataset.sourceKind='fallback';
+        clip.src='demo/food-360p.mp4';
+      }
+    });
     scrubPointer(element,()=>state.live&&duration()>0,()=>state.target,(base,dx)=>goTo(base-dx/element.clientWidth*dragGain()),card);
     element.addEventListener('wheel',event=>{
       if(!state.live || !duration() || Math.abs(event.deltaX)<=Math.abs(event.deltaY)) return;
@@ -1749,7 +1757,9 @@ Payment: confirmed (simulated)`;
     state.live=on;
     if(on){
       const source=state.card.dataset.videoUrl;
-      if(source){state.clip.preload='auto';state.clip.src=source;}
+      state.clip.preload='auto';
+      state.clip.dataset.sourceKind=source?'bucket':'fallback';
+      state.clip.src=source || 'demo/food-360p.mp4';
     }
     else{
       cancelAnimationFrame(state.raf);state.raf=0;state.lastSeek=-1;state.clip.pause();
@@ -1779,16 +1789,20 @@ Payment: confirmed (simulated)`;
     }catch(_){}
     manifestReady=true;
     scheduleLive();
-    if(!VIDEO_MANIFEST.heroUrl){heroReady=true;scheduleLive();return;}
     if(VIDEO_MANIFEST.heroPosterUrl) video.poster=VIDEO_MANIFEST.heroPosterUrl;
-    video.src=VIDEO_MANIFEST.heroUrl;
+    video.dataset.sourceKind=VIDEO_MANIFEST.heroUrl?'bucket':'fallback';
+    video.src=VIDEO_MANIFEST.heroUrl || 'demo/hero-360p.mp4';
     video.addEventListener('loadeddata',()=>{
       heroReady=true; target=current=0; lastSeek=-1; seekHero(0);
       scheduleLive();
     },{once:true});
     video.addEventListener('error',()=>{
+      if(video.dataset.sourceKind==='bucket'){
+        video.dataset.sourceKind='fallback';
+        video.src='demo/hero-360p.mp4'; video.load(); return;
+      }
       heroReady=true; scheduleLive();
-    },{once:true});
+    });
     video.load();
     setTimeout(()=>{if(!heroReady){heroReady=true;scheduleLive();}},8000);
   }

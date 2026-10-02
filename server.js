@@ -54,6 +54,7 @@ app.use(helmet({
   contentSecurityPolicy: false,
 }));
 app.use(express.json());
+app.use('/demo', express.static(path.join(__dirname, 'demo')));
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 app.get('/', (req, res) => {
