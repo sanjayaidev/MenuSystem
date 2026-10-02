@@ -13,11 +13,11 @@
   }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
 })();
 </script>
-<link rel="preload" as="image" href="frames/frame_0001.jpg" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    --brand-h:clamp(84px,29vw,136px);
     --bg:#121110; --surface:#1c1a18; --line:#2c2925;
     --gold:#e3b23c; --red:#b8352b;
     --text:#f4efe6; --muted:#a99f8f;
@@ -42,19 +42,20 @@
   html[lang="ar"] body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
   html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Poppins',sans-serif;}
   html[lang="zh"] body{font-family:'Noto Sans SC','Poppins',sans-serif;}
-  .app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative;}
+  .app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}
 
-  /* ===== TOP BAR: full-width, black bg, logo fit-to-height, free width ===== */
+  /* ===== BRAND ===== */
   .topbar{
-    background:#000; height:56px; display:flex; align-items:center; justify-content:space-between;
-    padding:0 14px; gap:10px;
+    position:sticky; top:0; z-index:20; background:#000; min-height:var(--brand-h);
+    display:flex; align-items:center; justify-content:center; padding:0;
   }
-  .topbar .logo-wrap{height:100%; display:flex; align-items:center; padding:10px 0;}
-  .topbar .logo-wrap img{height:100%; width:auto; display:block;}
-  .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:14px; letter-spacing:.03em; display:none;}
+  .topbar .logo-wrap{width:100%; display:flex; align-items:center; justify-content:center;}
+  .topbar .logo-wrap img{width:100%; height:auto; max-height:var(--brand-h); object-fit:contain; display:block;}
+  .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:14px; display:none;}
+  .language-row{display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px; background:#000;}
   .lang-pills{
-    display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;
-    max-width:58%;
+    display:flex; justify-content:center; gap:6px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;
+    max-width:100%;
   }
   .lang-pills::-webkit-scrollbar{display:none;}
   .lang-pill{
@@ -72,25 +73,16 @@
   html[data-theme="light"] .theme-toggle .icon-sun{display:none;}
   html[data-theme="light"] .theme-toggle .icon-moon{display:block;}
 
-  /* ===== HERO: autoplay frame loop ===== */
-  .hero{position:relative; height:calc(100svh - 56px); min-height:280px; overflow:hidden; background:#000;}
-  .hero-poster, .hero-canvas{position:absolute; inset:0; width:100%; height:100%;}
-  .hero-poster{object-fit:cover;}
-  .hero-canvas{opacity:0; transition:opacity .5s ease;}
-  .hero-canvas.is-ready{opacity:1;}
+  /* ===== HERO: pinned, autoplaying video that can be scrubbed ===== */
+  .hero{position:relative; height:100svh; min-height:420px; overflow:clip; background:#000;}
+  .hero-stage{position:sticky; top:var(--brand-h); height:calc(100svh - var(--brand-h)); min-height:320px; overflow:hidden; background:#000; touch-action:pan-y; user-select:none; -webkit-user-select:none;}
+  .hero-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
   .hero-scrim{
     position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(to top, rgba(8,12,10,.75) 0%, rgba(8,12,10,0) 45%);
   }
-  .hero-meter{
-    position:absolute; left:20px; bottom:44px; font-size:12px; color:var(--muted);
-    display:flex; flex-direction:column; gap:6px; pointer-events:none;
-  }
-  .hero-meter-bar{display:block; width:110px; height:2px; background:rgba(244,239,230,.2); overflow:hidden;}
-  .hero-meter-bar i{display:block; height:100%; background:var(--gold); transform-origin:left center; transform:scaleX(0);}
-  .hero.is-loaded .hero-meter{display:none;}
   .hero-cue{
-    position:absolute; left:20px; bottom:18px; display:flex; align-items:center; gap:8px;
+    position:absolute; left:20px; bottom:22px; display:flex; align-items:center; gap:8px;
     font-size:12px; color:var(--muted); text-decoration:none;
   }
   .hero-cue svg{width:14px; height:14px; animation:bob 1.6s ease-in-out infinite;}
@@ -98,13 +90,49 @@
   html[dir="rtl"] .hero-meter, html[dir="rtl"] .hero-cue{left:auto; right:20px;}
   @media (prefers-reduced-motion:reduce){ .hero-cue svg{animation:none;} }
 
+  /* ===== SPECIAL CATEGORY VIDEOS ===== */
+  .section{padding:22px 16px 10px;}
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px;}
+  .sec-head h2{margin:0; font-size:22px;}
+  .special-controls{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}
+  .special-hint{margin:0; color:var(--muted); font-size:11px;}
+  .speed-control{display:flex; align-items:center; gap:8px; white-space:nowrap; color:var(--muted); font-size:11px;}
+  .speed-control input{width:94px; accent-color:var(--gold); touch-action:pan-x;}
+  .speed-control output{min-width:1.2em; text-align:center; color:var(--text); font-weight:700;}
+  .special-row{display:grid; grid-template-columns:1fr; gap:20px;}
+  .special-card{min-width:0; cursor:pointer;}
+  .special-video{position:relative; aspect-ratio:16/9; overflow:hidden; background:#000; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab;}
+  .special-video.dragging{cursor:grabbing;}
+  .special-video video{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none;}
+  .special-scrub{position:absolute; inset:auto 0 0; height:3px; background:rgba(244,239,230,.25);}
+  .special-scrub i{display:block; width:100%; height:100%; background:var(--gold); transform:scaleX(0); transform-origin:left;}
+  .special-card .hint{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; color:#f4efe6; background:rgba(0,0,0,.58); font-size:11px; pointer-events:none; transition:opacity .3s;}
+  .special-card .hint i{font-style:normal; color:var(--gold); font-size:18px; line-height:1;}
+  .special-card .category-name{margin:8px 2px 0; font-size:15px; font-weight:600;}
+  .special-card .category-action{margin:2px 2px 0; color:var(--muted); font-size:12px;}
+  .special-foods{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 14px; margin:8px 2px 0; padding-inline-start:20px; color:var(--muted); font-size:11px; line-height:1.4;}
+  .special-foods li{min-width:0; overflow-wrap:anywhere;}
+  .special-row.hints-off .hint{opacity:0;}
+  .special-video.dragging + .hint{opacity:0;}
+
   /* ===== MENU ===== */
-  .controls{display:flex; gap:10px; padding:14px 16px 6px;}
+  #menu{display:flex; flex-direction:column; scroll-margin-top:var(--brand-h);}
+  #menuTitle{margin:8px 16px 0; font-size:22px;}
+  .controls{display:flex; gap:10px; padding:14px 16px 8px; order:1;}
   .controls select{
     flex:1; background:var(--surface); color:var(--text); border:1px solid var(--line);
     border-radius:10px; padding:10px 10px; font-family:inherit; font-size:13px; appearance:none;
   }
-  main{flex:1; padding:6px 16px 90px;}
+  .offer-banner{order:2; display:flex; align-items:center; gap:12px; min-height:116px; margin:8px 16px 10px; padding:12px; overflow:hidden; background:var(--gold); color:#1a1408;}
+  .offer-banner-copy{flex:1; min-width:0;}
+  .offer-banner h3{margin:0 0 4px; font-size:14px; line-height:1.25;}
+  .offer-banner p{margin:0; font-size:11px; line-height:1.4;}
+  .offer-banner img{width:35%; max-width:150px; height:92px; object-fit:contain; flex:none;}
+  main{flex:1; padding:6px 16px 20px; order:3;}
+  .app.menu-mode .hero,.app.menu-mode #special{display:none;}
+  .app.menu-mode #menuTitle{display:none;}
+  .app.menu-mode .offer-banner{order:1; margin-top:12px;}
+  .app.menu-mode .controls{order:2; padding-top:6px;}
 
   .row{
     display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line);
@@ -332,40 +360,52 @@
 
   <header class="topbar">
     <div class="logo-wrap">
-      <img id="logoImg" src="images/logo.png" alt="Red House Catering">
+      <img id="logoImg" src="images/rhclogo.png" alt="Red House Catering">
       <span class="logo-fallback" id="logoFallback">RED HOUSE CATERING</span>
     </div>
+  </header>
+
+  <section class="hero" id="hero" aria-label="Red House Catering">
+    <div class="hero-stage" id="heroStage">
+      <video class="hero-video" id="heroVideo" muted playsinline preload="auto" poster="images/offer-demo.png" aria-hidden="true"></video>
+      <div class="hero-scrim"></div>
+      <a class="hero-cue" href="#menu" id="exploreCue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span id="exploreLabel">Explore menu</span></a>
+    </div>
+  </section>
+
+  <div class="language-row" id="languageRow">
     <div class="lang-pills" id="langPills" role="group" aria-label="Language">
       <button class="lang-pill" data-lang="en">EN</button>
       <button class="lang-pill" data-lang="ar">عربي</button>
-      <button class="lang-pill" data-lang="ur">اردو</button>
+      <!-- <button class="lang-pill" data-lang="ur">اردو</button> -->
       <button class="lang-pill" data-lang="zh">中文</button>
     </div>
     <button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle light/dark theme">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
     </button>
-  </header>
+  </div>
 
-  <section class="hero" id="hero" aria-label="Red House Catering">
-    <img class="hero-poster" id="heroPoster" src="frames/frame_0001.jpg" alt="" fetchpriority="high" decoding="async">
-    <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
-    <div class="hero-scrim"></div>
-    <div class="hero-meter" id="heroMeter">
-      <span id="meterLabel">Loading 0%</span>
-      <span class="hero-meter-bar"><i id="meterFill"></i></span>
+  <section class="section" id="special">
+    <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
+    <div class="special-controls">
+      <p class="special-hint" data-i18n="specialHint">Drag left / right · Tap a category</p>
+      <label class="speed-control"><span data-i18n="videoSpeed">Speed</span><input id="speed" type="range" min="1" max="10" step="1" value="4" aria-label="Video scroll speed"><output id="speedval">4</output></label>
     </div>
-    <a class="hero-cue" href="#menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-      <span id="exploreLabel">Explore menu</span>
-    </a>
+    <div class="special-row" id="specialRow"></div>
   </section>
 
   <div id="menu">
+    <h2 id="menuTitle" data-i18n="menuTitle">Menu</h2>
     <div class="controls">
       <select id="categorySelect" aria-label="Filter by category"></select>
       <select id="sortSelect" aria-label="Sort menu"></select>
     </div>
+
+    <aside class="offer-banner" id="offerBanner">
+      <div class="offer-banner-copy"><h3 data-i18n="offerTitle">House special offer</h3><p data-i18n="offerText">Freshly prepared meals, made for sharing.</p></div>
+      <img src="images/offer-demo.png" alt="A meal with fries and drinks" loading="lazy">
+    </aside>
 
     <main id="list"></main>
 
@@ -569,7 +609,9 @@
 const LANGS = { en:{dir:'ltr'}, ar:{dir:'rtl'}, ur:{dir:'rtl'}, zh:{dir:'ltr'} };
 
 const STR = {
-  en:{ loading:'Loading', explore:'Explore menu', allCategories:'All categories',
+    en:{ loading:'Loading', explore:'Explore menu', allCategories:'All categories',
+      specialTitle:'Special', specialHint:'Drag left / right · Tap a category', videoSpeed:'Speed', menuTitle:'Menu',
+      offerTitle:'All meals served with', offerText:'Chinese fried egg rice, egg seaweed soup, vegetable salad with sauce, and bottled water.',
        sortName:'Name (A–Z)', sortTime:'Newest', sortOffer:'Offers first',
        sortPrice:'Price: low to high', sortPopular:'Most popular',
        empty:'No dishes in this category yet.', offer:'Offer',
@@ -591,7 +633,9 @@ const STR = {
        orderFailed:'Something went wrong. Please try again.',
        includesTitle:'This meal automatically includes:', includesText:'Steamed rice, soup, salad and bottled water.',
        descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
-  ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
+    ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
+      specialTitle:'المميز', specialHint:'اسحب يميناً أو يساراً · اضغط على الصنف', videoSpeed:'السرعة', menuTitle:'القائمة',
+      offerTitle:'تُقدَّم جميع الوجبات مع', offerText:'أرز مقلي بالبيض الصيني، شوربة البيض والأعشاب البحرية، سلطة خضار مع الصلصة وماء معبأ.',
        sortName:'الاسم (أ-ي)', sortTime:'الأحدث', sortOffer:'العروض أولاً',
        sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً',
        empty:'لا توجد أطباق في هذا الصنف بعد.', offer:'عرض',
@@ -613,7 +657,9 @@ const STR = {
        orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
        includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'أرز مطهو على البخار، شوربة، سلطة وماء معبأ.',
        descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
-  ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
+    ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
+      specialTitle:'خاص', specialHint:'دائیں یا بائیں سوائپ کریں · زمرہ منتخب کریں', videoSpeed:'رفتار', menuTitle:'مینو',
+      offerTitle:'تمام کھانوں کے ساتھ', offerText:'چائنیز ایگ فرائیڈ رائس، انڈے اور سی ویڈ کا سوپ، ساس کے ساتھ سبزیوں کا سلاد اور بوتل بند پانی۔',
        sortName:'نام (اے-زیڈ)', sortTime:'تازہ ترین', sortOffer:'پہلے آفرز',
        sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین',
        empty:'اس زمرے میں ابھی کوئی ڈش نہیں۔', offer:'آفر',
@@ -635,7 +681,9 @@ const STR = {
        orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
        includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'ابلے چاول، سوپ، سلاد اور بوتل بند پانی۔',
        descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
-  zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
+    zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
+      specialTitle:'精选', specialHint:'左右拖动 · 点击分类', videoSpeed:'速度', menuTitle:'菜单',
+      offerTitle:'所有餐点均配有', offerText:'中式鸡蛋炒饭、鸡蛋海藻汤、配酱汁的蔬菜沙拉和瓶装水。',
        sortName:'名称（A-Z）', sortTime:'最新', sortOffer:'优惠优先',
        sortPrice:'价格：从低到高', sortPopular:'最受欢迎',
        empty:'该分类暂无菜品。', offer:'优惠',
@@ -675,6 +723,24 @@ Object.keys(CONTACT_STR).forEach(code => Object.assign(STR[code], CONTACT_STR[co
 let CATS = [];
 let ITEMS = [];
 const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,zh:k} };
+let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
+let SPECIAL_SECTIONS = [];
+
+function renderSpecial(){
+  const row = document.getElementById('specialRow');
+  if(!row) return;
+  const ordered = [...CATS].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  row.innerHTML = ordered.map(category=>{
+    const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
+    const label = category.label[lang] || category.label.en || category.key;
+    const foods = (config?.items || []).map(item=>item[`name_${lang}`] || item.name_en).filter(Boolean);
+    return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}" role="button" tabindex="0" aria-label="${escapeHtml(label)}">
+      <div class="special-video"><video poster="images/offer-demo.png" muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div></div>
+      <p class="category-name">${escapeHtml(label)}</p><p class="category-action">${escapeHtml(STR[lang].specialHint)}</p>
+      ${foods.length ? `<ol class="special-foods">${foods.map(food=>`<li>${escapeHtml(food)}</li>`).join('')}</ol>` : ''}
+    </article>`;
+  }).join('');
+}
 
 let lang = 'en';
 
@@ -738,7 +804,6 @@ function setLang(code){
     p.classList.toggle('active', p.dataset.lang === code);
   });
 
-  document.getElementById('meterLabel').textContent = STR[lang].loading + ' 0%';
   document.getElementById('exploreLabel').textContent = STR[lang].explore;
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     el.textContent = STR[lang][el.dataset.i18n];
@@ -755,6 +820,7 @@ function setLang(code){
     <option value="price">${STR[lang].sortPrice}</option>`;
 
   render();
+  renderSpecial();
   refreshCartStaticText();
   refreshCheckoutStaticText();
   if(!cartOverlay.classList.contains('is-open')) {/* no-op, guards below re-render only if open */}
@@ -830,8 +896,14 @@ function closeOverlay(overlay){
 }
 function scrollToTab(tab){
   closeAllOverlays();
-  if(tab === 'menu') document.getElementById('menu').scrollIntoView({behavior:'smooth', block:'start'});
-  else window.scrollTo({top:0, behavior:'smooth'});
+  const app = document.querySelector('.app');
+  if(tab === 'menu'){
+    app.classList.add('menu-mode');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }else{
+    app.classList.remove('menu-mode');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
 }
 
 /* ---------- footer tabs ---------- */
@@ -843,6 +915,24 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
     else if(btn.dataset.tab === 'profile') openProfile();
     else scrollToTab(btn.dataset.tab);
   });
+});
+document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDefault(); scrollToTab('menu'); });
+
+document.getElementById('specialRow').addEventListener('click', e=>{
+  const card = e.target.closest('.special-card');
+  if(!card || card.dataset.drag) return;
+  categorySelect.value = card.dataset.cat;
+  render();
+  scrollToTab('menu');
+});
+document.getElementById('specialRow').addEventListener('keydown', e=>{
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('.special-card');
+  if(!card) return;
+  e.preventDefault();
+  categorySelect.value = card.dataset.cat;
+  render();
+  scrollToTab('menu');
 });
 
 /* =====================================================================
@@ -946,6 +1036,18 @@ async function loadMenuData(){
     CATS = [];
     ITEMS = [];
     listEl.innerHTML = `<div class="empty">Unable to load the menu right now. Please check your connection and try again.</div>`;
+  }
+}
+
+async function loadSpecialData(){
+  try{
+    const response = await fetch(`${API_BASE}/api/special`, { cache:'no-store' });
+    if(!response.ok) throw new Error(`GET /api/special failed (${response.status})`);
+    const data = await response.json();
+    SPECIAL_SECTIONS = data.categories || [];
+  }catch(error){
+    console.error('Failed to load Special section:', error);
+    SPECIAL_SECTIONS = [];
   }
 }
 
@@ -1499,7 +1601,7 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await Promise.all([loadMenuData(), loadConfig(), loadContact()]);
+  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
   if(authToken){
     await loadCartFromServer();
   }else{
@@ -1507,125 +1609,192 @@ Payment: confirmed (simulated)`;
   }
   updateCartBadge();
   setLang('en');
+  renderSpecial();
 })();
 
-/* =====================================================================
-   HERO: paint frame 1 instantly, preload the rest, then autoplay in a
-   continuous loop. Point FRAME_URL / TOTAL_FRAMES at your real frames.
-   ===================================================================== */
+/* ================= HERO + SPECIAL VIDEO SCRUBBING ================= */
 (() => {
-  // Banner source comes from /api/banner (admin can upload a new video).
-  // These are only fallbacks if that request fails.
-  let BASE = 'frames', VERSION = 0;
-  let TOTAL_FRAMES = 60;
-  let FPS = 24;
-  const FRAME_URL = (n) => `${BASE}/frame_${String(n).padStart(4, '0')}.jpg${VERSION ? `?v=${VERSION}` : ''}`;
-  const CONCURRENCY = 6;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   const hero = document.getElementById('hero');
-  const canvas = document.getElementById('heroCanvas');
-  const ctx = canvas.getContext('2d', { alpha:false });
-  const meterLabel = document.getElementById('meterLabel');
-  const meterFill = document.getElementById('meterFill');
+  const stage = document.getElementById('heroStage');
+  const video = document.getElementById('heroVideo');
+  const speedInput = document.getElementById('speed');
+  const speedValue = document.getElementById('speedval');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (value,min,max)=>Math.min(max,Math.max(min,value));
+  const smooth = value=>value*value*(3-2*value);
+  let speed = 4;
+  try { const saved = Number(localStorage.getItem('scrubSpeedUI')); if(saved >= 1 && saved <= 10) speed = saved; } catch(_){}
+  speedInput.value = speed;
+  speedValue.textContent = speed;
+  speedInput.addEventListener('input',()=>{
+    speed = Number(speedInput.value) || 4;
+    speedValue.textContent = speed;
+    try { localStorage.setItem('scrubSpeedUI', String(speed)); } catch(_){}
+  });
+  const dragGain = ()=>speed*0.12;
+  const wheelGain = ()=>speed/4;
 
-  const frames = [];
-  let done = 0;
-
-  function resizeCanvas(){
-    const dpr = Math.min(window.devicePixelRatio||1, 2);
-    canvas.width = Math.round(hero.clientWidth*dpr);
-    canvas.height = Math.round(hero.clientHeight*dpr);
+  let target = 0, current = 0, lastSeek = -1, heroReady = false, manifestReady = false;
+  let heroRaf = 0, pauseUntil = 0, lastAuto = 0, holdUntil = 0;
+  const ease = reduceMotion ? 1 : 0.16;
+  function seekHero(position){
+    if(!video.duration) return true;
+    const time = clamp(position,0,1)*(video.duration-0.04);
+    if(Math.abs(time-lastSeek)<0.008) return true;
+    if(video.seeking) return false;
+    lastSeek = time;
+    video.fastSeek ? video.fastSeek(time) : (video.currentTime = time);
+    return true;
   }
-  function paint(img){
-    const cw=canvas.width, ch=canvas.height;
-    const scale = Math.max(cw/img.naturalWidth, ch/img.naturalHeight);
-    const dw=img.naturalWidth*scale, dh=img.naturalHeight*scale;
-    ctx.drawImage(img, (cw-dw)/2, (ch-dh)/2, dw, dh);
+  function tickHero(){
+    heroRaf = 0;
+    current += (target-current)*ease;
+    if(Math.abs(target-current)<0.0004) current = target;
+    const settled = seekHero(current);
+    if(current !== target || !settled) heroRaf = requestAnimationFrame(tickHero);
   }
-  function nearestFrame(i){
-    if(frames[i]) return frames[i];
-    for(let d=1; d<TOTAL_FRAMES; d++){
-      if(frames[i-d]) return frames[i-d];
-      if(frames[i+d]) return frames[i+d];
-    }
-    return null;
+  function moveHero(position){
+    target = clamp(position,0,1);
+    hero.classList.add('used');
+    if(!heroRaf) heroRaf = requestAnimationFrame(tickHero);
   }
-  function loadImage(src){
-    return new Promise((resolve, reject)=>{
-      const img = new Image();
-      img.decoding = 'async';
-      img.onload = () => (img.decode ? img.decode() : Promise.resolve()).catch(()=>{}).then(()=>resolve(img));
-      img.onerror = () => reject(new Error('missing frame'));
-      img.src = src;
+  function scrubPointer(element, canStart, start, move, dragTarget){
+    let pointer = null, x = 0, y = 0, base = 0, locked = false;
+    element.addEventListener('pointerdown',event=>{
+      if(event.pointerType === 'mouse' && event.button !== 0) return;
+      delete dragTarget.dataset.drag;
+      if(!canStart()) return;
+      pointer=event.pointerId; x=event.clientX; y=event.clientY; base=start(); locked=false;
     });
-  }
-  function showLoading(){
-    const pct = Math.round((done/TOTAL_FRAMES)*100);
-    meterLabel.textContent = `${STR[lang].loading} ${pct}%`;
-    meterFill.style.transform = `scaleX(${done/TOTAL_FRAMES})`;
-  }
-
-  let playhead = 0, lastTime = 0;
-  function loopTick(ts){
-    if(!lastTime) lastTime = ts;
-    if(ts - lastTime > 1000/FPS){
-      lastTime = ts;
-      const img = nearestFrame(playhead);
-      if(img) paint(img);
-      playhead = (playhead + 1) % TOTAL_FRAMES;
-    }
-    requestAnimationFrame(loopTick);
-  }
-
-  async function loadBannerConfig(){
-    try{
-      const res = await fetch(`${API_BASE}/api/banner`, { cache:'no-store' });
-      if(!res.ok) throw new Error('banner config unavailable');
-      const cfg = await res.json();
-      if(cfg.count > 0){
-        BASE = cfg.base; VERSION = cfg.version || 0;
-        TOTAL_FRAMES = cfg.count;
-        FPS = cfg.fps || FPS;
-        if(cfg.custom) document.getElementById('heroPoster').src = FRAME_URL(1);
+    element.addEventListener('pointermove',event=>{
+      if(event.pointerId !== pointer) return;
+      const dx=event.clientX-x, dy=event.clientY-y;
+      if(!locked){
+        if(Math.abs(dx)<6 && Math.abs(dy)<6) return;
+        if(Math.abs(dy)>Math.abs(dx)){ pointer=null; return; }
+        locked=true; dragTarget.dataset.drag='1'; element.classList.add('dragging');
+        try { element.setPointerCapture(event.pointerId); } catch(_){}
       }
-    }catch(e){
-      // fall back to the default frames' manifest, then to the constants above
-      try{
-        const res = await fetch('frames/manifest.json');
-        const m = await res.json();
-        if(m.count > 0) TOTAL_FRAMES = m.count;
-      }catch(_){}
-    }
+      move(base,dx);
+    });
+    const end=event=>{ if(event.pointerId!==pointer) return; pointer=null; locked=false; element.classList.remove('dragging'); };
+    ['pointerup','pointercancel','lostpointercapture'].forEach(type=>element.addEventListener(type,end));
   }
 
-  async function start(){
-    resizeCanvas();
-    await loadBannerConfig();
-    try{
-      frames[0] = await loadImage(FRAME_URL(1));
-      done++; showLoading();
-      canvas.classList.add('is-ready');
-      paint(frames[0]);
-    }catch(e){ done++; }
+  scrubPointer(stage,()=>heroReady,()=>target,(base,dx)=>moveHero(base-dx/innerWidth*dragGain()*2),hero);
+  addEventListener('wheel',event=>{
+    if(!heroReady || event.ctrlKey || scrollY>2 || document.querySelector('.overlay.is-open') || document.querySelector('.app.menu-mode')) return;
+    let delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
+    if(!delta) return;
+    if(event.deltaMode===1) delta*=33; else if(event.deltaMode===2) delta*=innerHeight;
+    const now=performance.now();
+    if(now<holdUntil){ event.preventDefault(); return; }
+    if((delta>0 && target>=1)||(delta<0 && target<=0)) return;
+    event.preventDefault(); pauseUntil=now+2500;
+    target=clamp(target+delta/2500*wheelGain()*2,0,1);
+    if(target===0 || target===1) holdUntil=now+350;
+    moveHero(target);
+  },{passive:false});
+  stage.addEventListener('pointerdown',()=>{ pauseUntil=Infinity; });
+  ['pointerup','pointercancel'].forEach(type=>stage.addEventListener(type,()=>{pauseUntil=performance.now()+2500;}));
+  function autoStep(timestamp){
+    requestAnimationFrame(autoStep);
+    const dt=lastAuto?Math.min((timestamp-lastAuto)/1000,0.1):0; lastAuto=timestamp;
+    if(reduceMotion || !heroReady || !video.duration || scrollY>2 || document.hidden || timestamp<pauseUntil || document.querySelector('.app.menu-mode')) return;
+    let next=target+dt/video.duration*(speed/4);
+    if(next>=1){ next=0; current=0; lastSeek=-1; }
+    target=next;
+    if(!heroRaf) heroRaf=requestAnimationFrame(tickHero);
+  }
+  requestAnimationFrame(autoStep);
 
-    let next = 1;
-    async function worker(){
-      while(next < TOTAL_FRAMES){
-        const i = next++;
-        try{ frames[i] = await loadImage(FRAME_URL(i+1)); }
-        catch(e){ /* skip missing frame, nearest one is used instead */ }
-        done++; showLoading();
+  const specialRow=document.getElementById('specialRow');
+  const specialStates=new WeakMap();
+  const maxLive=3;
+  let liveRaf=0;
+  function stateFor(card){
+    let state=specialStates.get(card);
+    if(state) return state;
+    const element=card.querySelector('.special-video'), clip=element.querySelector('video'), bar=card.querySelector('.special-scrub i');
+    state={card,element,clip,bar,slot:card.dataset.slot,pos:0,target:0,current:0,lastSeek:-1,raf:0,live:false};
+    const duration=()=>clip.duration||0;
+    function tick(){
+      state.raf=0; state.current+=(state.target-state.current)*ease;
+      if(Math.abs(state.target-state.current)<0.0004) state.current=state.target;
+      state.bar.style.transform=`scaleX(${state.current})`;
+      let settled=true;
+      if(duration()){
+        const time=state.current*(duration()-0.04);
+        if(Math.abs(time-state.lastSeek)>=0.008){
+          if(clip.seeking) settled=false;
+          else { state.lastSeek=time; clip.fastSeek?clip.fastSeek(time):(clip.currentTime=time); }
+        }
       }
+      if(state.current!==state.target || !settled) state.raf=requestAnimationFrame(tick);
     }
-    await Promise.all(Array.from({length:CONCURRENCY}, worker));
-
-    hero.classList.add('is-loaded');
-    if(!reduceMotion) requestAnimationFrame(loopTick);
+    const kick=()=>{if(!state.raf) state.raf=requestAnimationFrame(tick);};
+    const goTo=position=>{if(!duration()) return; state.target=clamp(position,0,1); state.pos=state.target; specialRow.classList.add('hints-off'); kick();};
+    clip.addEventListener('loadedmetadata',()=>{state.current=state.target=state.pos;state.lastSeek=-1;state.bar.style.transform=`scaleX(${state.current})`;if(state.pos)kick();});
+    clip.addEventListener('loadeddata',()=>clip.play().then(()=>{clip.pause();if(state.live){state.lastSeek=-1;kick();}}).catch(()=>{}));
+    scrubPointer(element,()=>state.live&&duration()>0,()=>state.target,(base,dx)=>goTo(base-dx/element.clientWidth*dragGain()),card);
+    element.addEventListener('wheel',event=>{
+      if(!state.live || !duration() || Math.abs(event.deltaX)<=Math.abs(event.deltaY)) return;
+      event.preventDefault(); goTo(state.target+event.deltaX/600*wheelGain());
+    },{passive:false});
+    specialStates.set(card,state);
+    return state;
   }
+  function setLive(state,on){
+    if(state.live===on) return;
+    state.live=on;
+    if(on){
+      const source=state.card.dataset.videoUrl;
+      if(source){state.clip.preload='auto';state.clip.src=source;}
+    }
+    else{
+      cancelAnimationFrame(state.raf);state.raf=0;state.lastSeek=-1;state.clip.pause();
+      state.clip.removeAttribute('src');state.clip.load();state.bar.style.transform='scaleX(0)';
+    }
+  }
+  function refreshLive(){
+    liveRaf=0;
+    if(!manifestReady || document.querySelector('.app.menu-mode') || !heroReady && scrollY<40) return;
+    const cards=[...specialRow.querySelectorAll('.special-card')];
+    if(!cards.length) return;
+    const midpoint=innerHeight/2, view=innerHeight;
+    const wanted=cards.map(card=>{const rect=card.getBoundingClientRect();return {state:stateFor(card),distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-view*.5&&rect.top<view*1.5};})
+      .filter(item=>item.near).sort((a,b)=>a.distance-b.distance).slice(0,maxLive).map(item=>item.state);
+    cards.forEach(card=>{const state=stateFor(card);if(!wanted.includes(state))setLive(state,false);});
+    wanted.forEach(state=>setLive(state,true));
+  }
+  function scheduleLive(){if(!liveRaf) liveRaf=requestAnimationFrame(refreshLive);}
+  addEventListener('scroll',scheduleLive,{passive:true});
+  addEventListener('resize',scheduleLive);
+  scheduleLive();
 
-  window.addEventListener('resize', resizeCanvas);
-  start();
+  async function startHero(){
+    try{
+      const response=await fetch(`${API_BASE}/api/banner`,{cache:'no-store'});
+      if(response.ok) VIDEO_MANIFEST=await response.json();
+    }catch(_){}
+    manifestReady=true;
+    scheduleLive();
+    if(!VIDEO_MANIFEST.heroUrl){heroReady=true;scheduleLive();return;}
+    if(VIDEO_MANIFEST.heroPosterUrl) video.poster=VIDEO_MANIFEST.heroPosterUrl;
+    video.src=VIDEO_MANIFEST.heroUrl;
+    video.addEventListener('loadeddata',()=>{
+      heroReady=true; target=current=0; lastSeek=-1; seekHero(0);
+      scheduleLive();
+    },{once:true});
+    video.addEventListener('error',()=>{
+      heroReady=true; scheduleLive();
+    },{once:true});
+    video.load();
+    setTimeout(()=>{if(!heroReady){heroReady=true;scheduleLive();}},8000);
+  }
+  const kick=()=>[video,...[...specialRow.querySelectorAll('.special-card')].map(card=>card.querySelector('video'))].forEach(clip=>clip.play().then(()=>clip.pause()).catch(()=>{}));
+  ['touchstart','pointerdown','wheel'].forEach(type=>addEventListener(type,kick,{once:true,passive:true}));
+  startHero();
 })();
 </script>
 </body>

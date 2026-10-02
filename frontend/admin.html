@@ -100,6 +100,9 @@
   .panel-title .count{font-size:12px; color:var(--muted);}
   .manager-form{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:20px;}
   .manager-form h3{margin:0 0 12px; font-size:15px;}
+  .media-preview{display:block; width:100%; max-width:480px; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:#000; margin-bottom:12px;}
+  .media-preview[hidden]{display:none;}
+  .special-food-fields{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px;}
   .item-form-heading{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;}
   .item-form-heading h3{margin:0;}
   .form-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
@@ -153,7 +156,7 @@
     .record{align-items:flex-start;}
     .record-actions{flex-direction:column;}
   }
-  @media(max-width:420px){.form-grid,.form-grid.compact{grid-template-columns:1fr;}.image-tools{grid-template-columns:1fr;}}
+  @media(max-width:420px){.form-grid,.form-grid.compact,.special-food-fields{grid-template-columns:1fr;}.image-tools{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -232,23 +235,21 @@
     </section>
 
     <section class="admin-panel" id="bannerPanel" hidden>
-      <div class="panel-title"><h2 data-ui="bannerTitle">Homepage banner</h2><span class="count" id="bannerInfo"></span></div>
+      <div class="panel-title"><h2 data-ui="mediaTitle">Homepage videos</h2><span class="count" id="bannerInfo"></span></div>
       <div class="manager-form">
-        <h3 data-ui="bannerCurrent">Current banner</h3>
-        <img id="bannerPreview" alt="Current banner first frame" style="display:block; width:100%; max-width:480px; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:#000; margin-bottom:12px;">
+        <h3 data-ui="heroVideoTitle">Hero video</h3>
+        <video id="bannerPreview" class="media-preview" controls playsinline poster="images/offer-demo.png" hidden></video>
         <p class="form-note" id="bannerSource" style="margin:0 0 4px;"></p>
-        <div class="form-actions"><button class="action-btn danger" id="bannerReset" type="button" hidden data-ui="bannerRestore">Restore default banner</button></div>
+        <form id="bannerForm" novalidate>
+          <label class="field-label" for="bannerFile" data-ui="heroVideoFile">Upload hero video (source max 300 MB)</label>
+          <input type="file" id="bannerFile" accept="video/*,.mp4,.mov,.webm,.mkv,.avi,.m4v" required>
+          <p class="form-note" style="margin:10px 0 0;" data-ui="videoEncodingHint">Videos are trimmed to 10 seconds and encoded at 360p, 30 fps, with every frame keyframed. Output limit: 4.5 MB.</p>
+          <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="videoUploadBtn">Upload and encode</button><button class="action-btn danger" id="bannerReset" type="button" hidden data-ui="heroRemoveBtn">Remove hero video</button><span class="form-note" id="bannerNote" role="status"></span></div>
+        </form>
       </div>
-      <form class="manager-form" id="bannerForm" novalidate>
-        <h3 data-ui="bannerUploadHeading">Upload a new banner video</h3>
-        <div class="form-grid compact">
-          <label><span data-ui="bannerVideoLabel">Video file (MP4 recommended, max 300 MB)</span><input type="file" id="bannerFile" accept="video/*,.mp4,.mov,.webm,.mkv,.avi,.m4v" required></label>
-          <label><span data-ui="bannerFpsLabel">Frames per second (1-60)</span><input type="number" id="bannerFps" min="1" max="60" step="1" value="24"></label>
-          <label><span data-ui="bannerWidthLabel">Frame width in px (320-1920)</span><input type="number" id="bannerWidth" min="320" max="1920" step="10" value="1280"></label>
-        </div>
-        <p class="form-note" style="margin:10px 0 0;" data-ui="bannerHint">Only the first 10 seconds are used. Higher fps and width look smoother but make the homepage heavier to load. The new banner is temporary: it is replaced by the default after the next deploy or server restart.</p>
-        <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="bannerUploadBtn">Upload &amp; convert</button><span class="form-note" id="bannerNote" role="status"></span></div>
-      </form>
+      <div class="panel-title"><h2 data-ui="specialMediaTitle">Special section videos</h2><button class="action-btn" id="specialRefresh" type="button" data-ui="refresh">Refresh</button></div>
+      <p class="form-note" id="specialMediaNote" role="status"></p>
+      <div id="specialAdminCards" class="records"></div>
     </section>
 
     <section class="admin-panel" id="contactPanel" hidden>
@@ -490,6 +491,46 @@ const ADMIN_UI_STRINGS = {
   },
 };
 
+const VIDEO_ADMIN_STRINGS = {
+  en: {
+    mediaTitle:'Homepage videos', heroVideoTitle:'Hero video', heroVideoFile:'Hero video file (source max 300 MB)',
+    videoEncodingHint:'Uses the first 10 seconds; encoded at 360p, 30 fps, with every frame keyframed. Output stays below 4.5 MB.',
+    videoUploadBtn:'Upload and encode', heroRemoveBtn:'Remove hero video', heroRemoveConfirm:'Remove the hero video from the videos bucket?',
+    heroRemoved:'Hero video removed.', heroMissing:'No hero video uploaded.', heroLoadFailed:'Could not load homepage video settings.',
+    specialMediaTitle:'Special section videos', specialVideoFile:'Category video (optional; source max 300 MB)', specialFoodsLabel:'Five menu items shown with this category',
+    selectMenuFood:'Select a menu item', foodSlot:'Food item {slot}', saveSpecial:'Save category', savingSpecial:'Encoding and saving…', specialSaved:'Category video and food references saved.',
+    specialLoadFailed:'Could not load category videos.', specialSaveFailed:'Could not save this category.', specialItemsRequired:'Select five different menu items.', videoOutputTooLarge:'Encoded video exceeded the 4.5 MB limit.',
+  },
+  ar: {
+    mediaTitle:'فيديوهات الصفحة الرئيسية', heroVideoTitle:'فيديو المقدمة', heroVideoFile:'ملف فيديو المقدمة (المصدر 300 ميغابايت كحد أقصى)',
+    videoEncodingHint:'تُستخدم أول 10 ثوانٍ؛ بدقة 360p و30 إطاراً/ثانية مع جعل كل إطار مفتاحياً. الناتج أقل من 4.5 ميغابايت.',
+    videoUploadBtn:'رفع وتحويل', heroRemoveBtn:'حذف فيديو المقدمة', heroRemoveConfirm:'حذف فيديو المقدمة من مساحة videos؟',
+    heroRemoved:'تم حذف فيديو المقدمة.', heroMissing:'لم يتم رفع فيديو المقدمة.', heroLoadFailed:'تعذر تحميل إعدادات الفيديو.',
+    specialMediaTitle:'فيديوهات قسم المميز', specialVideoFile:'فيديو الفئة (اختياري؛ المصدر 300 ميغابايت كحد أقصى)', specialFoodsLabel:'الأصناف الخمسة المعروضة مع هذه الفئة',
+    selectMenuFood:'اختر صنفاً من القائمة', foodSlot:'الصنف {slot}', saveSpecial:'حفظ الفئة', savingSpecial:'جارٍ التحويل والحفظ…', specialSaved:'تم حفظ فيديو الفئة والأصناف.',
+    specialLoadFailed:'تعذر تحميل فيديوهات الفئات.', specialSaveFailed:'تعذر حفظ هذه الفئة.', specialItemsRequired:'اختر خمسة أصناف مختلفة.', videoOutputTooLarge:'حجم الفيديو المحول أكبر من 4.5 ميغابايت.',
+  },
+  ur: {
+    mediaTitle:'ہوم پیج ویڈیوز', heroVideoTitle:'ہیرو ویڈیو', heroVideoFile:'ہیرو ویڈیو فائل (اصل زیادہ سے زیادہ 300 MB)',
+    videoEncodingHint:'پہلے 10 سیکنڈ استعمال ہوں گے؛ 360p، 30 fps اور ہر فریم keyframe ہوگا۔ آؤٹ پٹ 4.5 MB سے کم رہے گا۔',
+    videoUploadBtn:'اپ لوڈ اور encode کریں', heroRemoveBtn:'ہیرو ویڈیو ہٹائیں', heroRemoveConfirm:'videos bucket سے ہیرو ویڈیو ہٹائیں؟',
+    heroRemoved:'ہیرو ویڈیو ہٹا دی گئی۔', heroMissing:'ہیرو ویڈیو اپ لوڈ نہیں ہوئی۔', heroLoadFailed:'ہوم پیج ویڈیو کی ترتیبات لوڈ نہیں ہو سکیں۔',
+    specialMediaTitle:'خصوصی سیکشن کی ویڈیوز', specialVideoFile:'زمرے کی ویڈیو (اختیاری؛ اصل زیادہ سے زیادہ 300 MB)', specialFoodsLabel:'اس زمرے کے ساتھ دکھائے جانے والے پانچ مینو آئٹمز',
+    selectMenuFood:'مینو آئٹم منتخب کریں', foodSlot:'مینو آئٹم {slot}', saveSpecial:'زمرہ محفوظ کریں', savingSpecial:'ویڈیو تبدیل اور محفوظ ہو رہی ہے…', specialSaved:'زمرے کی ویڈیو اور مینو آئٹمز محفوظ ہو گئے۔',
+    specialLoadFailed:'زمرے کی ویڈیوز لوڈ نہیں ہو سکیں۔', specialSaveFailed:'یہ زمرہ محفوظ نہیں ہو سکا۔', specialItemsRequired:'پانچ مختلف مینو آئٹمز منتخب کریں۔', videoOutputTooLarge:'تبدیل شدہ ویڈیو 4.5 MB کی حد سے بڑی ہے۔',
+  },
+  zh: {
+    mediaTitle:'首页视频', heroVideoTitle:'首页主视频', heroVideoFile:'主视频文件（源文件最大 300 MB）',
+    videoEncodingHint:'使用前 10 秒；编码为 360p、30 帧/秒，并将每帧设为关键帧。输出小于 4.5 MB。',
+    videoUploadBtn:'上传并编码', heroRemoveBtn:'移除主视频', heroRemoveConfirm:'要从 videos 存储桶中移除主视频吗？',
+    heroRemoved:'主视频已移除。', heroMissing:'尚未上传主视频。', heroLoadFailed:'无法加载首页视频设置。',
+    specialMediaTitle:'精选分类视频', specialVideoFile:'分类视频（可选；源文件最大 300 MB）', specialFoodsLabel:'此分类下显示的五个菜单商品',
+    selectMenuFood:'选择菜单商品', foodSlot:'商品 {slot}', saveSpecial:'保存分类', savingSpecial:'正在编码并保存…', specialSaved:'分类视频和商品引用已保存。',
+    specialLoadFailed:'无法加载分类视频。', specialSaveFailed:'无法保存此分类。', specialItemsRequired:'请选择五个不同的菜单商品。', videoOutputTooLarge:'编码后的视频超过 4.5 MB 限制。',
+  },
+};
+Object.keys(VIDEO_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], VIDEO_ADMIN_STRINGS[code]));
+
 // Strings for the Contact tab (merged into each language above).
 const CONTACT_ADMIN_STRINGS = {
   en: { cdTab:'Contact', cdTitle:'Contact details', cdHint:'Shown to customers when they tap the call button on the homepage.',
@@ -560,8 +601,8 @@ function applyAdminUiLanguage(language){
   document.getElementById('itemSubmit').textContent = adminText(itemEditing ? 'saveMenuItem' : 'createMenuItem');
   updateImagePreview(document.getElementById('itemImageUrl').value);
 
-  document.getElementById('bannerPreview').alt = adminText('bannerPreviewAlt');
   if(currentBannerData) renderBanner(currentBannerData);
+  if(currentSpecialData) renderSpecialAdmin(currentSpecialData);
 
   renderFilters();
   if(ordersLoaded) renderOrders(currentOrders);
@@ -827,6 +868,7 @@ async function adminRequest(path, options = {}){
   if(!response.ok){
     const message = result.error || '';
     if(path.startsWith('/banner')) throw new Error(bannerErrorText(message));
+    if(path.startsWith('/special')) throw new Error(specialErrorText(message));
     if(path.startsWith('/contact')) throw new Error(contactErrorText(message));
     let key = 'requestFailed';
     if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
@@ -1165,75 +1207,119 @@ document.getElementById('imageUploadBtn').addEventListener('click', async event 
   }
 });
 
-/* ---------- homepage banner ---------- */
+/* ---------- public-bucket homepage and Special videos ---------- */
 let currentBannerData = null;
+let currentSpecialData = null;
 function bannerErrorText(message){
   const known = [
-    ['smaller than 300 MB', 'bannerTooLarge'],
-    ['Unsupported video type', 'bannerUnsupported'],
-    ['being processed', 'bannerBusy'],
-    ['Could not process this video', 'bannerProcessFailed'],
-    ['No frames could be extracted', 'bannerNoFrames'],
-    ['No video file received', 'bannerChooseVideo'],
-    ['could not be saved', 'bannerSaveFailed'],
+    ['smaller than 300 MB', 'bannerTooLarge'], ['4.5 MB', 'videoOutputTooLarge'],
+    ['Unsupported video type', 'bannerUnsupported'], ['being processed', 'bannerBusy'],
+    ['Could not process this video', 'bannerProcessFailed'], ['No video file received', 'bannerChooseVideo'],
   ];
   const hit = known.find(([text]) => (message || '').includes(text));
   return adminText(hit ? hit[1] : 'bannerUploadFailed');
 }
+function specialErrorText(message){
+  if((message || '').includes('4.5 MB')) return adminText('videoOutputTooLarge');
+  if((message || '').includes('smaller than 300 MB')) return adminText('bannerTooLarge');
+  if((message || '').includes('Unsupported video type')) return adminText('bannerUnsupported');
+  if((message || '').includes('five') || (message || '').includes('five different')) return adminText('specialItemsRequired');
+  if((message || '').includes('processing')) return adminText('bannerBusy');
+  return adminText('specialSaveFailed');
+}
 async function loadBanner(){
   try{
-    const response = await fetch(`${API_BASE}/api/banner`, { cache: 'no-store' });
-    const banner = await response.json();
-    renderBanner(banner);
-  }catch{
-    setFormNote('bannerNote', adminText('bannerLoadFailed'), true);
+    const [heroResponse, special] = await Promise.all([
+      fetch(`${API_BASE}/api/banner`, { cache:'no-store' }).then(async response => {
+        if(!response.ok) throw new Error('Hero metadata request failed');
+        return response.json();
+      }),
+      adminRequest('/special'),
+    ]);
+    renderBanner(heroResponse);
+    renderSpecialAdmin(special);
+  }catch(error){
+    setFormNote('bannerNote', error.message || adminText('heroLoadFailed'), true);
+    setFormNote('specialMediaNote', adminText('specialLoadFailed'), true);
   }
 }
 function renderBanner(banner){
   currentBannerData = banner;
-  const first = `${API_BASE}/${banner.base}/frame_0001.jpg?v=${banner.version || 0}`;
-  document.getElementById('bannerPreview').src = first;
-  document.getElementById('bannerInfo').textContent = adminText('bannerFrames', { count: banner.count });
-  document.getElementById('bannerSource').textContent = banner.custom
-    ? adminText('bannerCustom', { count: banner.count, fps: banner.fps })
-    : adminText('bannerDefault');
-  document.getElementById('bannerReset').hidden = !banner.custom;
+  const preview = document.getElementById('bannerPreview');
+  preview.poster = banner.heroPosterUrl || 'images/offer-demo.png';
+  if(banner.heroUrl){ preview.src = banner.heroUrl; preview.hidden = false; preview.load(); }
+  else { preview.removeAttribute('src'); preview.hidden = true; }
+  document.getElementById('bannerInfo').textContent = '360p · 30 fps · GOP 1 · max 4.5 MB';
+  document.getElementById('bannerSource').textContent = adminText(banner.heroUrl ? 'bannerUpdated' : 'heroMissing');
+  document.getElementById('bannerReset').hidden = !banner.heroUrl;
 }
-document.getElementById('bannerForm').addEventListener('submit', async event => {
+function renderSpecialAdmin(data){
+  currentSpecialData = data;
+  const cards = document.getElementById('specialAdminCards');
+  const items = data.menuItems || [];
+  cards.innerHTML = (data.categories || []).map(category=>{
+    const label = category[`label_${adminUiLanguage}`] || category.label_en || category.key;
+    const selected = new Map((category.items || []).map(item=>[item.slot,String(item.id)]));
+    const choices = items.map(item=>{
+      const name = item[`name_${adminUiLanguage}`] || item.name_en || `#${item.id}`;
+      const availability = item.is_available ? '' : ` (${adminText('unavailable')})`;
+      return `<option value="${item.id}">${escapeHtml(name + availability)}</option>`;
+    }).join('');
+    const foodSelectors = Array.from({length:5},(_,index)=>{
+      const slot=index+1, selectedId=selected.get(slot) || '';
+      return `<label>${adminText('foodSlot',{slot})}<select name="food-${slot}" required><option value="">${adminText('selectMenuFood')}</option>${choices.replace(`<option value="${selectedId}">`,`<option value="${selectedId}" selected>` )}</select></label>`;
+    }).join('');
+    const preview = category.videoUrl
+      ? `<video class="media-preview" controls playsinline poster="images/offer-demo.png" src="${escapeHtml(category.videoUrl)}"></video>`
+      : `<p class="form-note">${adminText('heroMissing')}</p>`;
+    return `<form class="manager-form special-admin-card" data-category="${escapeHtml(category.key)}">
+      <h3>${escapeHtml(label)}</h3>${preview}
+      <label>${adminText('specialVideoFile')}<input type="file" name="video" accept="video/*,.mp4,.mov,.webm,.mkv,.avi,.m4v"></label>
+      <p class="form-note">${adminText('specialFoodsLabel')}</p>
+      <div class="special-food-fields">${foodSelectors}</div>
+      <div class="form-actions"><button class="action-btn primary" type="submit">${adminText('saveSpecial')}</button></div>
+    </form>`;
+  }).join('');
+  if(!data.categories?.length) cards.innerHTML = `<p class="empty">${adminText('noCategories')}</p>`;
+}
+document.getElementById('bannerForm').addEventListener('submit', async event=>{
   event.preventDefault();
-  const file = document.getElementById('bannerFile').files[0];
-  if(!file){ setFormNote('bannerNote', adminText('bannerChooseVideo'), true); return; }
-  const button = document.getElementById('bannerSubmit');
-  const body = new FormData();
-  body.append('fps', document.getElementById('bannerFps').value);
-  body.append('width', document.getElementById('bannerWidth').value);
-  body.append('video', file); // file last so the text fields are parsed first
-  button.disabled = true;
-  setFormNote('bannerNote', adminText('bannerUploading'));
+  const file=document.getElementById('bannerFile').files[0];
+  if(!file){setFormNote('bannerNote',adminText('bannerChooseVideo'),true);return;}
+  const button=document.getElementById('bannerSubmit'), body=new FormData();
+  body.append('video',file); button.disabled=true; setFormNote('bannerNote',adminText('bannerUploading'));
   try{
-    const result = await adminRequest('/banner', { method: 'POST', body });
-    renderBanner(result.banner);
-    document.getElementById('bannerForm').reset();
-    setFormNote('bannerNote', adminText('bannerUpdated'));
-  }catch(error){
-    setFormNote('bannerNote', error.message || adminText('bannerUploadFailed'), true);
-  }finally{
-    button.disabled = false;
-  }
+    const result=await adminRequest('/banner',{method:'POST',body});
+    renderBanner(result.banner);document.getElementById('bannerForm').reset();setFormNote('bannerNote',adminText('bannerUpdated'));
+  }catch(error){setFormNote('bannerNote',error.message||adminText('bannerUploadFailed'),true);}
+  finally{button.disabled=false;}
 });
-document.getElementById('bannerReset').addEventListener('click', async event => {
-  if(!confirm(adminText('bannerConfirmReset'))) return;
-  const button = event.currentTarget;
-  button.disabled = true;
+document.getElementById('bannerReset').addEventListener('click',async event=>{
+  if(!confirm(adminText('heroRemoveConfirm')))return;
+  const button=event.currentTarget;button.disabled=true;
   try{
-    const result = await adminRequest('/banner/reset', { method: 'POST' });
-    renderBanner(result.banner);
-    setFormNote('bannerNote', adminText('bannerResetDone'));
-  }catch(error){
-    setFormNote('bannerNote', error.message || adminText('bannerResetFailed'), true);
-  }finally{
-    button.disabled = false;
-  }
+    const result=await adminRequest('/banner/reset',{method:'POST'});
+    renderBanner(result.banner);setFormNote('bannerNote',adminText('heroRemoved'));
+  }catch(error){setFormNote('bannerNote',error.message||adminText('bannerUploadFailed'),true);}
+  finally{button.disabled=false;}
+});
+document.getElementById('specialRefresh').addEventListener('click',loadBanner);
+document.getElementById('specialAdminCards').addEventListener('submit',async event=>{
+  const form=event.target.closest('form[data-category]');
+  if(!form)return;
+  event.preventDefault();
+  const itemIds=[...form.querySelectorAll('select')].map(select=>Number(select.value)).filter(Boolean);
+  if(itemIds.length!==5 || new Set(itemIds).size!==5){setFormNote('specialMediaNote',adminText('specialItemsRequired'),true);return;}
+  const body=new FormData(), file=form.querySelector('input[type="file"]').files[0];
+  body.append('item_ids',JSON.stringify(itemIds)); if(file)body.append('video',file);
+  const button=form.querySelector('button[type="submit"]');button.disabled=true;
+  setFormNote('specialMediaNote',adminText('savingSpecial'));
+  try{
+    const result=await adminRequest(`/special/${encodeURIComponent(form.dataset.category)}`,{method:'POST',body});
+    renderSpecialAdmin({...currentSpecialData,categories:result.categories});
+    setFormNote('specialMediaNote',adminText('specialSaved'));
+  }catch(error){setFormNote('specialMediaNote',error.message||adminText('specialSaveFailed'),true);}
+  finally{button.disabled=false;}
 });
 
 /* ---------- contact details (homepage call button) ---------- */
