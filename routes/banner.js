@@ -15,7 +15,8 @@ const FFMPEG_PATH = path.join(ROOT, 'ffmpeg');
 const VIDEO_BUCKET = 'videos';
 const HERO_PATH = 'homepage/hero.mp4';
 const HERO_POSTER_PATH = 'homepage/hero.jpg';
-const MAX_SECONDS = 10;
+const MAX_SECONDS = 10;      // category (special) clips
+const HERO_MAX_SECONDS = 4;  // homepage hero: autoplay loop, trimmed to 4 s
 const MAX_OUTPUT_BYTES = 4_500_000;
 const ALLOWED_EXT = ['.mp4', '.mov', '.webm', '.mkv', '.avi', '.m4v'];
 
@@ -102,10 +103,27 @@ async function encodeVideo(sourcePath, outputPath) {
   }
 }
 
+// Hero: re-encode only (no 360p/all-keyframe compression, no scrub). Keeps the
+// source resolution up to 720 px wide, trims to 4 s, drops audio, and puts the
+// moov atom first so playback starts before the download finishes.
+async function encodeHero(sourcePath, outputPath) {
+  try { fs.chmodSync(FFMPEG_PATH, 0o755); } catch { /* best effort */ }
+  await runFfmpeg([
+    '-y', '-i', sourcePath, '-t', String(HERO_MAX_SECONDS), '-an',
+    '-vf', "scale='min(720,iw)':-2",
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
+    '-maxrate', '6000k', '-bufsize', '12000k',
+    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outputPath,
+  ]);
+  if (fs.statSync(outputPath).size >= MAX_OUTPUT_BYTES) {
+    throw new Error('Encoded video exceeds the 4.5 MB output limit.');
+  }
+}
+
+// Poster = the first frame of the hero, same size as the video (shown until it loads).
 async function encodePoster(videoPath, posterPath) {
   await runFfmpeg([
-    '-y', '-i', videoPath, '-frames:v', '1', '-vf', 'scale=640:360:force_original_aspect_ratio=decrease:force_divisible_by=2',
-    '-q:v', '3', posterPath,
+    '-y', '-i', videoPath, '-frames:v', '1', '-q:v', '3', posterPath,
   ]);
 }
 
@@ -166,7 +184,7 @@ router.post('/admin/banner', requireAdmin, (req, res) => {
     const outputPath = path.join(TMP_DIR, `${Date.now()}-hero.mp4`);
     const posterPath = path.join(TMP_DIR, `${Date.now()}-hero.jpg`);
     try {
-      await encodeVideo(sourcePath, outputPath);
+      await encodeHero(sourcePath, outputPath);
       await encodePoster(outputPath, posterPath);
 
       const storage = supabase.storage.from(VIDEO_BUCKET);

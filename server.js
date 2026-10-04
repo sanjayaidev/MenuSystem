@@ -57,8 +57,14 @@ app.use(express.json());
 app.use('/demo', express.static(path.join(__dirname, 'demo')));
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+// New flow: / = landing page (index.html) -> /menu = menu page (menu-page.html).
+// The previous single-page app is kept at /homepage.html (static) for reference.
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'homepage.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+app.get('/menu', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'menu-page.html'));
 });
 
 app.get('/admin', (req, res) => {

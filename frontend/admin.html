@@ -243,7 +243,7 @@
         <form id="bannerForm" novalidate>
           <label class="field-label" for="bannerFile" data-ui="heroVideoFile">Upload hero video (source max 300 MB)</label>
           <input type="file" id="bannerFile" accept="video/*,.mp4,.mov,.webm,.mkv,.avi,.m4v" required>
-          <p class="form-note" style="margin:10px 0 0;" data-ui="videoEncodingHint">Videos are trimmed to 10 seconds and encoded at 360p, 30 fps, with every frame keyframed. Output limit: 4.5 MB.</p>
+          <p class="form-note" style="margin:10px 0 0;" data-ui="videoEncodingHint">Hero video: trimmed to 4 seconds, muted, re-encoded (not shrunk, max 720 px wide) and played as an autoplay loop. The first frame is used as the poster. Output limit: 4.5 MB.</p>
           <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="videoUploadBtn">Upload and encode</button><button class="action-btn danger" id="bannerReset" type="button" hidden data-ui="heroRemoveBtn">Remove hero video</button><span class="form-note" id="bannerNote" role="status"></span></div>
         </form>
       </div>
@@ -257,10 +257,14 @@
       <form class="manager-form" id="contactForm" novalidate>
         <p class="form-note" style="margin:0 0 12px;" data-ui="cdHint">Shown to customers when they tap the call button on the homepage.</p>
         <div class="form-grid compact">
-          <label><span data-ui="cdPhone">Phone number</span><input name="phone" id="contactPhone" type="tel" required maxlength="30" autocomplete="off" placeholder="+966 50 000 0000"></label>
+          <label><span data-ui="cdPhone">WhatsApp number 1</span><input name="phone" id="contactPhone" type="tel" required maxlength="30" autocomplete="off" placeholder="056 928 3982"></label>
+          <label><span data-ui="cdPhone2">WhatsApp number 2 (optional)</span><input name="phone2" id="contactPhone2" type="tel" maxlength="30" autocomplete="off" placeholder="00966 56 928 3982"></label>
         </div>
         <div style="margin-top:12px;">
-          <label><span data-ui="cdAddress">Address</span><textarea name="address" id="contactAddress" required maxlength="300" placeholder="Street, area, city"></textarea></label>
+          <label><span data-ui="cdMapUrl">Map link (Google Maps)</span><input name="mapUrl" id="contactMapUrl" type="url" maxlength="300" autocomplete="off" placeholder="https://maps.app.goo.gl/..."></label>
+        </div>
+        <div style="margin-top:12px;">
+          <label><span data-ui="cdAddress">Address</span><textarea name="address" id="contactAddress" maxlength="300" placeholder="Street, area, city (optional if a map link is set)"></textarea></label>
         </div>
         <div class="form-actions"><button class="action-btn primary" id="contactSubmit" type="submit" data-ui="cdSave">Save contact details</button><span class="form-note" id="contactNote" role="status"></span></div>
       </form>
@@ -494,7 +498,7 @@ const ADMIN_UI_STRINGS = {
 const VIDEO_ADMIN_STRINGS = {
   en: {
     mediaTitle:'Homepage videos', heroVideoTitle:'Hero video', heroVideoFile:'Hero video file (source max 300 MB)',
-    videoEncodingHint:'Uses the first 10 seconds; encoded at 360p, 30 fps, with every frame keyframed. Output stays below 4.5 MB.',
+    videoEncodingHint:'Hero video: first 4 seconds only, muted, re-encoded (not shrunk, max 720 px wide), autoplay loop. First frame is the poster. Output stays below 4.5 MB.',
     videoUploadBtn:'Upload and encode', heroRemoveBtn:'Remove hero video', heroRemoveConfirm:'Remove the hero video from the videos bucket?',
     heroRemoved:'Hero video removed.', heroMissing:'No hero video uploaded.', heroLoadFailed:'Could not load homepage video settings.',
     specialMediaTitle:'Special section videos', specialVideoFile:'Category video (optional; source max 300 MB)', specialFoodsLabel:'Five menu items shown with this category',
@@ -503,7 +507,7 @@ const VIDEO_ADMIN_STRINGS = {
   },
   ar: {
     mediaTitle:'فيديوهات الصفحة الرئيسية', heroVideoTitle:'فيديو المقدمة', heroVideoFile:'ملف فيديو المقدمة (المصدر 300 ميغابايت كحد أقصى)',
-    videoEncodingHint:'تُستخدم أول 10 ثوانٍ؛ بدقة 360p و30 إطاراً/ثانية مع جعل كل إطار مفتاحياً. الناتج أقل من 4.5 ميغابايت.',
+    videoEncodingHint:'فيديو الواجهة: أول 4 ثوانٍ فقط، بدون صوت، يُعاد ترميزه دون تصغير (حتى 720 بكسل عرضاً) ويعمل تلقائياً بشكل متكرر. الإطار الأول هو الصورة المؤقتة. الحجم أقل من 4.5 ميجابايت.',
     videoUploadBtn:'رفع وتحويل', heroRemoveBtn:'حذف فيديو المقدمة', heroRemoveConfirm:'حذف فيديو المقدمة من مساحة videos؟',
     heroRemoved:'تم حذف فيديو المقدمة.', heroMissing:'لم يتم رفع فيديو المقدمة.', heroLoadFailed:'تعذر تحميل إعدادات الفيديو.',
     specialMediaTitle:'فيديوهات قسم المميز', specialVideoFile:'فيديو الفئة (اختياري؛ المصدر 300 ميغابايت كحد أقصى)', specialFoodsLabel:'الأصناف الخمسة المعروضة مع هذه الفئة',
@@ -512,7 +516,7 @@ const VIDEO_ADMIN_STRINGS = {
   },
   ur: {
     mediaTitle:'ہوم پیج ویڈیوز', heroVideoTitle:'ہیرو ویڈیو', heroVideoFile:'ہیرو ویڈیو فائل (اصل زیادہ سے زیادہ 300 MB)',
-    videoEncodingHint:'پہلے 10 سیکنڈ استعمال ہوں گے؛ 360p، 30 fps اور ہر فریم keyframe ہوگا۔ آؤٹ پٹ 4.5 MB سے کم رہے گا۔',
+    videoEncodingHint:'ہیرو ویڈیو: صرف پہلے 4 سیکنڈ، آواز کے بغیر، دوبارہ انکوڈ (چھوٹا نہیں، زیادہ سے زیادہ 720 پکسل چوڑائی)، خودکار لوپ۔ پہلا فریم پوسٹر ہے۔ سائز 4.5 MB سے کم۔',
     videoUploadBtn:'اپ لوڈ اور encode کریں', heroRemoveBtn:'ہیرو ویڈیو ہٹائیں', heroRemoveConfirm:'videos bucket سے ہیرو ویڈیو ہٹائیں؟',
     heroRemoved:'ہیرو ویڈیو ہٹا دی گئی۔', heroMissing:'ہیرو ویڈیو اپ لوڈ نہیں ہوئی۔', heroLoadFailed:'ہوم پیج ویڈیو کی ترتیبات لوڈ نہیں ہو سکیں۔',
     specialMediaTitle:'خصوصی سیکشن کی ویڈیوز', specialVideoFile:'زمرے کی ویڈیو (اختیاری؛ اصل زیادہ سے زیادہ 300 MB)', specialFoodsLabel:'اس زمرے کے ساتھ دکھائے جانے والے پانچ مینو آئٹمز',
@@ -521,7 +525,7 @@ const VIDEO_ADMIN_STRINGS = {
   },
   zh: {
     mediaTitle:'首页视频', heroVideoTitle:'首页主视频', heroVideoFile:'主视频文件（源文件最大 300 MB）',
-    videoEncodingHint:'使用前 10 秒；编码为 360p、30 帧/秒，并将每帧设为关键帧。输出小于 4.5 MB。',
+    videoEncodingHint:'首页视频：仅使用前 4 秒，静音，重新编码（不压缩画质，最大宽度 720 像素），自动循环播放。首帧作为封面。输出小于 4.5 MB。',
     videoUploadBtn:'上传并编码', heroRemoveBtn:'移除主视频', heroRemoveConfirm:'要从 videos 存储桶中移除主视频吗？',
     heroRemoved:'主视频已移除。', heroMissing:'尚未上传主视频。', heroLoadFailed:'无法加载首页视频设置。',
     specialMediaTitle:'精选分类视频', specialVideoFile:'分类视频（可选；源文件最大 300 MB）', specialFoodsLabel:'此分类下显示的五个菜单商品',
@@ -555,6 +559,19 @@ const CONTACT_ADMIN_STRINGS = {
         cdTableMissing:'缺少 site_settings 表。请在 Supabase 中运行 db/06_site_settings.sql。' },
 };
 Object.keys(CONTACT_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS[code]));
+
+// WhatsApp numbers + map link (override/extend the Contact strings above).
+const CONTACT_ADMIN_STRINGS_2 = {
+  en: { cdHint:'Shown to customers when they tap the WhatsApp button on the menu page. Numbers open wa.me chats; the location opens the map link.',
+        cdPhone:'WhatsApp number 1', cdPhone2:'WhatsApp number 2 (optional)', cdMapUrl:'Map link (Google Maps)' },
+  ar: { cdHint:'يظهر للعملاء عند الضغط على زر واتساب في صفحة القائمة. الأرقام تفتح محادثة واتساب والموقع يفتح رابط الخريطة.',
+        cdPhone:'رقم واتساب 1', cdPhone2:'رقم واتساب 2 (اختياري)', cdMapUrl:'رابط الخريطة (خرائط جوجل)' },
+  ur: { cdHint:'جب گاہک مینو صفحے پر واٹس ایپ بٹن دباتے ہیں تو یہ دکھایا جاتا ہے۔ نمبر واٹس ایپ چیٹ کھولتے ہیں اور لوکیشن نقشے کا لنک کھولتی ہے۔',
+        cdPhone:'واٹس ایپ نمبر 1', cdPhone2:'واٹس ایپ نمبر 2 (اختیاری)', cdMapUrl:'نقشے کا لنک (گوگل میپس)' },
+  zh: { cdHint:'顾客点击菜单页的 WhatsApp 按钮时显示。号码打开 WhatsApp 聊天，位置打开地图链接。',
+        cdPhone:'WhatsApp 号码 1', cdPhone2:'WhatsApp 号码 2（可选）', cdMapUrl:'地图链接（Google 地图）' },
+};
+Object.keys(CONTACT_ADMIN_STRINGS_2).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS_2[code]));
 
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
@@ -1339,6 +1356,8 @@ async function loadContact(){
     if(!response.ok) throw new Error();
     const contact = await response.json();
     document.getElementById('contactPhone').value = contact.phone || '';
+    document.getElementById('contactPhone2').value = contact.phone2 || '';
+    document.getElementById('contactMapUrl').value = contact.mapUrl || '';
     document.getElementById('contactAddress').value = contact.address || '';
     setFormNote('contactNote', '');
   }catch{
@@ -1356,10 +1375,14 @@ document.getElementById('contactForm').addEventListener('submit', async event =>
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         phone: document.getElementById('contactPhone').value,
+        phone2: document.getElementById('contactPhone2').value,
+        mapUrl: document.getElementById('contactMapUrl').value,
         address: document.getElementById('contactAddress').value,
       }),
     });
     document.getElementById('contactPhone').value = result.contact.phone;
+    document.getElementById('contactPhone2').value = result.contact.phone2 || '';
+    document.getElementById('contactMapUrl').value = result.contact.mapUrl || '';
     document.getElementById('contactAddress').value = result.contact.address;
     setFormNote('contactNote', adminText('cdSaved'));
   }catch(error){

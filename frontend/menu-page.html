@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Red House Catering — Menu</title>
+<script>document.documentElement.setAttribute('data-theme','dark');</script>
+<!-- LIGHT/DARK TOGGLE DISABLED (dark only). Original theme script:
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('redhouse_theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-h:clamp(84px,29vw,136px);
+    --bg:#121110; --surface:#1c1a18; --line:#2c2925;
+    --gold:#e3b23c; --red:#b8352b;
+    --text:#f4efe6; --muted:#a99f8f;
+  }
+  /* LIGHT MODE DISABLED (dark only) — kept for reference:
+   Light theme — brand gold/red stay constant, surfaces flip 
+  html[data-theme="light"]{
+    --bg:#faf6ef; --surface:#ffffff; --line:#e6ddcf;
+    --text:#241f1a; --muted:#756b5c;
+  }
+  html[data-theme="light"] .icon-btn{background:rgba(0,0,0,.06);}
+  html[data-theme="light"] .qty-stepper .step-minus{background:rgba(0,0,0,.08);}
+  html[data-theme="light"] .empty-cart .empty-icon{background:rgba(0,0,0,.05);}
+  */
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Poppins',sans-serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    transition:background .2s ease, color .2s ease;
+  }
+  html[lang="ar"] body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
+  html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Poppins',sans-serif;}
+  html[lang="zh"] body{font-family:'Noto Sans SC','Poppins',sans-serif;}
+  .app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}
+
+  /* ===== BRAND ===== */
+  .topbar{
+    position:sticky; top:0; z-index:20; background:#000; min-height:var(--brand-h);
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .topbar .logo-wrap{width:100%; display:flex; align-items:center; justify-content:center;}
+  .topbar .logo-wrap img{width:100%; height:auto; max-height:var(--brand-h); object-fit:contain; display:block;}
+  .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:14px; display:none;}
+  .language-row{display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px; background:#000;}
+  .lang-pills{
+    display:flex; justify-content:center; gap:6px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;
+    max-width:100%;
+  }
+  .lang-pills::-webkit-scrollbar{display:none;}
+  .lang-pill{
+    flex-shrink:0; background:#000; color:var(--muted); border:1px solid var(--line);
+    border-radius:999px; padding:6px 14px; font-family:inherit; font-size:12px; font-weight:600;
+    cursor:pointer; transition:background .15s ease, color .15s ease;
+  }
+  .lang-pill.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .theme-toggle{
+    width:34px; height:34px; flex-shrink:0; border-radius:50%; border:1px solid #2c2925;
+    background:#000; color:var(--gold); display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .theme-toggle svg{width:17px; height:17px;}
+  .theme-toggle .icon-moon{display:none;}
+  html[data-theme="light"] .theme-toggle .icon-sun{display:none;}
+  html[data-theme="light"] .theme-toggle .icon-moon{display:block;}
+
+  /* ===== HERO: pinned, autoplaying video that can be scrubbed ===== */
+  .hero{position:relative; height:100svh; min-height:420px; overflow:clip; background:#000;}
+  .hero-stage{position:sticky; top:var(--brand-h); height:calc(100svh - var(--brand-h)); min-height:320px; overflow:hidden; background:#000; touch-action:pan-y; user-select:none; -webkit-user-select:none;}
+  .hero-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
+  .hero-scrim{
+    position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(to top, rgba(8,12,10,.75) 0%, rgba(8,12,10,0) 45%);
+  }
+  .hero-cue{
+    position:absolute; left:20px; bottom:22px; display:flex; align-items:center; gap:8px;
+    font-size:12px; color:var(--muted); text-decoration:none;
+  }
+  .hero-cue svg{width:14px; height:14px; animation:bob 1.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(4px);}}
+  html[dir="rtl"] .hero-meter, html[dir="rtl"] .hero-cue{left:auto; right:20px;}
+  @media (prefers-reduced-motion:reduce){ .hero-cue svg{animation:none;} }
+
+  /* ===== SPECIAL CATEGORY VIDEOS ===== */
+  .section{padding:22px 16px 10px;}
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px;}
+  .sec-head h2{margin:0; font-size:22px;}
+  .special-controls{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}
+  .special-hint{margin:0; color:var(--muted); font-size:11px;}
+  .speed-control{display:flex; align-items:center; gap:8px; white-space:nowrap; color:var(--muted); font-size:11px;}
+  .speed-control input{width:94px; accent-color:var(--gold); touch-action:pan-x;}
+  .speed-control output{min-width:1.2em; text-align:center; color:var(--text); font-weight:700;}
+  .special-row{display:grid; grid-template-columns:1fr; gap:20px;}
+  .special-card{min-width:0; cursor:pointer;}
+  .special-video{position:relative; aspect-ratio:16/9; overflow:hidden; background:#000; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab;}
+  .special-video.dragging{cursor:grabbing;}
+  .special-video video{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none;}
+  .special-scrub{position:absolute; inset:auto 0 0; height:3px; background:rgba(244,239,230,.25);}
+  .special-scrub i{display:block; width:100%; height:100%; background:var(--gold); transform:scaleX(0); transform-origin:left;}
+  .special-card .hint{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; color:#f4efe6; background:rgba(0,0,0,.58); font-size:11px; pointer-events:none; transition:opacity .3s;}
+  .special-card .hint i{font-style:normal; color:var(--gold); font-size:18px; line-height:1;}
+  .special-card .category-name{margin:8px 2px 0; font-size:15px; font-weight:600;}
+  .special-card .category-action{margin:2px 2px 0; color:var(--muted); font-size:12px;}
+  .special-add{position:absolute; right:10px; bottom:11px; z-index:2; display:flex; align-items:center; gap:8px; margin:0; border:0; background:var(--gold); color:#1a1408; padding:8px 12px; font:600 12px 'Poppins',sans-serif; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.3);}
+  .special-foods{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 14px; margin:8px 2px 0; padding-inline-start:20px; color:var(--muted); font-size:11px; line-height:1.4;}
+  .special-foods li{min-width:0; overflow-wrap:anywhere;}
+  .special-foods li.is-current{color:var(--gold); font-weight:700;}
+  .special-row.hints-off .hint{opacity:0;}
+  .special-video.dragging + .hint{opacity:0;}
+
+  /* ===== MENU ===== */
+  #menu{display:flex; flex-direction:column; scroll-margin-top:var(--brand-h);}
+  #menuTitle{margin:8px 16px 0; font-size:22px;}
+  .controls{display:flex; gap:10px; padding:14px 16px 8px; order:1;}
+  .controls select{
+    flex:1; background:var(--surface); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; padding:10px 10px; font-family:inherit; font-size:13px; appearance:none;
+  }
+  .offer-banner{order:2; display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:8px 16px 10px; padding:0; overflow:hidden; background:var(--gold); color:#1a1408;}
+  .offer-banner-copy{grid-row:2; min-width:0; padding:14px 16px;}
+  .offer-banner h3{margin:0 0 4px; font-size:14px; line-height:1.25;}
+  .offer-banner p{margin:0; font-size:11px; line-height:1.4;}
+  .offer-banner img{grid-row:1; display:block; width:100%; aspect-ratio:1/1; height:auto; max-width:none; object-fit:cover;}
+  main{flex:1; padding:6px 16px 20px; order:3;}
+  .app.menu-mode .hero,.app.menu-mode #special{display:none;}
+  .app.menu-mode #menuTitle{display:none;}
+  .app.menu-mode .offer-banner{order:1; margin-top:12px;}
+  .app.menu-mode .controls{order:2; padding-top:6px;}
+
+  .row{
+    display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line);
+    cursor:pointer; background:none; border-left:none; border-right:none; border-top:none; width:100%; text-align:start; color:inherit;
+  }
+  html[dir="rtl"] .row{flex-direction:row-reverse; text-align:end;}
+  .row:active{background:rgba(227,178,60,0.06);}
+  .row .thumb{
+    width:96px; height:92px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .row .thumb img{height:100%; width:auto; max-width:96px; object-fit:contain; display:block;}
+  .row .thumb-fallback{display:none; width:100%; height:100%; align-items:center; justify-content:center;}
+  .row .thumb-fallback svg{width:55%; height:55%;}
+  .row .info{flex:1; min-width:0;}
+  .row .info .name{font-size:15px; font-weight:600; line-height:1.3; margin:0 0 6px;}
+  .row .info .price{font-size:14px; color:var(--gold); font-weight:600; margin:0;}
+  .row .offer-tag{
+    font-size:10px; color:var(--red); background:rgba(184,53,43,.12); border:1px solid var(--red);
+    border-radius:6px; padding:1px 6px; margin-inline-end:6px; font-weight:600;
+  }
+
+  .empty{padding:40px 10px; text-align:center; color:var(--muted); font-size:14px;}
+
+  /* ===== OVERLAYS (item modal / cart / checkout) ===== */
+  .overlay{
+    position:absolute; inset:0; z-index:30; background:var(--bg); display:none;
+    flex-direction:column; min-height:0; overflow-y:auto;
+  }
+  .overlay.is-open{display:flex;}
+  #cartOverlay, #profileOverlay{
+    position:fixed; inset: auto auto calc(58px + env(safe-area-inset-bottom,0px)) 50%;
+    width:min(480px, 100%); max-height:calc(100svh - 58px - env(safe-area-inset-bottom,0px));
+    transform:translateX(-50%); border:1px solid var(--line); border-bottom:none;
+    border-radius:18px 18px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.35); overflow:hidden;
+  }
+  #itemModal{
+    position:fixed; inset:0 auto 0 50%; width:min(480px, 100%); height:100svh; max-height:100svh;
+    transform:translateX(-50%); overflow:hidden;
+  }
+  .overlay-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 14px; position:sticky; top:0; background:var(--bg); z-index:2;
+  }
+  html[dir="rtl"] .overlay-head{flex-direction:row-reverse;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%; border:none; background:rgba(255,255,255,.06);
+    color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .icon-btn svg{width:18px; height:18px;}
+  .overlay-title{font-size:16px; font-weight:700; flex:1; text-align:center;}
+  .count-pill{
+    background:var(--red); color:#fff; font-size:12px; font-weight:700; border-radius:999px;
+    padding:4px 12px; flex-shrink:0;
+  }
+
+  /* item modal */
+  .item-hero{position:relative; width:100%; aspect-ratio:1/1; max-height:340px; flex:0 0 auto; overflow:hidden; background:#000;}
+  .item-hero img{width:100%; height:100%; object-fit:cover;}
+  .item-hero .icon-btn{position:absolute; top:12px; inset-inline-start:12px;}
+  .item-tag{
+    position:absolute; top:12px; inset-inline-end:12px; background:var(--gold); color:#1a1408;
+    font-size:12px; font-weight:700; border-radius:999px; padding:5px 12px;
+  }
+  .item-body{padding:16px; flex:1 1 auto; min-height:0; overflow-y:auto;}
+  .badge-row{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .badge{
+    border:1px solid var(--line); border-radius:8px; padding:5px 10px; font-size:12px;
+    color:var(--gold); font-weight:600; background:var(--surface);
+  }
+  .item-body h2{font-size:21px; margin:4px 0 2px;}
+  .item-subtitle{color:var(--gold); font-size:13px; font-weight:600; margin:0 0 12px;}
+  .item-desc{color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 16px;}
+  .includes-box{
+    border:1px solid var(--gold); background:rgba(227,178,60,.08); border-radius:12px;
+    padding:12px 14px; margin-bottom:16px;
+  }
+  .includes-box .includes-title{color:var(--gold); font-weight:700; font-size:13px; margin:0 0 6px;}
+  .includes-box p{margin:0; font-size:13px; color:var(--text); line-height:1.5;}
+  .item-actionbar{
+    display:flex; align-items:center; gap:10px; padding:12px 16px 16px; position:sticky; bottom:0; flex-shrink:0;
+    background:var(--bg); border-top:1px solid var(--line);
+  }
+  .add-cart-btn{
+    flex:1; background:var(--gold); color:#1a1408; border:none; border-radius:12px;
+    padding:14px 16px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .qty-stepper{
+    display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:10px 12px; flex-shrink:0;
+  }
+  .qty-stepper button{
+    width:26px; height:26px; border-radius:50%; border:none; font-size:16px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .qty-stepper .step-minus{background:rgba(255,255,255,.08); color:var(--text);}
+  .qty-stepper .step-plus{background:var(--red); color:#fff;}
+  .qty-stepper .qty-val{min-width:16px; text-align:center; font-weight:700;}
+
+  /* cart / order type toggle */
+  .order-type{display:flex; gap:10px; padding:0 16px 14px;}
+  .order-type button{
+    flex:1; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--text);
+    font-family:inherit; font-size:13px; font-weight:600; padding:12px 8px; cursor:pointer;
+  }
+  .order-type button.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .order-type button .free-tag{color:#5fbf7a; font-weight:700; margin-inline-end:4px;}
+  .order-type button.active .free-tag{color:#1a1408;}
+
+  .cart-list{padding:0 16px; flex:0 1 auto; min-height:0; max-height:42svh; overflow-y:auto;}
+  .cart-row{
+    display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line);
+  }
+  .cart-row .trash-btn{background:none; border:none; color:var(--muted); cursor:pointer; flex-shrink:0;}
+  .cart-row .trash-btn svg{width:18px; height:18px;}
+  .cart-row .cart-info{flex:1; min-width:0;}
+  .cart-row .cart-info .name{font-weight:600; font-size:14px; margin:0 0 8px;}
+  .cart-row .cart-thumb{width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#000;}
+  .cart-row .cart-thumb img{width:100%; height:100%; object-fit:cover;}
+  .cart-row .price{color:var(--gold); font-weight:700; font-size:14px; white-space:nowrap;}
+
+  .cart-summary{padding:14px 16px; border-top:1px solid var(--line); position:sticky; bottom:0; flex-shrink:0; background:var(--bg);}
+  .summary-line{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); padding:3px 0;}
+  .summary-line.final{color:var(--gold); font-weight:700; font-size:16px; padding-top:8px;}
+  .primary-btn{
+    width:100%; margin-top:12px; background:var(--gold); color:#1a1408; border:none; border-radius:12px;
+    padding:15px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .wa-btn{background:#25d366; color:#06210f;}
+  .empty-cart{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px 24px; text-align:center;}
+  .empty-cart .empty-icon{
+    width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.05); display:flex;
+    align-items:center; justify-content:center; margin-bottom:20px; color:var(--gold);
+  }
+  .empty-cart .empty-icon svg{width:38px; height:38px;}
+  .empty-cart h3{font-size:17px; margin:0 0 8px;}
+  .empty-cart p{color:var(--muted); font-size:13px; margin:0 0 22px; line-height:1.5;}
+
+  /* checkout form */
+  .checkout-body{padding:16px; flex:1;}
+  .profile-body{padding:16px; overflow-y:auto; max-height:calc(100svh - 130px);}
+  .profile-subtitle{color:var(--muted); font-size:13px; line-height:1.5; margin:0 0 18px;}
+  .profile-identity{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:16px;}
+  .profile-identity strong{display:block; margin-bottom:4px;}
+  .profile-identity small{display:block; color:var(--muted); overflow-wrap:anywhere;}
+  .profile-actions{display:flex; gap:10px; margin-top:16px;}
+  .profile-actions .primary-btn{margin-top:0;}
+  .profile-secondary-btn{flex:1; border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--surface); color:var(--text); font:inherit; font-weight:700; cursor:pointer;}
+  .profile-status{min-height:18px; color:var(--muted); font-size:12px; margin:12px 0 0;}
+  .profile-orders-title{font-size:16px; margin:26px 0 10px;}
+  .profile-order{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:8px;}
+  .profile-order-head{display:flex; justify-content:space-between; gap:10px; font-size:13px; font-weight:700;}
+  .profile-order small{display:block; color:var(--muted); margin-top:6px; line-height:1.45;}
+  .profile-empty{color:var(--muted); font-size:13px;}
+  .checkout-branch{color:var(--gold); font-weight:700; font-size:14px; margin-bottom:2px;}
+  .checkout-subrow{display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:18px;}
+  .field-label{font-size:12px; color:var(--gold); font-weight:600; margin:14px 0 6px;}
+  .field-input, .field-textarea{
+    width:100%; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:12px 12px; color:var(--text); font-family:inherit; font-size:14px;
+  }
+  .field-textarea{resize:vertical; min-height:64px;}
+  .pay-method{
+    display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--gold);
+    border-radius:12px; padding:14px; margin-top:18px; color:var(--gold); font-weight:700; font-size:14px;
+    background:rgba(227,178,60,.08);
+  }
+  .status-note{font-size:12px; text-align:center; color:var(--muted); margin-top:8px;}
+  .primary-btn:disabled{opacity:.6; cursor:default;}
+
+  /* ===== FLOATING chat/call ===== */
+  .floating{position:fixed; right:14px; bottom:82px; display:flex; flex-direction:column; gap:10px; z-index:15;}
+  html[dir="rtl"] .floating{right:auto; left:14px;}
+  .fab{width:46px; height:46px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .fab svg{width:20px; height:20px;}
+  .fab-call{background:var(--gold); color:#1a1408;}
+
+  /* ===== CONTACT CARD (opened by the call button) ===== */
+  #contactOverlay{
+    position:fixed; inset: auto auto calc(58px + env(safe-area-inset-bottom,0px)) 50%;
+    width:min(480px, 100%); transform:translateX(-50%); border:1px solid var(--line); border-bottom:none;
+    border-radius:18px 18px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.35); overflow:hidden;
+  }
+  .contact-body{padding:4px 18px 22px; display:flex; flex-direction:column; gap:12px;}
+  .contact-row{
+    display:flex; align-items:flex-start; gap:12px; background:var(--surface);
+    border:1px solid var(--line); border-radius:12px; padding:14px;
+  }
+  .contact-row .ico{width:20px; height:20px; color:var(--gold); flex-shrink:0; margin-top:2px;}
+  .contact-label{font-size:12px; color:var(--muted); margin:0 0 3px;}
+  .contact-value{font-size:15px; font-weight:600; margin:0; line-height:1.5; overflow-wrap:anywhere;}
+  .contact-actions{display:flex; gap:10px;}
+  .contact-btn{
+    flex:1; text-align:center; text-decoration:none; font-family:inherit; font-size:14px; font-weight:700;
+    border-radius:12px; padding:13px 10px; border:1px solid var(--gold); color:var(--gold); background:transparent;
+  }
+  .contact-btn.primary{background:var(--gold); color:#1a1408;}
+
+  /* ===== FOOTER: Home, Menu, Basket, Profile ===== */
+  footer.tabs{
+    position:fixed; left:50%; bottom:0; transform:translateX(-50%); width:min(480px,100%); z-index:10; background:var(--surface); border-top:1px solid var(--line);
+    display:flex; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));
+  }
+  footer.tabs{transition:transform .25s ease, opacity .25s ease;}
+  footer.tabs:not(.show){transform:translate(-50%,110%); opacity:0; pointer-events:none; visibility:hidden;}
+  footer.tabs.show{transform:translateX(-50%); opacity:1; visibility:visible;}
+  footer.tabs button{flex:1; background:none; border:none; color:var(--muted); font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; padding:6px 0; cursor:pointer;}
+  footer.tabs button.active{color:var(--gold);}
+  footer.tabs .icon{width:22px; height:22px;}
+  footer.tabs .icon svg{width:100%; height:100%;}
+  footer.tabs .icon{position:relative; overflow:visible;}
+  /* cart count badge on the Basket tab icon */
+  .cart-badge{
+    position:absolute; top:-7px; inset-inline-end:-10px; min-width:20px; height:20px; padding:0 4px; box-sizing:border-box;
+    border-radius:999px; background:var(--red); color:#fff; font-size:11px; font-weight:700; line-height:16px;
+    text-align:center; border:2px solid var(--surface); pointer-events:none;
+    transform:scale(1); transition:transform .15s ease;
+  }
+  .cart-badge[hidden]{display:none;}
+  .cart-badge.pop{animation:cartBadgePop .3s ease;}
+  @keyframes cartBadgePop{0%{transform:scale(1);}45%{transform:scale(1.35);}100%{transform:scale(1);}}
+  @media (prefers-reduced-motion:reduce){.cart-badge.pop{animation:none;}}
+
+  /* ===== MENU PAGE (new flow) ===== */
+  /* logo (909x259) + poster D = exactly 9:16: poster ratio = 1 / (16/9 - 259/909) = 8181:12213.
+     If the final logo A has a different ratio, change both numbers. */
+  .topbar{min-height:0;}
+  .topbar .logo-wrap img{max-height:none;}
+  .poster-d{width:100%; aspect-ratio:8181 / 12213; background:#000; overflow:hidden;}
+  .poster-d img{width:100%; height:100%; object-fit:cover; display:block;}
+  .app.menu-mode .poster-d{display:none;}
+  /* WhatsApp */
+  .fab-call{background:#25D366; color:#fff;}
+  .contact-btn.wa{background:#25D366; color:#fff; border-color:#25D366;}
+  .contact-row .wa-ico{color:#25D366;}
+  .wa-link{display:block; color:var(--gold); font-weight:600; text-decoration:none; padding:2px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="logo-wrap">
+      <img id="logoImg" src="images/rhclogo.png" alt="Red House Catering">
+      <span class="logo-fallback" id="logoFallback">RED HOUSE CATERING</span>
+    </div>
+  </header>
+
+  <section class="poster-d" id="posterD" aria-label="Red House Catering">
+    <img src="images/page2-poster.png" alt="" fetchpriority="high">
+  </section>
+
+  <!-- HERO VIDEO SECTION DISABLED on the menu page (video now lives on index.html). Original:
+<section class="hero" id="hero" aria-label="Red House Catering">
+    <div class="hero-stage" id="heroStage">
+      <video class="hero-video" id="heroVideo" muted playsinline preload="auto" poster="images/offer-demo.png" aria-hidden="true"></video>
+      <div class="hero-scrim"></div>
+      <a class="hero-cue" href="#menu" id="exploreCue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span id="exploreLabel">Explore menu</span></a>
+    </div>
+  </section>
+-->
+
+  <div class="language-row" id="languageRow">
+    <div class="lang-pills" id="langPills" role="group" aria-label="Language">
+      <button class="lang-pill" data-lang="en">EN</button>
+      <button class="lang-pill" data-lang="ar">عربي</button>
+      <!-- <button class="lang-pill" data-lang="ur">اردو</button> -->
+      <button class="lang-pill" data-lang="zh">中文</button>
+    </div>
+    <!-- THEME TOGGLE DISABLED (dark only)
+<button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle light/dark theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+-->
+  </div>
+
+  <section class="section" id="special">
+    <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
+    <div class="special-controls">
+      <p class="special-hint" data-i18n="specialHint">Drag left / right · Tap a category</p>
+      <label class="speed-control"><span data-i18n="videoSpeed">Speed</span><input id="speed" type="range" min="1" max="10" step="1" value="4" aria-label="Video scroll speed"><output id="speedval">4</output></label>
+    </div>
+    <div class="special-row" id="specialRow"></div>
+  </section>
+
+  <div id="menu">
+    <h2 id="menuTitle" data-i18n="menuTitle">Menu</h2>
+    <div class="controls">
+      <select id="categorySelect" aria-label="Filter by category"></select>
+      <select id="sortSelect" aria-label="Sort menu"></select>
+    </div>
+
+    <!-- OLD OFFER BANNER DISABLED (replaced by poster D above the list):
+<aside class="offer-banner" id="offerBanner">
+      <img src="images/offer-demo.png" alt="A meal with fries and drinks" loading="lazy">
+      <div class="offer-banner-copy"><h3 data-i18n="offerTitle">House special offer</h3><p data-i18n="offerText">Freshly prepared meals, made for sharing.</p></div>
+    </aside>
+-->
+
+    <main id="list"></main>
+
+    <div class="floating">
+      <button class="fab fab-call" id="callFab" aria-label="WhatsApp" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>
+      <!-- PHONE ICON BUTTON DISABLED (now WhatsApp). Original:
+      <button class="fab fab-call" id="callFab" aria-label="Call" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg></button>
+      -->
+    </div>
+
+    <footer class="tabs" id="tabsBar">
+      <button class="active" data-tab="home"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span><span data-i18n="navHome">Home</span></button>
+      <button data-tab="menu"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2v9"/><path d="M8 3v6"/><path d="M4 6h4"/><path d="M18 3c-1.7 0-3 2-3 5s1.3 5 3 5v8"/></svg></span><span data-i18n="navMenu">Menu</span></button>
+      <button data-tab="basket"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="cart-badge" id="cartBadge" hidden>0</span></span><span data-i18n="navBasket">Basket</span></button>
+      <button data-tab="profile"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span><span data-i18n="navProfile">Profile</span></button>
+    </footer>
+  </div>
+
+  <!-- ===== CONTACT CARD (call button) ===== -->
+  <div class="overlay" id="contactOverlay" role="dialog" aria-labelledby="contactTitle">
+    <div class="overlay-head">
+      <button class="icon-btn" id="contactClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="overlay-title" id="contactTitle" data-i18n="contactTitle">Contact us</span>
+      <span style="width:38px;flex-shrink:0;"></span>
+    </div>
+    <div class="contact-body">
+      <div class="contact-row">
+        <svg class="ico wa-ico" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        <!-- PHONE GLYPH DISABLED (WhatsApp icon above): <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2Z"/></svg> -->
+        <div><p class="contact-label" data-i18n="contactWhatsApp">WhatsApp</p><p class="contact-value" id="contactPhone" dir="ltr"></p></div>
+      </div>
+      <div class="contact-row">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        <div><p class="contact-label" data-i18n="contactLocation">Location</p><p class="contact-value" id="contactAddress"></p></div>
+      </div>
+      <div class="contact-actions">
+        <a class="contact-btn primary wa" id="contactCallLink" href="#" target="_blank" rel="noopener" data-i18n="contactChat">Chat on WhatsApp</a>
+        <!-- CALL NOW (tel:) DISABLED - WhatsApp replaces it -->
+        <a class="contact-btn" id="contactMapLink" href="#" target="_blank" rel="noopener" data-i18n="contactOpenMap">Open in Maps</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ITEM DETAIL MODAL ===== -->
+  <div class="overlay" id="itemModal">
+    <div class="item-hero">
+      <button class="icon-btn" id="itemModalClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="item-tag" id="itemModalCat"></span>
+      <img id="itemModalImg" src="" alt="">
+    </div>
+    <div class="item-body">
+      <div class="badge-row">
+        <span class="badge" id="itemModalCalories"></span>
+        <span class="badge" id="itemModalRating"></span>
+      </div>
+      <h2 id="itemModalName"></h2>
+      <p class="item-subtitle" id="itemModalEnName"></p>
+      <p class="item-desc" id="itemModalDesc"></p>
+      <div class="includes-box">
+        <p class="includes-title" id="itemModalIncludesTitle"></p>
+        <p id="itemModalIncludesText"></p>
+      </div>
+    </div>
+    <div class="item-actionbar">
+      <button class="add-cart-btn" id="itemModalAdd"></button>
+      <div class="qty-stepper">
+        <button class="step-minus" id="itemModalMinus" aria-label="Decrease">−</button>
+        <span class="qty-val" id="itemModalQty">1</span>
+        <button class="step-plus" id="itemModalPlus" aria-label="Increase">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CART OVERLAY ===== -->
+  <div class="overlay" id="cartOverlay">
+    <div class="overlay-head">
+      <button class="icon-btn" id="cartClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="overlay-title" id="cartTitle"></span>
+      <span class="count-pill" id="cartCountPill">0</span>
+    </div>
+    <div class="order-type" id="orderTypeRow">
+      <button data-type="pickup" id="pickupBtn"></button>
+      <button data-type="delivery" id="deliveryBtn"></button>
+    </div>
+    <div id="cartEmptyState" class="empty-cart">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      </div>
+      <h3 id="cartEmptyTitle"></h3>
+      <p id="cartEmptyText"></p>
+      <button class="primary-btn" id="cartBrowseBtn" style="width:auto; padding:12px 26px;"></button>
+    </div>
+    <div class="cart-list" id="cartList" style="display:none;"></div>
+    <div class="cart-summary" id="cartSummary" style="display:none;">
+      <div class="summary-line"><span id="cartSubtotalLabel"></span><span id="cartSubtotalVal"></span></div>
+      <div class="summary-line" id="cartDeliveryLine"><span id="cartDeliveryLabel"></span><span id="cartDeliveryVal"></span></div>
+      <div class="summary-line final"><span id="cartTotalLabel"></span><span id="cartTotalVal"></span></div>
+      <button class="primary-btn" id="cartCheckoutBtn"></button>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE OVERLAY ===== -->
+  <div class="overlay" id="profileOverlay">
+    <div class="overlay-head">
+      <button class="icon-btn" id="profileClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="overlay-title" id="profileTitle"></span>
+      <span style="width:38px;"></span>
+    </div>
+    <div class="profile-body">
+      <div id="profileLoggedOut">
+        <h2 id="profileSignInTitle"></h2>
+        <p class="profile-subtitle" id="profileAccountHint"></p>
+        <p class="field-label" id="profileEmailLabel"></p>
+        <input class="field-input" id="profileEmail" type="email" autocomplete="email">
+        <p class="field-label" id="profilePasswordLabel"></p>
+        <input class="field-input" id="profilePassword" type="password" autocomplete="current-password">
+        <button type="button" id="profileForgotBtn" style="background:none; border:none; color:var(--gold); font-size:12px; padding:8px 0 0; cursor:pointer; text-decoration:underline;"></button>
+        <div id="profileNameWrap" style="display:none;">
+          <p class="field-label" id="profileNameLabel"></p>
+          <input class="field-input" id="profileName" type="text" autocomplete="name">
+        </div>
+        <div class="profile-actions">
+          <button class="primary-btn" id="profileLoginBtn"></button>
+          <button class="profile-secondary-btn" id="profileRegisterBtn"></button>
+        </div>
+        <p class="profile-status" id="profileAuthStatus"></p>
+      </div>
+
+      <div id="profileLoggedIn" style="display:none;">
+        <div class="profile-identity">
+          <strong id="profileEmailValue"></strong>
+          <small id="profileIdValue"></small>
+        </div>
+        <p class="field-label" id="profileSavedNameLabel"></p>
+        <input class="field-input" id="profileSavedName" type="text" autocomplete="name">
+        <p class="field-label" id="profilePhoneLabel"></p>
+        <input class="field-input" id="profilePhone" type="tel" autocomplete="tel">
+        <p class="field-label" id="profileAddressLabel"></p>
+        <textarea class="field-textarea" id="profileAddress" autocomplete="street-address"></textarea>
+        <div class="profile-actions">
+          <button class="primary-btn" id="profileSaveBtn"></button>
+          <button class="profile-secondary-btn" id="profileLogoutBtn"></button>
+        </div>
+        <p class="profile-status" id="profileStatus"></p>
+        <h2 class="profile-orders-title" id="profileOrdersTitle"></h2>
+        <div id="profileOrders"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHECKOUT OVERLAY ===== -->
+  <div class="overlay" id="checkoutOverlay">
+    <div class="overlay-head">
+      <button class="icon-btn" id="checkoutBack" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="overlay-title" id="checkoutTitle"></span>
+      <span style="width:38px;"></span>
+    </div>
+    <div class="checkout-body">
+      <p class="checkout-branch" id="checkoutBranch"></p>
+      <div class="checkout-subrow"><span id="checkoutTypeLabel"></span><span id="checkoutTypeVal"></span></div>
+
+      <p class="field-label" id="checkoutContactLabel"></p>
+      <p class="field-label" id="nameLabel"></p>
+      <input class="field-input" id="checkoutName" type="text">
+      <p class="field-label" id="phoneLabel"></p>
+      <input class="field-input" id="checkoutPhone" type="tel" placeholder="05XXXXXXXX">
+      <div id="addressWrap">
+        <p class="field-label" id="addressLabel"></p>
+        <textarea class="field-textarea" id="checkoutAddress"></textarea>
+      </div>
+
+      <p class="field-label" id="paymentLabel"></p>
+      <div class="pay-method">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        <span id="paymentMethodText"></span>
+      </div>
+
+      <div class="cart-summary" style="border:none; padding:18px 0 0;">
+        <div class="summary-line"><span id="checkoutSubLabel"></span><span id="checkoutSubVal"></span></div>
+        <div class="summary-line" id="checkoutDeliveryLine"><span id="checkoutDeliveryLabel"></span><span id="checkoutDeliveryVal"></span></div>
+        <div class="summary-line final"><span id="checkoutTotalLabel"></span><span id="checkoutTotalVal"></span></div>
+        <button class="primary-btn wa-btn" id="checkoutPayBtn"></button>
+        <p class="status-note" id="checkoutStatusNote"></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   i18n — EN / AR / UR / ZH. AR + UR are RTL; EN + ZH are LTR.
+   Note: AR/UR/ZH strings below are a working first pass for layout and
+   flow — have a native speaker review the actual wording before launch.
+   ===================================================================== */
+const LANGS = { en:{dir:'ltr'}, ar:{dir:'rtl'}, ur:{dir:'rtl'}, zh:{dir:'ltr'} };
+
+const STR = {
+    en:{ loading:'Loading', explore:'Explore menu', allCategories:'All categories',
+      specialTitle:'Special', specialHint:'Drag left / right · Tap a category', videoSpeed:'Speed', menuTitle:'Menu',
+      offerTitle:'All meals served with', offerText:'Chinese fried egg rice, egg seaweed soup, vegetable salad with sauce, and bottled water.',
+       sortName:'Name (A–Z)', sortTime:'Newest', sortOffer:'Offers first',
+       sortPrice:'Price: low to high', sortPopular:'Most popular',
+       empty:'No dishes in this category yet.', offer:'Offer',
+      navHome:'Home', navMenu:'Menu', navBasket:'Basket', navProfile:'Profile',
+      profileTitle:'My profile', signInTitle:'Sign in to your account', accountHint:'Save your details and see previous orders.',
+      email:'Email', password:'Password', displayName:'Full name', phone:'Phone', address:'Address',
+      signIn:'Sign in', register:'Create account', saveProfile:'Save profile', signOut:'Sign out',
+      authRequired:'Please enter your email and password.', profileSaved:'Profile saved.', orderHistory:'Previous orders', noOrders:'No orders yet.', authError:'Unable to sign in. Please check your details.',
+      forgotPassword:'Forgot password?', resetEmailRequired:'Enter your email above, then tap "Forgot password?" again.', resetLinkSent:'If that email is registered, a reset link has been sent to it.',
+       cartTitle:'Order Cart', pickupLabel:'Pick-up from the branch', free:'Free', deliveryLabel:'Home delivery',
+       cartEmptyTitle:'The basket is currently empty.', cartEmptyText:'Enjoy the most delicious meals and order now!',
+       browseMenu:'Browse the menu', subtotal:'Subtotal:', deliveryFees:'Delivery fees:', finalTotal:'Final total:',
+       completeOrder:'Complete your order now', addToCart:'Add to cart', calLabel:'Calories',
+       checkoutTitle:'Checkout', requestType:'Request type:', customerContact:'Customer contact information:',
+       fullName:'Full name:', fullNamePh:'Enter your name...', mobileNumber:'Mobile number (WhatsApp/call):',
+       deliveryAddress:'Delivery address:', deliveryAddressPh:'Neighborhood, street, building/villa, apartment...',
+       paymentMethod:'Payment method:', paymentSimulated:'Simulated payment (test mode)',
+       payBtn:'Pay & send order', processingPayment:'Processing payment…', paymentDone:'Payment confirmed — opening WhatsApp…',
+       orderFailed:'Something went wrong. Please try again.',
+       includesTitle:'This meal automatically includes:', includesText:'Steamed rice, soup, salad and bottled water.',
+       descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
+    ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
+      specialTitle:'المميز', specialHint:'اسحب يميناً أو يساراً · اضغط على الصنف', videoSpeed:'السرعة', menuTitle:'القائمة',
+      offerTitle:'تُقدَّم جميع الوجبات مع', offerText:'أرز مقلي بالبيض الصيني، شوربة البيض والأعشاب البحرية، سلطة خضار مع الصلصة وماء معبأ.',
+       sortName:'الاسم (أ-ي)', sortTime:'الأحدث', sortOffer:'العروض أولاً',
+       sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً',
+       empty:'لا توجد أطباق في هذا الصنف بعد.', offer:'عرض',
+      navHome:'الرئيسية', navMenu:'القائمة', navBasket:'السلة', navProfile:'حسابي',
+      profileTitle:'حسابي', signInTitle:'تسجيل الدخول', accountHint:'احفظ بياناتك وشاهد طلباتك السابقة.',
+      email:'البريد الإلكتروني', password:'كلمة المرور', displayName:'الاسم الكامل', phone:'رقم الجوال', address:'العنوان',
+      signIn:'تسجيل الدخول', register:'إنشاء حساب', saveProfile:'حفظ الحساب', signOut:'تسجيل الخروج',
+      authRequired:'أدخل البريد الإلكتروني وكلمة المرور.', profileSaved:'تم حفظ الحساب.', orderHistory:'الطلبات السابقة', noOrders:'لا توجد طلبات بعد.', authError:'تعذر تسجيل الدخول. تحقق من بياناتك.',
+      forgotPassword:'نسيت كلمة المرور؟', resetEmailRequired:'أدخل بريدك الإلكتروني أعلاه، ثم اضغط "نسيت كلمة المرور؟" مرة أخرى.', resetLinkSent:'إذا كان هذا البريد الإلكتروني مسجلاً، فقد تم إرسال رابط إعادة تعيين كلمة المرور إليه.',
+       cartTitle:'سلة الطلبات', pickupLabel:'الاستلام من الفرع', free:'مجاني', deliveryLabel:'التوصيل للمنزل',
+       cartEmptyTitle:'السلة فارغة حالياً.', cartEmptyText:'استمتع بألذ الأطباق واطلب وجبتك الآن!',
+       browseMenu:'تصفح القائمة', subtotal:'المجموع الفرعي:', deliveryFees:'رسوم التوصيل:', finalTotal:'الإجمالي النهائي:',
+       completeOrder:'أكمل طلبك الآن', addToCart:'أضف إلى السلة', calLabel:'سعرة حرارية',
+       checkoutTitle:'إتمام الطلب', requestType:'نوع الطلب:', customerContact:'بيانات التواصل:',
+       fullName:'الاسم الكامل:', fullNamePh:'أدخل اسمك...', mobileNumber:'رقم الجوال (واتساب/اتصال):',
+       deliveryAddress:'عنوان التوصيل:', deliveryAddressPh:'الحي، الشارع، رقم المبنى/الفيلا، الشقة...',
+       paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع تجريبي (وضع الاختبار)',
+       payBtn:'ادفع وأرسل الطلب', processingPayment:'جارٍ معالجة الدفع…', paymentDone:'تم تأكيد الدفع — جارٍ فتح واتساب…',
+       orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
+       includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'أرز مطهو على البخار، شوربة، سلطة وماء معبأ.',
+       descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
+    ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
+      specialTitle:'خاص', specialHint:'دائیں یا بائیں سوائپ کریں · زمرہ منتخب کریں', videoSpeed:'رفتار', menuTitle:'مینو',
+      offerTitle:'تمام کھانوں کے ساتھ', offerText:'چائنیز ایگ فرائیڈ رائس، انڈے اور سی ویڈ کا سوپ، ساس کے ساتھ سبزیوں کا سلاد اور بوتل بند پانی۔',
+       sortName:'نام (اے-زیڈ)', sortTime:'تازہ ترین', sortOffer:'پہلے آفرز',
+       sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین',
+       empty:'اس زمرے میں ابھی کوئی ڈش نہیں۔', offer:'آفر',
+      navHome:'ہوم', navMenu:'مینو', navBasket:'باسکٹ', navProfile:'پروفائل',
+      profileTitle:'میرا پروفائل', signInTitle:'اپنے اکاؤنٹ میں سائن ان کریں', accountHint:'اپنی معلومات محفوظ کریں اور پچھلے آرڈرز دیکھیں۔',
+      email:'ای میل', password:'پاس ورڈ', displayName:'پورا نام', phone:'فون', address:'پتہ',
+      signIn:'سائن ان', register:'اکاؤنٹ بنائیں', saveProfile:'پروفائل محفوظ کریں', signOut:'سائن آؤٹ',
+      authRequired:'ای میل اور پاس ورڈ درج کریں۔', profileSaved:'پروفائل محفوظ ہو گیا۔', orderHistory:'پچھلے آرڈرز', noOrders:'ابھی کوئی آرڈر نہیں۔', authError:'سائن ان نہیں ہو سکا۔ معلومات چیک کریں۔',
+      forgotPassword:'پاس ورڈ بھول گئے؟', resetEmailRequired:'پہلے اوپر اپنا ای میل درج کریں، پھر دوبارہ "پاس ورڈ بھول گئے؟" دبائیں۔', resetLinkSent:'اگر یہ ای میل رجسٹرڈ ہے تو اس پر ری سیٹ لنک بھیج دیا گیا ہے۔',
+       cartTitle:'آرڈر کارٹ', pickupLabel:'برانچ سے پک اپ', free:'مفت', deliveryLabel:'ہوم ڈیلیوری',
+       cartEmptyTitle:'ٹوکری اس وقت خالی ہے۔', cartEmptyText:'لذیذ کھانوں سے لطف اٹھائیں اور ابھی آرڈر کریں!',
+       browseMenu:'مینو دیکھیں', subtotal:'ذیلی مجموعہ:', deliveryFees:'ڈیلیوری فیس:', finalTotal:'حتمی رقم:',
+       completeOrder:'ابھی آرڈر مکمل کریں', addToCart:'کارٹ میں شامل کریں', calLabel:'کیلوریز',
+       checkoutTitle:'چیک آؤٹ', requestType:'درخواست کی قسم:', customerContact:'رابطہ کی معلومات:',
+       fullName:'پورا نام:', fullNamePh:'اپنا نام درج کریں...', mobileNumber:'موبائل نمبر (واٹس ایپ/کال):',
+       deliveryAddress:'ڈیلیوری پتہ:', deliveryAddressPh:'محلہ، گلی، عمارت/ولا نمبر، اپارٹمنٹ...',
+       paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'ٹیسٹ ادائیگی (آزمائشی موڈ)',
+       payBtn:'ادائیگی کریں اور آرڈر بھیجیں', processingPayment:'ادائیگی جاری ہے…', paymentDone:'ادائیگی کی تصدیق — واٹس ایپ کھل رہا ہے…',
+       orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+       includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'ابلے چاول، سوپ، سلاد اور بوتل بند پانی۔',
+       descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
+    zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
+      specialTitle:'精选', specialHint:'左右拖动 · 点击分类', videoSpeed:'速度', menuTitle:'菜单',
+      offerTitle:'所有餐点均配有', offerText:'中式鸡蛋炒饭、鸡蛋海藻汤、配酱汁的蔬菜沙拉和瓶装水。',
+       sortName:'名称（A-Z）', sortTime:'最新', sortOffer:'优惠优先',
+       sortPrice:'价格：从低到高', sortPopular:'最受欢迎',
+       empty:'该分类暂无菜品。', offer:'优惠',
+      navHome:'首页', navMenu:'菜单', navBasket:'购物车', navProfile:'我的',
+      profileTitle:'我的资料', signInTitle:'登录您的账户', accountHint:'保存您的信息并查看历史订单。',
+      email:'电子邮箱', password:'密码', displayName:'姓名', phone:'电话', address:'地址',
+      signIn:'登录', register:'创建账户', saveProfile:'保存资料', signOut:'退出登录',
+      authRequired:'请输入电子邮箱和密码。', profileSaved:'资料已保存。', orderHistory:'历史订单', noOrders:'暂无订单。', authError:'登录失败，请检查您的信息。',
+      forgotPassword:'忘记密码？', resetEmailRequired:'请先在上方输入邮箱，然后再次点击"忘记密码？"。', resetLinkSent:'如果该邮箱已注册，重置链接已发送至该邮箱。',
+       cartTitle:'订单购物车', pickupLabel:'到店自取', free:'免费', deliveryLabel:'送货上门',
+       cartEmptyTitle:'购物车当前为空。', cartEmptyText:'尽享美味佳肴，现在就下单吧！',
+       browseMenu:'浏览菜单', subtotal:'小计：', deliveryFees:'配送费：', finalTotal:'总计：',
+       completeOrder:'立即完成订单', addToCart:'加入购物车', calLabel:'卡路里',
+       checkoutTitle:'结账', requestType:'订单类型：', customerContact:'客户联系信息：',
+       fullName:'姓名：', fullNamePh:'请输入您的姓名…', mobileNumber:'手机号码（WhatsApp/通话）：',
+       deliveryAddress:'送货地址：', deliveryAddressPh:'小区、街道、楼栋/别墅号、公寓号…',
+       paymentMethod:'付款方式：', paymentSimulated:'模拟付款（测试模式）',
+       payBtn:'付款并发送订单', processingPayment:'正在处理付款…', paymentDone:'付款已确认——正在打开WhatsApp…',
+       orderFailed:'出错了，请重试。',
+       includesTitle:'此套餐自动包含：', includesText:'米饭、汤、沙拉和瓶装水。',
+       descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
+};
+
+// Strings for the call-button contact card.
+const CONTACT_STR = {
+  en:{ contactTitle:'Contact us', contactPhone:'Phone', contactAddress:'Address', contactCallNow:'Call now', contactOpenMap:'Open in Maps', contactWhatsApp:'WhatsApp', contactLocation:'Location', contactChat:'Chat on WhatsApp' },
+  ar:{ contactTitle:'تواصل معنا', contactPhone:'الهاتف', contactAddress:'العنوان', contactCallNow:'اتصل الآن', contactOpenMap:'افتح في الخرائط', contactWhatsApp:'واتساب', contactLocation:'الموقع', contactChat:'تواصل عبر واتساب' },
+  ur:{ contactTitle:'ہم سے رابطہ کریں', contactPhone:'فون', contactAddress:'پتہ', contactCallNow:'ابھی کال کریں', contactOpenMap:'نقشے میں کھولیں', contactWhatsApp:'واٹس ایپ', contactLocation:'مقام', contactChat:'واٹس ایپ پر بات کریں' },
+  zh:{ contactTitle:'联系我们', contactPhone:'电话', contactAddress:'地址', contactCallNow:'立即致电', contactOpenMap:'在地图中打开', contactWhatsApp:'WhatsApp', contactLocation:'位置', contactChat:'通过 WhatsApp 联系' },
+};
+Object.keys(CONTACT_STR).forEach(code => Object.assign(STR[code], CONTACT_STR[code]));
+
+// CATS and ITEMS are no longer hardcoded — they're loaded from the
+// real backend (GET /api/categories and GET /api/menu, which read
+// from Supabase) by loadMenuData(), called from init() near the
+// bottom of this script, before the first render().
+let CATS = [];
+let ITEMS = [];
+const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,zh:k} };
+let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
+let SPECIAL_SECTIONS = [];
+
+function renderSpecial(){
+  const row = document.getElementById('specialRow');
+  if(!row) return;
+  const ordered = [...CATS].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  row.innerHTML = ordered.map(category=>{
+    const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
+    const label = category.label[lang] || category.label.en || category.key;
+    const selectedFoods = config?.items || [];
+    const foods = selectedFoods.map(item=>item[`name_${lang}`] || item.name_en);
+    const featuredPrice = selectedFoods[0] && Number.isFinite(Number(selectedFoods[0].price))
+      ? money(Number(selectedFoods[0].price))
+      : '';
+    return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}">
+      <div class="special-video"><video poster="images/offer-demo.png" muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b class="special-add-price">${escapeHtml(featuredPrice)}</b></button></div>
+      <p class="category-name">${escapeHtml(label)}</p>
+      ${foods.some(Boolean) ? `<ol class="special-foods">${foods.map((food,index)=>`<li data-slot="${index+1}">${escapeHtml(food || '')}</li>`).join('')}</ol>` : ''}
+    </article>`;
+  }).join('');
+}
+
+let lang = 'en';
+
+/* ---------- image fallback (dish -> category -> icon) ---------- */
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]/g,''); }
+function dishImgPath(cat, name){ return `images/${cat}/${slugify(name)}.png`; }
+function catImgPath(cat){ return `images/${cat}.png`; }
+function genericImgPath(){ return `images/food.png`; }
+function hasImageUrl(item){ return typeof item.imagePath === 'string' && item.imagePath.trim().length > 0; }
+function itemImgPath(item){
+  if(!hasImageUrl(item)) return dishImgPath(item.cat, item.name.en);
+  try{
+    const url = new URL(item.imagePath.trim(), window.location.href);
+    if(url.protocol === 'https:' || url.protocol === 'http:') return url.href;
+  }catch{}
+  return '';
+}
+const FALLBACK_ICON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+  '<circle cx="50" cy="50" r="30" fill="none" stroke="#3a3630" stroke-width="3"/>' +
+  '<circle cx="50" cy="50" r="18" fill="none" stroke="#3a3630" stroke-width="2"/></svg>';
+function wireImgFallback(imgEl){
+  if(imgEl.dataset.hasImageUrl === 'true') return;
+  const cat = imgEl.dataset.cat;
+  function onError(){
+    if(imgEl.dataset.stage === 'dish'){ imgEl.dataset.stage = 'cat'; imgEl.src = catImgPath(cat); }
+    else if(imgEl.dataset.stage === 'cat'){ imgEl.dataset.stage = 'generic'; imgEl.src = genericImgPath(); }
+    else {
+      imgEl.removeEventListener('error', onError);
+      imgEl.style.display = 'none';
+      const fb = imgEl.nextElementSibling;
+      if(fb) fb.style.display = 'flex';
+    }
+  }
+  imgEl.dataset.stage = 'dish';
+  imgEl.addEventListener('error', onError);
+}
+wireImgFallback.call = wireImgFallback; // no-op, keeps linter quiet
+
+/* logo fallback if images/logo.png is missing */
+(() => {
+  const img = document.getElementById('logoImg');
+  img.addEventListener('error', function onErr(){
+    img.removeEventListener('error', onErr);
+    img.style.display = 'none';
+    document.getElementById('logoFallback').style.display = 'block';
+  });
+})();
+
+/* ---------- language switching ---------- */
+const langPills = document.getElementById('langPills');
+langPills.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-pill');
+  if (btn) setLang(btn.dataset.lang);
+});
+
+function initialLang(){
+  let c = new URLSearchParams(location.search).get('lang');
+  try{ if(!LANGS[c]) c = localStorage.getItem('redhouse_lang'); }catch(_){}
+  return LANGS[c] ? c : 'en';
+}
+function setLang(code){
+  lang = code;
+  try{ localStorage.setItem('redhouse_lang', code); }catch(_){}
+  document.documentElement.lang = code;
+  document.documentElement.dir = LANGS[code].dir;
+  langPills.querySelectorAll('.lang-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.lang === code);
+  });
+
+  // document.getElementById('exploreLabel').textContent = STR[lang].explore;  // hero removed
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent = STR[lang][el.dataset.i18n];
+  });
+
+  categorySelect.innerHTML = `<option value="all">${STR[lang].allCategories}</option>` +
+    CATS.map(c=>`<option value="${c.key}">${c.label[lang]}</option>`).join('');
+
+  sortSelect.innerHTML = `
+    <option value="popular">${STR[lang].sortPopular}</option>
+    <option value="name">${STR[lang].sortName}</option>
+    <option value="time">${STR[lang].sortTime}</option>
+    <option value="offer">${STR[lang].sortOffer}</option>
+    <option value="price">${STR[lang].sortPrice}</option>`;
+
+  render();
+  renderSpecial();
+  refreshCartStaticText();
+  refreshCheckoutStaticText();
+  if(!cartOverlay.classList.contains('is-open')) {/* no-op, guards below re-render only if open */}
+  if(cartOverlay.classList.contains('is-open')) renderCart();
+}
+
+/* ---------- menu list ---------- */
+const categorySelect = document.getElementById('categorySelect');
+const sortSelect = document.getElementById('sortSelect');
+const listEl = document.getElementById('list');
+
+function render(){
+  const cat = categorySelect.value;
+  const sort = sortSelect.value;
+  let items = ITEMS.filter(i => cat==='all' || i.cat===cat);
+
+  if(sort==='name') items.sort((a,b)=>a.name[lang].localeCompare(b.name[lang]));
+  else if(sort==='time') items.sort((a,b)=>b.id-a.id);
+  else if(sort==='offer') items.sort((a,b)=>(b.offer-a.offer) || (b.pop-a.pop));
+  else if(sort==='price') items.sort((a,b)=>a.price - b.price);
+  else if(sort==='popular') items.sort((a,b)=>b.pop-a.pop);
+
+  if(!items.length){
+    listEl.innerHTML = `<div class="empty">${STR[lang].empty}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = items.map(i=>{
+    const name = i.name[lang];
+    const imageUrl = itemImgPath(i);
+    const hasUrl = hasImageUrl(i);
+    return `<button class="row" data-id="${i.id}">
+      <div class="thumb">
+        ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(name)}" loading="lazy" data-cat="${escapeHtml(i.cat || '')}" data-has-image-url="${hasUrl}">` : ''}
+        ${!hasUrl ? `<div class="thumb-fallback">${FALLBACK_ICON}</div>` : ''}
+      </div>
+      <div class="info">
+        <p class="name">${i.offer ? `<span class="offer-tag">${STR[lang].offer}</span>` : ''}${name}</p>
+        <p class="price">$${i.price.toFixed(2)}</p>
+      </div>
+    </button>`;
+  }).join('');
+
+  listEl.querySelectorAll('.thumb img').forEach(wireImgFallback);
+  listEl.querySelectorAll('.row').forEach(row=>{
+    row.addEventListener('click', ()=> openItemModal(Number(row.dataset.id)));
+  });
+}
+
+categorySelect.addEventListener('change', render);
+sortSelect.addEventListener('change', render);
+
+/* ---------- overlay and tab state ---------- */
+const overlayElements = ['itemModal', 'cartOverlay', 'profileOverlay', 'checkoutOverlay', 'contactOverlay']
+  .map(id => document.getElementById(id));
+function resetOverlayScroll(overlay){
+  overlay.scrollTop = 0;
+  overlay.querySelectorAll('[class*="body"], .cart-list, .profile-body').forEach(element => {
+    element.scrollTop = 0;
+  });
+}
+function closeAllOverlays(){
+  overlayElements.forEach(overlay => overlay.classList.remove('is-open'));
+}
+function openOverlay(overlay){
+  closeAllOverlays();
+  resetOverlayScroll(overlay);
+  overlay.classList.add('is-open');
+}
+function closeOverlay(overlay){
+  overlay.classList.remove('is-open');
+  resetOverlayScroll(overlay);
+  syncFooter();
+}
+function scrollToTab(tab){
+  closeAllOverlays();
+  const app = document.querySelector('.app');
+  if(tab === 'menu'){
+    app.classList.add('menu-mode');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }else{
+    app.classList.remove('menu-mode');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  syncFooter();
+}
+
+/* Footer tabs appear only once the menu section is reached (normal scroll)
+   or the Menu tab is tapped (menu-mode). Hidden on the hero / specials. */
+function syncFooter(){
+  const bar = document.getElementById('tabsBar');
+  const app = document.querySelector('.app');
+  const menuEl = document.getElementById('menu');
+  if(!bar || !menuEl) return;
+  const reached = app.classList.contains('menu-mode') || menuEl.getBoundingClientRect().top <= innerHeight * 0.5;
+  const overlayOpen = !!document.querySelector('.overlay.is-open');
+  bar.classList.toggle('show', reached || overlayOpen);
+  if(!overlayOpen){
+    bar.querySelectorAll('button').forEach(b=>{
+      if(b.dataset.tab === 'home' || b.dataset.tab === 'menu') b.classList.toggle('active', b.dataset.tab === (reached ? 'menu' : 'home'));
+    });
+  }
+}
+addEventListener('scroll', syncFooter, {passive:true});
+addEventListener('resize', syncFooter);
+
+/* ---------- footer tabs ---------- */
+document.querySelectorAll('footer.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.dataset.tab === 'home'){ location.href = 'index.html'; return; }
+    document.querySelectorAll('footer.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(btn.dataset.tab === 'basket') openCart();
+    else if(btn.dataset.tab === 'profile') openProfile();
+    else scrollToTab(btn.dataset.tab);
+  });
+});
+// (hero explore cue removed with the hero section)
+// document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDefault(); scrollToTab('menu'); });
+
+document.getElementById('specialRow').addEventListener('click', e=>{
+  const card = e.target.closest('.special-card');
+  const addBtn = e.target.closest('.special-add');
+  if(card && addBtn){
+    e.stopPropagation();
+    // Add the product currently shown in the video (2 s per product).
+    const items = SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items || [];
+    const item = items[Number(card.dataset.idx) || 0] || items[0];
+    if(!item || !itemById(Number(item.id))) return;
+    cartSet(item.id, (cart[Number(item.id)] || 0) + 1);
+    const label = addBtn.querySelector('span');
+    const original = STR[lang].addToCart;
+    label.textContent = '✓';
+    clearTimeout(addBtn._t);
+    addBtn._t = setTimeout(()=>{ label.textContent = original; }, 800);
+    return;
+  }
+  if(!card || card.dataset.drag) return;
+  categorySelect.value = card.dataset.cat;
+  render();
+  scrollToTab('menu');
+});
+document.getElementById('specialRow').addEventListener('keydown', e=>{
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('.special-card');
+  if(!card) return;
+  e.preventDefault();
+  categorySelect.value = card.dataset.cat;
+  render();
+  scrollToTab('menu');
+});
+
+/* =====================================================================
+   CONFIG — DELIVERY_FEE / WHATSAPP_NUMBER / BRANCH_NAME now come from
+   the server (GET /api/config), which reads them from env vars, so
+   there's one source of truth instead of duplicating them here.
+   ===================================================================== */
+const CURRENCY = '$';
+const API_BASE = window.location.origin;
+let DELIVERY_FEE = 20;          // overwritten by loadConfig() below
+let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
+let BRANCH_NAME = 'Red House Trading';
+
+async function loadConfig(){
+  try{
+    const res = await fetch(`${API_BASE}/api/config`);
+    if(!res.ok) throw new Error(`GET /api/config failed (${res.status})`);
+    const cfg = await res.json();
+    DELIVERY_FEE = Number(cfg.deliveryFee ?? DELIVERY_FEE);
+    WHATSAPP_NUMBER = cfg.whatsappNumber || '';
+    BRANCH_NAME = cfg.branchName || BRANCH_NAME;
+  }catch(err){
+    console.error('Failed to load server config, using defaults:', err);
+  }
+}
+
+/* ---------- contact details (call button) ---------- */
+// Editable from the admin "Contact" tab; served by GET /api/contact.
+let CONTACT = { phone:'', phone2:'', address:'', mapUrl:'' };
+const WA_COUNTRY = '966';   // local numbers starting with 0 are treated as Saudi (+966)
+
+async function loadContact(){
+  try{
+    const res = await fetch(`${API_BASE}/api/contact`, { cache:'no-store' });
+    if(!res.ok) throw new Error(`GET /api/contact failed (${res.status})`);
+    const data = await res.json();
+    CONTACT = { phone:String(data.phone||''), phone2:String(data.phone2||''), address:String(data.address||''), mapUrl:String(data.mapUrl||'') };
+  }catch(err){
+    console.error('Failed to load contact details:', err);
+  }
+}
+
+// 00966 56 928 3982 / 056 928 3982 / +966569283982  ->  966569283982 (wa.me format)
+function waNumber(raw){
+  let d = String(raw || '').replace(/\D/g, '');
+  if(d.startsWith('00')) d = d.slice(2);
+  else if(d.startsWith('0')) d = WA_COUNTRY + d.slice(1);
+  return d;
+}
+
+function renderContact(){
+  // both admin numbers; if they are the same line written two ways, show it once
+  const nums = [], seen = new Set();
+  [CONTACT.phone, CONTACT.phone2].forEach(p => {
+    const wa = waNumber(p);
+    if(wa.length >= 8 && !seen.has(wa)){ seen.add(wa); nums.push({ label:String(p).trim(), wa }); }
+  });
+  document.getElementById('contactPhone').innerHTML = nums.length
+    ? nums.map(n => `<a class="wa-link" dir="ltr" href="https://wa.me/${n.wa}" target="_blank" rel="noopener">${escapeHtml(n.label)}</a>`).join('')
+    : '';
+  const chat = document.getElementById('contactCallLink');
+  chat.href = nums.length ? `https://wa.me/${nums[0].wa}` : '#';
+  chat.hidden = !nums.length;
+
+  const mapHref = CONTACT.mapUrl || (CONTACT.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONTACT.address)}` : '');
+  const addr = document.getElementById('contactAddress');
+  const addrText = CONTACT.address || (mapHref ? STR[lang].contactOpenMap : '');
+  addr.innerHTML = mapHref ? `<a class="wa-link" href="${escapeHtml(mapHref)}" target="_blank" rel="noopener">${escapeHtml(addrText)}</a>` : escapeHtml(addrText);
+  const mapLink = document.getElementById('contactMapLink');
+  mapLink.href = mapHref || '#';
+  mapLink.hidden = !mapHref;
+  /* PREVIOUS tel: / address-only logic DISABLED:
+  const dialable = CONTACT.phone.replace(/[^\d+]/g, '');
+  callLink.href = dialable ? `tel:${dialable}` : '#';
+  mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONTACT.address)}`;
+  */
+}
+
+const contactOverlay = document.getElementById('contactOverlay');
+async function openContact(){
+  renderContact();                 // show what we have instantly...
+  openOverlay(contactOverlay);
+  await loadContact();             // ...then pick up any admin edit made since page load
+  renderContact();
+}
+document.getElementById('callFab').addEventListener('click', openContact);
+document.getElementById('contactClose').addEventListener('click', ()=> closeOverlay(contactOverlay));
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && contactOverlay.classList.contains('is-open')) closeOverlay(contactOverlay);
+});
+
+/* ---------- load categories + menu items from the real backend ---------- */
+async function loadMenuData(){
+  try{
+    const [catsRes, itemsRes] = await Promise.all([
+      fetch(`${API_BASE}/api/categories`),
+      fetch(`${API_BASE}/api/menu`),
+    ]);
+    if(!catsRes.ok) throw new Error(`GET /api/categories failed (${catsRes.status})`);
+    if(!itemsRes.ok) throw new Error(`GET /api/menu failed (${itemsRes.status})`);
+
+    const cats = await catsRes.json();
+    const items = await itemsRes.json();
+
+    CATS = cats.map(c => ({
+      key: c.key,
+      sort_order: c.sort_order,
+      label: { en:c.label_en, ar:c.label_ar, ur:c.label_ur, zh:c.label_zh },
+    }));
+
+    ITEMS = items.map(i => ({
+      id: i.id,
+      cat: i.categories ? i.categories.key : null,
+      pop: i.popularity ?? 0,
+      offer: Boolean(i.is_offer),
+      cal: i.calories ?? null,
+      rating: i.rating != null ? Number(i.rating) : null,
+      price: Number(i.price),
+      imagePath: i.image_path || '',
+      name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
+      desc: { en:i.description_en || null },
+    }));
+  }catch(err){
+    console.error('Failed to load menu from server:', err);
+    CATS = [];
+    ITEMS = [];
+    listEl.innerHTML = `<div class="empty">Unable to load the menu right now. Please check your connection and try again.</div>`;
+  }
+}
+
+async function loadSpecialData(){
+  try{
+    const response = await fetch(`${API_BASE}/api/special`, { cache:'no-store' });
+    if(!response.ok) throw new Error(`GET /api/special failed (${response.status})`);
+    const data = await response.json();
+    SPECIAL_SECTIONS = data.categories || [];
+  }catch(error){
+    console.error('Failed to load Special section:', error);
+    SPECIAL_SECTIONS = [];
+  }
+}
+
+/* ---------- theme (light/dark) ---------- */
+const THEME_KEY = 'redhouse_theme';
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  try{ localStorage.setItem(THEME_KEY, theme); }catch(e){ /* storage unavailable, ignore */ }
+}
+/* THEME TOGGLE DISABLED (dark only)
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  applyTheme(isLight ? 'dark' : 'light');
+});
+*/
+
+/* ---------- cart state ----------
+   Signed-in users: the cart lives in Supabase (cart_items table via
+   /api/cart) so it follows them across devices. Guests: the cart lives
+   in localStorage only, on this device/browser. cartSet()/clearCart()
+   are the only places that mutate `cart` so every call site stays in
+   sync with whichever storage is currently active. */
+let cart = {};            // { itemId: qty } — always the in-memory source of truth for rendering
+let orderType = 'pickup'; // 'pickup' | 'delivery'
+let lastOrder = null;     // {id, items, subtotal, deliveryFee, total} set after a successful order
+
+const GUEST_CART_KEY = 'redhouse_guest_cart';
+function loadGuestCart(){
+  try{ return JSON.parse(localStorage.getItem(GUEST_CART_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function saveGuestCart(){
+  try{ localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart)); }catch(e){ /* storage unavailable, ignore */ }
+}
+
+// Sets (or, for qty <= 0, removes) one cart line. Updates the in-memory
+// `cart` synchronously so the UI never waits on the network, then syncs
+// to Supabase (signed in) or localStorage (guest) in the background.
+function cartSet(id, qty){
+  id = Number(id);
+  if(qty <= 0){ delete cart[id]; } else { cart[id] = qty; }
+  updateCartBadge();
+
+  if(authToken){
+    const request = qty <= 0
+      ? fetch(`${API_BASE}/api/cart/${id}`, { method:'DELETE', headers:authHeaders() })
+      : fetch(`${API_BASE}/api/cart`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json', ...authHeaders()},
+          body: JSON.stringify({ menu_item_id:id, quantity:qty }),
+        });
+    request.catch(err => console.error('Cart sync failed:', err));
+  }else{
+    saveGuestCart();
+  }
+}
+
+// Empties the cart (after a completed order): clears every DB row for a
+// signed-in user, or just wipes localStorage for a guest.
+async function clearCart(){
+  const ids = Object.keys(cart).map(Number);
+  cart = {};
+  updateCartBadge();
+  if(authToken){
+    try{
+      await Promise.all(ids.map(id => fetch(`${API_BASE}/api/cart/${id}`, { method:'DELETE', headers:authHeaders() })));
+    }catch(err){ console.error('Failed to clear server cart:', err); }
+  }else{
+    saveGuestCart();
+  }
+}
+
+// Replaces in-memory `cart` with whatever's saved server-side for the
+// signed-in user (called on page load when a token exists, and after login).
+async function loadCartFromServer(){
+  try{
+    const res = await fetch(`${API_BASE}/api/cart`, { headers: authHeaders() });
+    if(!res.ok) throw new Error(`GET /api/cart failed (${res.status})`);
+    const { items } = await res.json();
+    cart = {};
+    items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+    updateCartBadge();
+  }catch(err){
+    console.error('Failed to load cart from server:', err);
+  }
+}
+
+// Called once, right after a successful login: folds whatever was in the
+// guest's localStorage cart into their DB cart (quantities add on top of
+// anything already saved there), then makes the DB the source of truth.
+async function mergeGuestCartIntoServer(){
+  const guestItems = Object.entries(cart).map(([id, qty]) => ({ menu_item_id:Number(id), quantity:qty }));
+  try{
+    if(guestItems.length){
+      const res = await fetch(`${API_BASE}/api/cart/merge`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', ...authHeaders()},
+        body: JSON.stringify({ items: guestItems }),
+      });
+      if(!res.ok) throw new Error(`POST /api/cart/merge failed (${res.status})`);
+      const { items } = await res.json();
+      cart = {};
+      items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+    }else{
+      await loadCartFromServer();
+    }
+  }catch(err){
+    console.error('Failed to merge guest cart into server cart:', err);
+  }
+  try{ localStorage.removeItem(GUEST_CART_KEY); }catch(e){ /* ignore */ }
+  updateCartBadge();
+}
+
+function itemById(id){ return ITEMS.find(i=>i.id===id); }
+function itemPrice(item){ return item.price; }
+function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+
+// Red count bubble on the Basket tab. Total quantity across all lines
+// (2 burgers + 1 juice = 3). Hidden at 0, capped at 99+, pops on increase.
+let lastBadgeCount = 0;
+function updateCartBadge(){
+  const badge = document.getElementById('cartBadge');
+  if(!badge) return;
+  const count = cartCount();
+  badge.hidden = count <= 0;
+  badge.textContent = count > 99 ? '99+' : String(count);
+  if(count > lastBadgeCount){
+    badge.classList.remove('pop');
+    void badge.offsetWidth; // restart the animation
+    badge.classList.add('pop');
+  }
+  lastBadgeCount = count;
+}
+function cartLines(){
+  return Object.entries(cart).map(([id,qty])=>{
+    const item = itemById(Number(id));
+    return { item, qty, lineTotal: itemPrice(item)*qty };
+  }).filter(l=>l.item);
+}
+function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
+function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
+function cartTotal(){ return cartSubtotal() + cartDeliveryFee(); }
+function money(n){ return `${CURRENCY}${n.toFixed(2)}`; }
+
+/* ---------- ITEM MODAL ---------- */
+const itemModal = document.getElementById('itemModal');
+let modalItem = null, modalQty = 1;
+
+function openItemModal(id){
+  modalItem = itemById(id);
+  modalQty = cart[id] || 1;
+  const c = catInfo(modalItem.cat);
+  const modalImg = document.getElementById('itemModalImg');
+  modalImg.dataset.stage = 'dish';
+  modalImg.onerror = () => {
+    if(hasImageUrl(modalItem)){ modalImg.onerror = null; return; }
+    if(modalImg.dataset.stage === 'dish'){ modalImg.dataset.stage = 'cat'; modalImg.src = catImgPath(modalItem.cat); }
+    else if(modalImg.dataset.stage === 'cat'){ modalImg.dataset.stage = 'generic'; modalImg.src = genericImgPath(); }
+  };
+  const imageUrl = itemImgPath(modalItem);
+  if(imageUrl){
+    modalImg.style.display = '';
+    modalImg.src = imageUrl;
+  }else{
+    modalImg.removeAttribute('src');
+    modalImg.onerror = null;
+    modalImg.style.display = 'none';
+  }
+  document.getElementById('itemModalCat').textContent = c.label[lang];
+  document.getElementById('itemModalCalories').textContent = modalItem.cal != null ? `${modalItem.cal} ${STR[lang].calLabel}` : '';
+  document.getElementById('itemModalCalories').style.display = modalItem.cal != null ? 'inline-block' : 'none';
+  document.getElementById('itemModalRating').textContent = modalItem.rating != null ? `${modalItem.rating.toFixed(1)} ★` : '';
+  document.getElementById('itemModalRating').style.display = modalItem.rating != null ? 'inline-block' : 'none';
+  document.getElementById('itemModalName').textContent = modalItem.name[lang];
+  document.getElementById('itemModalEnName').textContent = lang==='en' ? '' : modalItem.name.en;
+  document.getElementById('itemModalEnName').style.display = lang==='en' ? 'none' : 'block';
+  // Prefer the real ingredient description from the DB (English only, for
+  // now — no ar/ur/zh descriptions have been entered yet); otherwise fall
+  // back to the generic template so every language still shows something.
+  const realDesc = lang==='en' && modalItem.desc && modalItem.desc.en;
+  document.getElementById('itemModalDesc').textContent = realDesc || STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
+  document.getElementById('itemModalIncludesTitle').textContent = STR[lang].includesTitle;
+  document.getElementById('itemModalIncludesText').textContent = STR[lang].includesText;
+  document.getElementById('itemModalQty').textContent = modalQty;
+  updateModalAddBtn();
+  openOverlay(itemModal);
+}
+function updateModalAddBtn(){
+  const price = itemPrice(modalItem) * modalQty;
+  document.getElementById('itemModalAdd').innerHTML =
+    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${money(price)} · ${STR[lang].addToCart}`;
+}
+document.getElementById('itemModalClose').addEventListener('click', ()=> closeOverlay(itemModal));
+document.getElementById('itemModalPlus').addEventListener('click', ()=>{
+  modalQty++; document.getElementById('itemModalQty').textContent = modalQty; updateModalAddBtn();
+});
+document.getElementById('itemModalMinus').addEventListener('click', ()=>{
+  if(modalQty>1){ modalQty--; document.getElementById('itemModalQty').textContent = modalQty; updateModalAddBtn(); }
+});
+document.getElementById('itemModalAdd').addEventListener('click', ()=>{
+  cartSet(modalItem.id, modalQty);
+  closeOverlay(itemModal);
+  renderCart();
+});
+
+/* ---------- CART OVERLAY ---------- */
+const cartOverlay = document.getElementById('cartOverlay');
+function refreshCartStaticText(){
+  document.getElementById('cartTitle').textContent = STR[lang].cartTitle;
+  document.getElementById('pickupBtn').innerHTML = `<span class="free-tag">(${STR[lang].free})</span>🏠 ${STR[lang].pickupLabel}`;
+  document.getElementById('deliveryBtn').innerHTML = `🛵 ${STR[lang].deliveryLabel}`;
+  document.getElementById('cartEmptyTitle').textContent = STR[lang].cartEmptyTitle;
+  document.getElementById('cartEmptyText').textContent = STR[lang].cartEmptyText;
+  document.getElementById('cartBrowseBtn').textContent = STR[lang].browseMenu;
+  document.getElementById('cartSubtotalLabel').textContent = STR[lang].subtotal;
+  document.getElementById('cartDeliveryLabel').textContent = STR[lang].deliveryFees;
+  document.getElementById('cartTotalLabel').textContent = STR[lang].finalTotal;
+  document.getElementById('cartCheckoutBtn').textContent = STR[lang].completeOrder;
+}
+function openCart(){ renderCart(); openOverlay(cartOverlay); }
+document.getElementById('cartClose').addEventListener('click', ()=> closeOverlay(cartOverlay));
+document.getElementById('cartBrowseBtn').addEventListener('click', ()=>{
+  closeOverlay(cartOverlay);
+  scrollToTab('menu');
+});
+document.getElementById('pickupBtn').addEventListener('click', ()=>{ orderType='pickup'; renderCart(); });
+document.getElementById('deliveryBtn').addEventListener('click', ()=>{ orderType='delivery'; renderCart(); });
+
+function renderCart(){
+  refreshCartStaticText();
+  document.getElementById('cartCountPill').textContent = cartCount();
+  document.getElementById('pickupBtn').classList.toggle('active', orderType==='pickup');
+  document.getElementById('deliveryBtn').classList.toggle('active', orderType==='delivery');
+
+  const lines = cartLines();
+  const emptyEl = document.getElementById('cartEmptyState');
+  const listEl2 = document.getElementById('cartList');
+  const summaryEl = document.getElementById('cartSummary');
+
+  if(!lines.length){
+    emptyEl.style.display = 'flex'; listEl2.style.display = 'none'; summaryEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none'; listEl2.style.display = 'block'; summaryEl.style.display = 'block';
+
+  listEl2.innerHTML = lines.map(l=>`
+    <div class="cart-row" data-id="${l.item.id}">
+      <button class="trash-btn" data-action="remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-9 0 1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg></button>
+      <div class="cart-info">
+        <p class="name">${l.item.name[lang]}</p>
+        <div class="qty-stepper" style="padding:6px 8px;">
+          <button class="step-minus" data-action="minus">−</button>
+          <span class="qty-val">${l.qty}</span>
+          <button class="step-plus" data-action="plus">+</button>
+        </div>
+      </div>
+      <div class="cart-thumb">${itemImgPath(l.item) ? `<img src="${escapeHtml(itemImgPath(l.item))}" alt="" data-cat="${escapeHtml(l.item.cat || '')}" data-has-image-url="${hasImageUrl(l.item)}">` : ''}</div>
+      <div class="price">${money(l.lineTotal)}</div>
+    </div>`).join('');
+
+  listEl2.querySelectorAll('.cart-thumb img').forEach(wireImgFallback);
+  listEl2.querySelectorAll('.cart-row').forEach(row=>{
+    const id = Number(row.dataset.id);
+    row.querySelector('[data-action="plus"]').addEventListener('click', ()=>{ cartSet(id, (cart[id]||0)+1); renderCart(); });
+    row.querySelector('[data-action="minus"]').addEventListener('click', ()=>{ cartSet(id, (cart[id]||0)-1); renderCart(); });
+    row.querySelector('[data-action="remove"]').addEventListener('click', ()=>{ cartSet(id, 0); renderCart(); });
+  });
+
+  document.getElementById('cartSubtotalVal').textContent = money(cartSubtotal());
+  document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('cartDeliveryVal').textContent = money(cartDeliveryFee());
+  document.getElementById('cartTotalVal').textContent = money(cartTotal());
+}
+document.getElementById('cartCheckoutBtn').addEventListener('click', ()=>{
+  closeOverlay(cartOverlay);
+  openCheckout();
+});
+
+/* ---------- PROFILE ---------- */
+const profileOverlay = document.getElementById('profileOverlay');
+const AUTH_TOKEN_KEY = 'redhouse_access_token';
+let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
+let profileData = null;
+
+function authHeaders(){
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+}
+function profileStatus(message, error = false){
+  const status = document.getElementById(profileData ? 'profileStatus' : 'profileAuthStatus');
+  status.textContent = message;
+  status.style.color = error ? 'var(--red)' : 'var(--muted)';
+}
+function refreshProfileStaticText(){
+  document.getElementById('profileTitle').textContent = STR[lang].profileTitle;
+  document.getElementById('profileSignInTitle').textContent = STR[lang].signInTitle;
+  document.getElementById('profileAccountHint').textContent = STR[lang].accountHint;
+  document.getElementById('profileEmailLabel').textContent = STR[lang].email;
+  document.getElementById('profilePasswordLabel').textContent = STR[lang].password;
+  document.getElementById('profileNameLabel').textContent = STR[lang].displayName;
+  document.getElementById('profileSavedNameLabel').textContent = STR[lang].displayName;
+  document.getElementById('profilePhoneLabel').textContent = STR[lang].phone;
+  document.getElementById('profileAddressLabel').textContent = STR[lang].address;
+  document.getElementById('profileLoginBtn').textContent = STR[lang].signIn;
+  document.getElementById('profileRegisterBtn').textContent = STR[lang].register;
+  document.getElementById('profileForgotBtn').textContent = STR[lang].forgotPassword;
+  document.getElementById('profileSaveBtn').textContent = STR[lang].saveProfile;
+  document.getElementById('profileLogoutBtn').textContent = STR[lang].signOut;
+  document.getElementById('profileOrdersTitle').textContent = STR[lang].orderHistory;
+}
+function renderProfile(){
+  refreshProfileStaticText();
+  const loggedIn = Boolean(profileData);
+  document.getElementById('profileLoggedOut').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('profileLoggedIn').style.display = loggedIn ? 'block' : 'none';
+  if(!loggedIn) return;
+
+  document.getElementById('profileEmailValue').textContent = profileData.email || '';
+  document.getElementById('profileIdValue').textContent = `ID: ${profileData.user_id}`;
+  document.getElementById('profileSavedName').value = profileData.profile.display_name || '';
+  document.getElementById('profilePhone').value = profileData.profile.phone || '';
+  document.getElementById('profileAddress').value = profileData.profile.address || '';
+}
+function escapeHtml(value){
+  return String(value).replace(/[&<>'"]/g, character => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  }[character]));
+}
+async function readApiJson(response){
+  const body = await response.text();
+  if(!body.trim()) throw new Error(`Server returned an empty response (HTTP ${response.status}).`);
+  try{
+    return JSON.parse(body);
+  }catch{
+    throw new Error(`Server returned an invalid response (HTTP ${response.status}).`);
+  }
+}
+async function loadProfile(){
+  if(!authToken){ profileData = null; renderProfile(); return; }
+  const response = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
+  if(!response.ok){
+    authToken = ''; profileData = null; localStorage.removeItem(AUTH_TOKEN_KEY); renderProfile();
+    return;
+  }
+  profileData = await readApiJson(response);
+  renderProfile();
+  loadProfileOrders();
+}
+async function loadProfileOrders(){
+  const ordersEl = document.getElementById('profileOrders');
+  ordersEl.innerHTML = '';
+  const response = await fetch(`${API_BASE}/api/auth/orders`, { headers: authHeaders() });
+  if(!response.ok){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].authError)}</p>`; return; }
+  const { orders } = await readApiJson(response);
+  if(!orders.length){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].noOrders)}</p>`; return; }
+  ordersEl.innerHTML = orders.map(order => {
+    const items = order.order_items.map(item => `${item.quantity} × ${escapeHtml(item.name_snapshot)}`).join(', ');
+    return `<div class="profile-order"><div class="profile-order-head"><span>${escapeHtml(order.order_number || '#'+order.id)}</span><span>${escapeHtml(money(Number(order.total)))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
+  }).join('');
+}
+function openProfile(){
+  openOverlay(profileOverlay);
+  renderProfile();
+  if(authToken) loadProfile().catch(() => profileStatus(STR[lang].authError, true));
+}
+document.getElementById('profileClose').addEventListener('click', ()=> closeOverlay(profileOverlay));
+document.getElementById('profileLoginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('profileEmail').value.trim();
+  const password = document.getElementById('profilePassword').value;
+  if(!email || !password){ profileStatus(STR[lang].authRequired, true); return; }
+  try{
+    const response = await fetch(`${API_BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password}) });
+    const result = await readApiJson(response);
+    if(!response.ok) throw new Error(result.error);
+    authToken = result.access_token; localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+    profileData = { email, user_id: result.profile.id, profile: result.profile };
+    renderProfile(); loadProfileOrders();
+    await mergeGuestCartIntoServer();
+    if(cartOverlay.classList.contains('is-open')) renderCart();
+  }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
+});
+document.getElementById('profileRegisterBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('profileEmail').value.trim();
+  const password = document.getElementById('profilePassword').value;
+  const display_name = document.getElementById('profileName').value.trim();
+  if(!email || !password){ profileStatus(STR[lang].authRequired, true); return; }
+  try{
+    const response = await fetch(`${API_BASE}/api/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password, display_name}) });
+    const result = await readApiJson(response);
+    if(!response.ok) throw new Error(result.error);
+    document.getElementById('profileLoginBtn').click();
+  }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
+});
+document.getElementById('profileSaveBtn').addEventListener('click', async ()=>{
+  const updates = {
+    display_name: document.getElementById('profileSavedName').value,
+    phone: document.getElementById('profilePhone').value,
+    address: document.getElementById('profileAddress').value,
+  };
+  try{
+    const response = await fetch(`${API_BASE}/api/auth/me`, { method:'PATCH', headers:{'Content-Type':'application/json', ...authHeaders()}, body:JSON.stringify(updates) });
+    const result = await readApiJson(response);
+    if(!response.ok){ profileStatus(result.error || STR[lang].authError, true); return; }
+    profileData.profile = result.profile;
+    profileStatus(STR[lang].profileSaved);
+    document.getElementById('checkoutName').value = result.profile.display_name || '';
+    document.getElementById('checkoutPhone').value = result.profile.phone || '';
+    document.getElementById('checkoutAddress').value = result.profile.address || '';
+  }catch(error){ profileStatus(error.message || STR[lang].authError, true); }
+});
+document.getElementById('profileForgotBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('profileEmail').value.trim();
+  if(!email){ profileStatus(STR[lang].resetEmailRequired, true); return; }
+  try{
+    await fetch(`${API_BASE}/api/auth/request-password-reset`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email }),
+    });
+  }catch(err){
+    // Network error — still show the generic confirmation below; the
+    // endpoint never reveals whether an account exists either way.
+  }
+  profileStatus(STR[lang].resetLinkSent);
+});
+document.getElementById('profileLogoutBtn').addEventListener('click', ()=>{
+  authToken = ''; profileData = null; localStorage.removeItem(AUTH_TOKEN_KEY); renderProfile();
+  // Signing out starts a fresh guest cart on this device rather than
+  // keeping whatever was synced from the account.
+  cart = {};
+  updateCartBadge();
+  try{ localStorage.removeItem(GUEST_CART_KEY); }catch(e){ /* ignore */ }
+  if(cartOverlay.classList.contains('is-open')) renderCart();
+});
+
+/* ---------- CHECKOUT OVERLAY ---------- */
+const checkoutOverlay = document.getElementById('checkoutOverlay');
+function refreshCheckoutStaticText(){
+  document.getElementById('checkoutTitle').textContent = STR[lang].checkoutTitle;
+  document.getElementById('checkoutBranch').textContent = BRANCH_NAME;
+  document.getElementById('checkoutTypeLabel').textContent = STR[lang].requestType;
+  document.getElementById('checkoutContactLabel').textContent = STR[lang].customerContact;
+  document.getElementById('nameLabel').textContent = STR[lang].fullName;
+  document.getElementById('checkoutName').placeholder = STR[lang].fullNamePh;
+  document.getElementById('phoneLabel').textContent = STR[lang].mobileNumber;
+  document.getElementById('addressLabel').textContent = STR[lang].deliveryAddress;
+  document.getElementById('checkoutAddress').placeholder = STR[lang].deliveryAddressPh;
+  document.getElementById('paymentLabel').textContent = STR[lang].paymentMethod;
+  document.getElementById('paymentMethodText').textContent = STR[lang].paymentSimulated;
+  document.getElementById('checkoutSubLabel').textContent = STR[lang].subtotal;
+  document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
+  document.getElementById('checkoutTotalLabel').textContent = STR[lang].finalTotal;
+  if(!checkoutOverlay.dataset.submitting){
+    document.getElementById('checkoutPayBtn').textContent = `${STR[lang].payBtn} · ${money(cartTotal())}`;
+  }
+}
+function openCheckout(){
+  refreshCheckoutStaticText();
+  if(profileData){
+    document.getElementById('checkoutName').value = profileData.profile.display_name || '';
+    document.getElementById('checkoutPhone').value = profileData.profile.phone || '';
+    document.getElementById('checkoutAddress').value = profileData.profile.address || '';
+  }
+  document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
+  document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
+  document.getElementById('checkoutSubVal').textContent = money(cartSubtotal());
+  document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('checkoutDeliveryVal').textContent = money(cartDeliveryFee());
+  document.getElementById('checkoutTotalVal').textContent = money(cartTotal());
+  document.getElementById('checkoutStatusNote').textContent = '';
+  openOverlay(checkoutOverlay);
+}
+document.getElementById('checkoutBack').addEventListener('click', ()=>{
+  closeOverlay(checkoutOverlay);
+  openCart();
+});
+
+/* ---------- SIMULATED PAYMENT + WHATSAPP HANDOFF ---------- */
+document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('checkoutName').value.trim();
+  const phone = document.getElementById('checkoutPhone').value.trim();
+  const address = document.getElementById('checkoutAddress').value.trim();
+  const statusNote = document.getElementById('checkoutStatusNote');
+  const payBtn = document.getElementById('checkoutPayBtn');
+
+  if(!name || !phone || (orderType==='delivery' && !address)){
+    statusNote.textContent = STR[lang].orderFailed;
+    return;
+  }
+
+  payBtn.disabled = true;
+  checkoutOverlay.dataset.submitting = '1';
+  payBtn.textContent = STR[lang].processingPayment;
+  statusNote.textContent = '';
+
+  const payload = {
+    customer_name: name,
+    customer_phone: phone,
+    delivery_type: orderType,
+    delivery_address: orderType==='delivery' ? address : null,
+    items: cartLines().map(l=>({ menu_item_id: l.item.id, quantity: l.qty }))
+  };
+
+  try{
+    // Simulated payment: brief delay to mimic processing, then create the
+    // order server-side (server re-checks prices in Supabase — never trust
+    // client-sent prices) and mark it paid.
+    await new Promise(r=>setTimeout(r, 700));
+    const res = await fetch(`${API_BASE}/api/orders`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('order failed');
+    const order = await res.json();
+    lastOrder = order;
+
+    statusNote.textContent = STR[lang].paymentDone;
+    sendOrderToWhatsApp(order, { name, phone, address });
+
+    await clearCart();
+    closeOverlay(checkoutOverlay);
+  }catch(err){
+    statusNote.textContent = STR[lang].orderFailed;
+  }finally{
+    payBtn.disabled = false;
+    delete checkoutOverlay.dataset.submitting;
+    refreshCheckoutStaticText();
+  }
+});
+
+function sendOrderToWhatsApp(order, contact){
+  const lines = cartLines().map(l=>`• ${l.qty}x ${l.item.name.en} — ${money(l.lineTotal)}`).join('\n');
+  const typeLine = orderType==='delivery'
+    ? `Home delivery\nAddress: ${contact.address}`
+    : `Pick-up from the branch`;
+  const message =
+`New order ${order.order_number || '#'+order.id} — ${BRANCH_NAME}
+${typeLine}
+
+Name: ${contact.name}
+Phone: ${contact.phone}
+
+Items:
+${lines}
+
+Subtotal: ${money(cartSubtotal())}
+Delivery: ${money(cartDeliveryFee())}
+Total: ${money(cartTotal())}
+Payment: confirmed (simulated)`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+(async function init(){
+  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
+  if(authToken){
+    await loadCartFromServer();
+  }else{
+    cart = loadGuestCart();
+  }
+  updateCartBadge();
+  setLang(initialLang());
+  syncFooter();
+  renderSpecial();
+})();
+
+/* ================= HERO + SPECIAL VIDEO SCRUBBING ================= */
+(() => {
+  // hero section removed from this page: detached stand-ins keep the shared scrub code valid
+  const hero = document.getElementById('hero') || document.createElement('div');
+  const stage = document.getElementById('heroStage') || document.createElement('div');
+  const video = document.getElementById('heroVideo') || document.createElement('video');
+  const speedInput = document.getElementById('speed');
+  const speedValue = document.getElementById('speedval');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (value,min,max)=>Math.min(max,Math.max(min,value));
+  const smooth = value=>value*value*(3-2*value);
+  let speed = 4;
+  try { const saved = Number(localStorage.getItem('scrubSpeedUI')); if(saved >= 1 && saved <= 10) speed = saved; } catch(_){}
+  speedInput.value = speed;
+  speedValue.textContent = speed;
+  speedInput.addEventListener('input',()=>{
+    speed = Number(speedInput.value) || 4;
+    speedValue.textContent = speed;
+    try { localStorage.setItem('scrubSpeedUI', String(speed)); } catch(_){}
+  });
+  const dragGain = ()=>speed*0.12;
+  const wheelGain = ()=>speed/4;
+
+  let target = 0, current = 0, lastSeek = -1, heroReady = false, manifestReady = false;
+  let heroRaf = 0, pauseUntil = 0, lastAuto = 0, holdUntil = 0;
+  const ease = reduceMotion ? 1 : 0.16;
+  function seekHero(position){
+    if(!video.duration) return true;
+    const time = clamp(position,0,1)*(video.duration-0.04);
+    if(Math.abs(time-lastSeek)<0.008) return true;
+    if(video.seeking) return false;
+    lastSeek = time;
+    video.fastSeek ? video.fastSeek(time) : (video.currentTime = time);
+    return true;
+  }
+  function tickHero(){
+    heroRaf = 0;
+    current += (target-current)*ease;
+    if(Math.abs(target-current)<0.0004) current = target;
+    const settled = seekHero(current);
+    if(current !== target || !settled) heroRaf = requestAnimationFrame(tickHero);
+  }
+  function moveHero(position){
+    target = clamp(position,0,1);
+    hero.classList.add('used');
+    if(!heroRaf) heroRaf = requestAnimationFrame(tickHero);
+  }
+  function scrubPointer(element, canStart, start, move, dragTarget){
+    let pointer = null, x = 0, y = 0, base = 0, locked = false;
+    element.addEventListener('pointerdown',event=>{
+      if(event.pointerType === 'mouse' && event.button !== 0) return;
+      delete dragTarget.dataset.drag;
+      if(!canStart()) return;
+      pointer=event.pointerId; x=event.clientX; y=event.clientY; base=start(); locked=false;
+    });
+    element.addEventListener('pointermove',event=>{
+      if(event.pointerId !== pointer) return;
+      const dx=event.clientX-x, dy=event.clientY-y;
+      if(!locked){
+        if(Math.abs(dx)<6 && Math.abs(dy)<6) return;
+        if(Math.abs(dy)>Math.abs(dx)){ pointer=null; return; }
+        locked=true; dragTarget.dataset.drag='1'; element.classList.add('dragging');
+        try { element.setPointerCapture(event.pointerId); } catch(_){}
+      }
+      move(base,dx);
+    });
+    const end=event=>{ if(event.pointerId!==pointer) return; pointer=null; locked=false; element.classList.remove('dragging'); };
+    ['pointerup','pointercancel','lostpointercapture'].forEach(type=>element.addEventListener(type,end));
+  }
+
+  scrubPointer(stage,()=>heroReady,()=>target,(base,dx)=>moveHero(base-dx/innerWidth*dragGain()*2),hero);
+  addEventListener('wheel',event=>{
+    if(!heroReady || event.ctrlKey || scrollY>2 || document.querySelector('.overlay.is-open') || document.querySelector('.app.menu-mode')) return;
+    let delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
+    if(!delta) return;
+    if(event.deltaMode===1) delta*=33; else if(event.deltaMode===2) delta*=innerHeight;
+    const now=performance.now();
+    if(now<holdUntil){ event.preventDefault(); return; }
+    if((delta>0 && target>=1)||(delta<0 && target<=0)) return;
+    event.preventDefault(); pauseUntil=now+2500;
+    target=clamp(target+delta/2500*wheelGain()*2,0,1);
+    if(target===0 || target===1) holdUntil=now+350;
+    moveHero(target);
+  },{passive:false});
+  stage.addEventListener('pointerdown',()=>{ pauseUntil=Infinity; });
+  ['pointerup','pointercancel'].forEach(type=>stage.addEventListener(type,()=>{pauseUntil=performance.now()+2500;}));
+  function autoStep(timestamp){
+    requestAnimationFrame(autoStep);
+    const dt=lastAuto?Math.min((timestamp-lastAuto)/1000,0.1):0; lastAuto=timestamp;
+    if(reduceMotion || !heroReady || !video.duration || scrollY>2 || document.hidden || timestamp<pauseUntil || document.querySelector('.app.menu-mode')) return;
+    let next=target+dt/video.duration*(speed/4);
+    if(next>=1){ next=0; current=0; lastSeek=-1; }
+    target=next;
+    if(!heroRaf) heroRaf=requestAnimationFrame(tickHero);
+  }
+  requestAnimationFrame(autoStep);
+
+  const specialRow=document.getElementById('specialRow');
+  const specialStates=new WeakMap();
+  const maxLive=3;
+  let liveRaf=0;
+  function stateFor(card){
+    let state=specialStates.get(card);
+    if(state) return state;
+    const element=card.querySelector('.special-video'), clip=element.querySelector('video'), bar=card.querySelector('.special-scrub i');
+    state={card,element,clip,bar,items:SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items||[],priceLabel:card.querySelector('.special-add-price'),foodRows:[...card.querySelectorAll('.special-foods li')],pos:0,target:0,current:0,lastSeek:-1,raf:0,live:false};
+    const duration=()=>clip.duration||0;
+    function updateFeaturedProduct(){
+      if(!state.items.length || !duration()) return;
+      const index=Math.min(state.items.length-1,Math.floor(state.current*duration()/2));
+      const item=state.items[index];
+      state.card.dataset.idx=String(index);
+      const price=Number(item?.price);
+      state.priceLabel.textContent=Number.isFinite(price)?money(price):'';
+      state.foodRows.forEach((food,rowIndex)=>food.classList.toggle('is-current',rowIndex===index));
+    }
+    function tick(){
+      state.raf=0; state.current+=(state.target-state.current)*ease;
+      if(Math.abs(state.target-state.current)<0.0004) state.current=state.target;
+      state.bar.style.transform=`scaleX(${state.current})`;
+      updateFeaturedProduct();
+      let settled=true;
+      if(duration()){
+        const time=state.current*(duration()-0.04);
+        if(Math.abs(time-state.lastSeek)>=0.008){
+          if(clip.seeking) settled=false;
+          else { state.lastSeek=time; clip.fastSeek?clip.fastSeek(time):(clip.currentTime=time); }
+        }
+      }
+      if(state.current!==state.target || !settled) state.raf=requestAnimationFrame(tick);
+    }
+    const kick=()=>{if(!state.raf) state.raf=requestAnimationFrame(tick);};
+    const goTo=position=>{if(!duration()) return; state.target=clamp(position,0,1); state.pos=state.target; specialRow.classList.add('hints-off'); kick();};
+    clip.addEventListener('loadedmetadata',()=>{state.current=state.target=state.pos;state.lastSeek=-1;state.bar.style.transform=`scaleX(${state.current})`;updateFeaturedProduct();if(state.pos)kick();});
+    clip.addEventListener('loadeddata',()=>clip.play().then(()=>{clip.pause();if(state.live){state.lastSeek=-1;kick();}}).catch(()=>{}));
+    clip.addEventListener('error',()=>{
+      if(state.live && clip.dataset.sourceKind==='bucket'){
+        clip.dataset.sourceKind='fallback';
+        clip.src='demo/food-360p.mp4';
+      }
+    });
+    scrubPointer(element,()=>state.live&&duration()>0,()=>state.target,(base,dx)=>goTo(base-dx/element.clientWidth*dragGain()),card);
+    element.addEventListener('wheel',event=>{
+      if(!state.live || !duration() || Math.abs(event.deltaX)<=Math.abs(event.deltaY)) return;
+      event.preventDefault(); goTo(state.target+event.deltaX/600*wheelGain());
+    },{passive:false});
+    specialStates.set(card,state);
+    return state;
+  }
+  function setLive(state,on){
+    if(state.live===on) return;
+    state.live=on;
+    if(on){
+      const source=state.card.dataset.videoUrl;
+      state.clip.preload='auto';
+      state.clip.dataset.sourceKind=source?'bucket':'fallback';
+      state.clip.src=source || 'demo/food-360p.mp4';
+    }
+    else{
+      cancelAnimationFrame(state.raf);state.raf=0;state.lastSeek=-1;state.clip.pause();
+      state.clip.removeAttribute('src');state.clip.load();state.bar.style.transform='scaleX(0)';
+    }
+  }
+  function refreshLive(){
+    liveRaf=0;
+    if(!manifestReady || document.querySelector('.app.menu-mode') || !heroReady && scrollY<40) return;
+    const cards=[...specialRow.querySelectorAll('.special-card')];
+    if(!cards.length) return;
+    const midpoint=innerHeight/2, view=innerHeight;
+    const wanted=cards.map(card=>{const rect=card.getBoundingClientRect();return {state:stateFor(card),distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-view*.5&&rect.top<view*1.5};})
+      .filter(item=>item.near).sort((a,b)=>a.distance-b.distance).slice(0,maxLive).map(item=>item.state);
+    cards.forEach(card=>{const state=stateFor(card);if(!wanted.includes(state))setLive(state,false);});
+    wanted.forEach(state=>setLive(state,true));
+  }
+  function scheduleLive(){if(!liveRaf) liveRaf=requestAnimationFrame(refreshLive);}
+  addEventListener('scroll',scheduleLive,{passive:true});
+  addEventListener('resize',scheduleLive);
+  scheduleLive();
+
+  async function startHero(){
+    try{
+      const response=await fetch(`${API_BASE}/api/banner`,{cache:'no-store'});
+      if(response.ok) VIDEO_MANIFEST=await response.json();
+    }catch(_){}
+    manifestReady=true;
+    scheduleLive();
+    if(VIDEO_MANIFEST.heroPosterUrl) video.poster=VIDEO_MANIFEST.heroPosterUrl;
+    video.dataset.sourceKind=VIDEO_MANIFEST.heroUrl?'bucket':'fallback';
+    video.src=VIDEO_MANIFEST.heroUrl || 'demo/hero.mp4';
+    video.addEventListener('loadeddata',()=>{
+      heroReady=true; target=current=0; lastSeek=-1; seekHero(0);
+      scheduleLive();
+    },{once:true});
+    video.addEventListener('error',()=>{
+      if(video.dataset.sourceKind==='bucket'){
+        video.dataset.sourceKind='fallback';
+        video.src='demo/hero.mp4'; video.load(); return;
+      }
+      heroReady=true; scheduleLive();
+    });
+    video.load();
+    setTimeout(()=>{if(!heroReady){heroReady=true;scheduleLive();}},8000);
+  }
+  const kick=()=>[video,...[...specialRow.querySelectorAll('.special-card')].map(card=>card.querySelector('video'))].forEach(clip=>clip.play().then(()=>clip.pause()).catch(()=>{}));
+  ['touchstart','pointerdown','wheel'].forEach(type=>addEventListener(type,kick,{once:true,passive:true}));
+  // startHero();  // DISABLED: hero video moved to index.html
+  manifestReady=true; heroReady=true; scheduleLive();   // let the special-section clips start
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,16 @@
 
 Node/Express API backed by Supabase, deployed on Render.
 
+## Pages
+| URL | File | What it is |
+|---|---|---|
+| `/` | `frontend/index.html` | Landing page (link in bio): logo, text, 4 s autoplay video, MENU / المنيو / 菜单 buttons. One 9:16 screen, dark only. |
+| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + poster (9:16), special section, categories, items, basket. Language carried over from the landing page. |
+| `/homepage.html` | `frontend/homepage.html` | The previous single-page app, kept unchanged for reference. |
+
+Images to replace with the high-resolution originals (same file names): `frontend/images/page1-logo.png` (A) and
+`frontend/images/page2-poster.png` (D). Text B is in `index.html` (`.sec-b`).
+
 ## 1. Set up the database
 Run these in Supabase → **SQL Editor** → New query, **in this order**:
 1. `db/01_create_tables.sql` — creates all app tables, including profiles and carts.
@@ -15,11 +25,15 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
    (`GET /api/admin/orders?q=RH-2609` for a month, `?date=2026-09-28` for a day).
 6. `db/06_site_settings.sql` — creates editable contact settings.
 7. `db/07_special_sections.sql` — stores category video paths and five ordered menu-item references per category.
+8. `db/08_contact_whatsapp.sql` — (optional) stores two WhatsApp numbers and a map link in the contact settings; the admin **Contact** tab edits them afterwards.
 
 ### Homepage video storage
 Create a **public** Supabase Storage bucket named `videos` with a **5 MB maximum file size**.
-The admin converts uploaded clips to 360p H.264 at 30 fps with every frame keyframed, trims
-them to 10 seconds, and rejects encoded files at 4.5 MB or larger. The hero is stored at
+The **hero** clip (landing page) is trimmed to **4 seconds**, muted and re-encoded without shrinking
+(max 720 px wide, faststart MP4); its first frame is stored as the poster (`homepage/hero.jpg`) and shown
+until the video loads. The bundled default is `demo/hero.mp4` + `demo/hero-poster.jpg`.
+Category clips are converted to 360p H.264 at 30 fps with every frame keyframed and trimmed to 10 seconds.
+Encoded files at 4.5 MB or larger are rejected. The hero is stored at
 `homepage/hero.mp4`; category clips use `special/<category-key>.mp4`. Special food selections
 are saved as references to existing menu item rows, not copied names. New categories appear
 automatically and can be configured from Admin → Banner.

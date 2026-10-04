@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Red House Catering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<!-- first frame of the hero shows instantly; the menu page is fetched in the background -->
+<link rel="preload" as="image" href="demo/hero-poster.jpg">
+<link rel="prefetch" href="menu-page.html">
+<style>
+  :root{ --gold:#e3b23c; --text:#f4efe6; --line:#2c2925; }
+  *{box-sizing:border-box;}
+  html,body{height:100%; margin:0; background:#000; color:var(--text);}
+  body{display:flex; align-items:center; justify-content:center; overflow:hidden; font-family:'Poppins',sans-serif;}
+
+  /* ONE 9:16 page (IG / TikTok). --fw = frame width, everything inside scales from it. */
+  .frame{
+    --fw:min(100vw, calc(100vh*9/16));
+    --fw:min(100vw, calc(100svh*9/16));
+    width:var(--fw); aspect-ratio:9/16; position:relative; overflow:hidden; background:#000;
+    display:flex; flex-direction:column;
+  }
+
+  /* A — logo */
+  .sec-a{flex:0 0 19%; display:flex; align-items:center; justify-content:center;}
+  .sec-a img{width:100%; height:100%; object-fit:contain; display:block;}
+
+  /* B — text (supplied by the client; Arabic + English as in the layout) */
+  .sec-b{flex:0 0 20%; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; padding:0 6%; line-height:1.25;}
+  .sec-b .b-ar{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-weight:700; color:var(--gold); font-size:calc(var(--fw)*.062);}
+  .sec-b .b-en{font-weight:600; color:var(--gold); letter-spacing:.06em; font-size:calc(var(--fw)*.032); text-transform:uppercase;}
+
+  /* C — autoplay video, first frame is the poster */
+  .sec-c{position:relative; flex:1 1 auto; min-height:0; background:#000;}
+  .sec-c video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; background:#000;}
+
+  /* menu pills, full width, over the bottom of C */
+  .pills{position:absolute; left:0; right:0; bottom:4.5%; display:flex; gap:2.5%; padding:0 5%; z-index:2;}
+  .pill{
+    flex:1 1 0; min-width:0; display:flex; align-items:center; justify-content:center; text-decoration:none;
+    height:calc(var(--fw)*.115); border-radius:999px; font-weight:700; color:var(--gold);
+    background:rgba(0,0,0,.72); border:1px solid rgba(227,178,60,.55);
+    font-size:calc(var(--fw)*.05); -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease,color .15s ease;
+  }
+  .pill:first-child{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .pill:active{background:var(--gold); color:#1a1408;}
+  .pill[data-lang="ar"]{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-size:calc(var(--fw)*.058);}
+  .pill[data-lang="zh"]{font-family:'Noto Sans SC','Poppins',sans-serif;}
+</style>
+</head>
+<body>
+<main class="frame">
+
+  <!-- A: logo (replace images/page1-logo.png with the high-res file) -->
+  <header class="sec-a"><img src="images/page1-logo.png" alt="Red House Catering"></header>
+
+  <!-- B: text -->
+  <section class="sec-b" aria-label="Cuisine">
+    <span class="b-ar" lang="ar" dir="rtl">المطبخ الصيني</span>
+    <span class="b-en">Chinese Cuisine</span>
+  </section>
+
+  <!-- C: 4-second autoplay loop. No scrub, no scroll control. -->
+  <section class="sec-c">
+    <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="demo/hero-poster.jpg" aria-hidden="true"></video>
+
+    <!-- MENU in 3 languages -> each opens the menu page in that language -->
+    <nav class="pills" aria-label="Menu">
+      <a class="pill" data-lang="en" href="menu-page.html?lang=en" lang="en">MENU</a>
+      <a class="pill" data-lang="ar" href="menu-page.html?lang=ar" lang="ar" dir="rtl">المنيو</a>
+      <a class="pill" data-lang="zh" href="menu-page.html?lang=zh" lang="zh">菜单</a>
+    </nav>
+  </section>
+
+</main>
+
+<script>
+/* remember the chosen language so the menu page opens in it (also passed as ?lang=) */
+document.querySelectorAll('.pill').forEach(function(a){
+  a.addEventListener('click', function(){
+    try{ localStorage.setItem('redhouse_lang', a.dataset.lang); }catch(_){}
+  });
+});
+
+/* hero video: poster (= first frame) is already on screen; the video starts as soon as
+   its first bytes arrive (faststart mp4), without waiting for the whole file. */
+(async function(){
+  var v = document.getElementById('heroVideo');
+  var DEFAULT_SRC = 'demo/hero.mp4', DEFAULT_POSTER = 'demo/hero-poster.jpg';
+  var src = DEFAULT_SRC;
+  try{
+    var ctl = new AbortController(), t = setTimeout(function(){ ctl.abort(); }, 1500);
+    var r = await fetch('/api/banner', { cache:'no-store', signal:ctl.signal });
+    clearTimeout(t);
+    if(r.ok){
+      var m = await r.json();
+      if(m.heroUrl){ src = m.heroUrl; if(m.heroPosterUrl) v.poster = m.heroPosterUrl; }
+    }
+  }catch(_){ /* API slow or down: use the bundled clip */ }
+  v.addEventListener('error', function(){
+    if(v.dataset.fb) return;
+    v.dataset.fb = '1'; v.poster = DEFAULT_POSTER; v.src = DEFAULT_SRC; v.load();
+  });
+  v.muted = true;
+  v.src = src;
+  var go = function(){ var p = v.play(); if(p && p.catch) p.catch(function(){ /* autoplay blocked: poster stays */ }); };
+  go();
+  ['touchstart','pointerdown'].forEach(function(e){ addEventListener(e, go, { once:true, passive:true }); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) go(); });
+})();
+</script>
+</body>
+</html>
