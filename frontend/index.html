@@ -25,20 +25,21 @@
   }
 
   /* A — logo */
-  .sec-a{flex:0 0 19%; display:flex; align-items:center; justify-content:center;}
+  .sec-a{flex:0 0 13%; min-height:0; overflow:hidden; display:flex; align-items:center; justify-content:center;}
   .sec-a img{width:100%; height:100%; object-fit:contain; display:block;}
 
   /* B — text (supplied by the client; Arabic + English as in the layout) */
-  .sec-b{flex:0 0 20%; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; padding:0 6%; line-height:1.25;}
-  .sec-b .b-ar{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-weight:700; color:var(--gold); font-size:calc(var(--fw)*.062);}
-  .sec-b .b-en{font-weight:600; color:var(--gold); letter-spacing:.06em; font-size:calc(var(--fw)*.032); text-transform:uppercase;}
+  .sec-b{flex:0 0 7%; min-height:0; overflow:hidden; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; padding:0 6%; line-height:1.15;}
+  .sec-b .b-ar{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-weight:700; color:var(--gold); font-size:calc(var(--fw)*.05);}
+  .sec-b .b-en{font-weight:600; color:var(--gold); letter-spacing:.06em; font-size:calc(var(--fw)*.027); text-transform:uppercase;}
 
   /* C — autoplay video, first frame is the poster */
   .sec-c{position:relative; flex:1 1 auto; min-height:0; background:#000;}
-  .sec-c video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; background:#000;}
+  .sec-c video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 60%; display:block; background:#000;}
 
-  /* menu pills, full width, over the bottom of C */
-  .pills{position:absolute; left:0; right:0; bottom:4.5%; display:flex; gap:2.5%; padding:0 5%; z-index:2;}
+  /* D — menu pills: their own black strip BELOW the video (never over it) */
+  .sec-d{flex:0 0 10%; min-height:0; display:flex; align-items:center; background:#000;}
+  .pills{width:100%; display:flex; gap:2.5%; padding:0 5%;}
   .pill{
     flex:1 1 0; min-width:0; display:flex; align-items:center; justify-content:center; text-decoration:none;
     height:calc(var(--fw)*.115); border-radius:999px; font-weight:700; color:var(--gold);
@@ -67,8 +68,10 @@
   <!-- C: 4-second autoplay loop. No scrub, no scroll control. -->
   <section class="sec-c">
     <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="demo/hero-poster.jpg" aria-hidden="true"></video>
+  </section>
 
-    <!-- MENU in 3 languages -> each opens the menu page in that language -->
+  <!-- D: MENU in 3 languages -> each opens the menu page in that language -->
+  <section class="sec-d">
     <nav class="pills" aria-label="Menu">
       <a class="pill" data-lang="en" href="menu-page.html?lang=en" lang="en">MENU</a>
       <a class="pill" data-lang="ar" href="menu-page.html?lang=ar" lang="ar" dir="rtl">المنيو</a>

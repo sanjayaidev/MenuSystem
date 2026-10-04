@@ -403,22 +403,25 @@
   </section>
 -->
 
-  <div class="language-row" id="languageRow">
+  <!-- LANGUAGE SELECTOR DISABLED on the menu page (language is chosen on index.html and carried over via ?lang= / localStorage).
+<div class="language-row" id="languageRow">
     <div class="lang-pills" id="langPills" role="group" aria-label="Language">
       <button class="lang-pill" data-lang="en">EN</button>
       <button class="lang-pill" data-lang="ar">عربي</button>
-      <!-- <button class="lang-pill" data-lang="ur">اردو</button> -->
+      [!-- <button class="lang-pill" data-lang="ur">اردو</button> --]
       <button class="lang-pill" data-lang="zh">中文</button>
     </div>
-    <!-- THEME TOGGLE DISABLED (dark only)
+    [!-- THEME TOGGLE DISABLED (dark only)
 <button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle light/dark theme">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
     </button>
--->
+--]
   </div>
+-->
 
-  <section class="section" id="special">
+  <!-- SPECIAL SECTION DISABLED (videos / scrub). Poster D is followed directly by the menu. To bring it back, remove this comment and the stand-ins marked "no special section" in the script.
+<section class="section" id="special">
     <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
     <div class="special-controls">
       <p class="special-hint" data-i18n="specialHint">Drag left / right · Tap a category</p>
@@ -426,6 +429,7 @@
     </div>
     <div class="special-row" id="specialRow"></div>
   </section>
+-->
 
   <div id="menu">
     <h2 id="menuTitle" data-i18n="menuTitle">Menu</h2>
@@ -833,7 +837,7 @@ wireImgFallback.call = wireImgFallback; // no-op, keeps linter quiet
 })();
 
 /* ---------- language switching ---------- */
-const langPills = document.getElementById('langPills');
+const langPills = document.getElementById('langPills') || document.createElement('div');   // language row removed (stand-in)
 langPills.addEventListener('click', (e) => {
   const btn = e.target.closest('.lang-pill');
   if (btn) setLang(btn.dataset.lang);
@@ -990,7 +994,8 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
 // (hero explore cue removed with the hero section)
 // document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDefault(); scrollToTab('menu'); });
 
-document.getElementById('specialRow').addEventListener('click', e=>{
+const specialRowEl = document.getElementById('specialRow') || document.createElement('div');   // no special section (stand-in)
+specialRowEl.addEventListener('click', e=>{
   const card = e.target.closest('.special-card');
   const addBtn = e.target.closest('.special-add');
   if(card && addBtn){
@@ -1012,7 +1017,7 @@ document.getElementById('specialRow').addEventListener('click', e=>{
   render();
   scrollToTab('menu');
 });
-document.getElementById('specialRow').addEventListener('keydown', e=>{
+specialRowEl.addEventListener('keydown', e=>{
   if(e.key !== 'Enter' && e.key !== ' ') return;
   const card = e.target.closest('.special-card');
   if(!card) return;
@@ -1714,7 +1719,7 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
+  await Promise.all([loadMenuData(), /* loadSpecialData(), -- special section disabled */ loadConfig(), loadContact()]);
   if(authToken){
     await loadCartFromServer();
   }else{
@@ -1732,8 +1737,8 @@ Payment: confirmed (simulated)`;
   const hero = document.getElementById('hero') || document.createElement('div');
   const stage = document.getElementById('heroStage') || document.createElement('div');
   const video = document.getElementById('heroVideo') || document.createElement('video');
-  const speedInput = document.getElementById('speed');
-  const speedValue = document.getElementById('speedval');
+  const speedInput = document.getElementById('speed') || document.createElement('input');   // no special section (stand-in)
+  const speedValue = document.getElementById('speedval') || document.createElement('output');   // no special section (stand-in)
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (value,min,max)=>Math.min(max,Math.max(min,value));
   const smooth = value=>value*value*(3-2*value);
@@ -1823,7 +1828,7 @@ Payment: confirmed (simulated)`;
   }
   requestAnimationFrame(autoStep);
 
-  const specialRow=document.getElementById('specialRow');
+  const specialRow=document.getElementById('specialRow') || document.createElement('div');   // no special section (stand-in)
   const specialStates=new WeakMap();
   const maxLive=3;
   let liveRaf=0;
@@ -1932,7 +1937,9 @@ Payment: confirmed (simulated)`;
   const kick=()=>[video,...[...specialRow.querySelectorAll('.special-card')].map(card=>card.querySelector('video'))].forEach(clip=>clip.play().then(()=>clip.pause()).catch(()=>{}));
   ['touchstart','pointerdown','wheel'].forEach(type=>addEventListener(type,kick,{once:true,passive:true}));
   // startHero();  // DISABLED: hero video moved to index.html
-  manifestReady=true; heroReady=true; scheduleLive();   // let the special-section clips start
+  // heroReady deliberately stays false: with no hero there is nothing to scrub, so the wheel / touch
+  // handlers above never intercept scrolling and the page scrolls straight from poster D to the menu.
+  manifestReady=true;
 })();
 </script>
 </body>

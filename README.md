@@ -6,7 +6,7 @@ Node/Express API backed by Supabase, deployed on Render.
 | URL | File | What it is |
 |---|---|---|
 | `/` | `frontend/index.html` | Landing page (link in bio): logo, text, 4 s autoplay video, MENU / المنيو / 菜单 buttons. One 9:16 screen, dark only. |
-| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + poster (9:16), special section, categories, items, basket. Language carried over from the landing page. |
+| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + single poster image (9:16, no video, no language boxes), then straight into categories, items and basket. Language is carried over from the landing page. The old special (video) section is commented out in the file. |
 | `/homepage.html` | `frontend/homepage.html` | The previous single-page app, kept unchanged for reference. |
 
 Images to replace with the high-resolution originals (same file names): `frontend/images/page1-logo.png` (A) and
