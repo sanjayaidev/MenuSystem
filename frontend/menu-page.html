@@ -420,8 +420,8 @@
   </div>
 -->
 
-  <!-- SPECIAL SECTION DISABLED (videos / scrub). Poster D is followed directly by the menu. To bring it back, remove this comment and the stand-ins marked "no special section" in the script.
-<section class="section" id="special">
+  <!-- SPECIAL SECTION: category videos (scrub) -- sits between poster D and the menu list. Content comes from /api/special (admin: "Special section videos"). -->
+  <section class="section" id="special">
     <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
     <div class="special-controls">
       <p class="special-hint" data-i18n="specialHint">Drag left / right · Tap a category</p>
@@ -429,7 +429,6 @@
     </div>
     <div class="special-row" id="specialRow"></div>
   </section>
--->
 
   <div id="menu">
     <h2 id="menuTitle" data-i18n="menuTitle">Menu</h2>
@@ -994,8 +993,7 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
 // (hero explore cue removed with the hero section)
 // document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDefault(); scrollToTab('menu'); });
 
-const specialRowEl = document.getElementById('specialRow') || document.createElement('div');   // no special section (stand-in)
-specialRowEl.addEventListener('click', e=>{
+document.getElementById('specialRow').addEventListener('click', e=>{
   const card = e.target.closest('.special-card');
   const addBtn = e.target.closest('.special-add');
   if(card && addBtn){
@@ -1017,7 +1015,7 @@ specialRowEl.addEventListener('click', e=>{
   render();
   scrollToTab('menu');
 });
-specialRowEl.addEventListener('keydown', e=>{
+document.getElementById('specialRow').addEventListener('keydown', e=>{
   if(e.key !== 'Enter' && e.key !== ' ') return;
   const card = e.target.closest('.special-card');
   if(!card) return;
@@ -1719,7 +1717,7 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await Promise.all([loadMenuData(), /* loadSpecialData(), -- special section disabled */ loadConfig(), loadContact()]);
+  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
   if(authToken){
     await loadCartFromServer();
   }else{
@@ -1737,8 +1735,8 @@ Payment: confirmed (simulated)`;
   const hero = document.getElementById('hero') || document.createElement('div');
   const stage = document.getElementById('heroStage') || document.createElement('div');
   const video = document.getElementById('heroVideo') || document.createElement('video');
-  const speedInput = document.getElementById('speed') || document.createElement('input');   // no special section (stand-in)
-  const speedValue = document.getElementById('speedval') || document.createElement('output');   // no special section (stand-in)
+  const speedInput = document.getElementById('speed');
+  const speedValue = document.getElementById('speedval');
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (value,min,max)=>Math.min(max,Math.max(min,value));
   const smooth = value=>value*value*(3-2*value);
@@ -1754,7 +1752,7 @@ Payment: confirmed (simulated)`;
   const dragGain = ()=>speed*0.12;
   const wheelGain = ()=>speed/4;
 
-  let target = 0, current = 0, lastSeek = -1, heroReady = false, manifestReady = false;
+  let target = 0, current = 0, lastSeek = -1, heroReady = false, manifestReady = false, posterReady = false;
   let heroRaf = 0, pauseUntil = 0, lastAuto = 0, holdUntil = 0;
   const ease = reduceMotion ? 1 : 0.16;
   function seekHero(position){
@@ -1828,7 +1826,7 @@ Payment: confirmed (simulated)`;
   }
   requestAnimationFrame(autoStep);
 
-  const specialRow=document.getElementById('specialRow') || document.createElement('div');   // no special section (stand-in)
+  const specialRow=document.getElementById('specialRow');
   const specialStates=new WeakMap();
   const maxLive=3;
   let liveRaf=0;
@@ -1896,7 +1894,7 @@ Payment: confirmed (simulated)`;
   }
   function refreshLive(){
     liveRaf=0;
-    if(!manifestReady || document.querySelector('.app.menu-mode') || !heroReady && scrollY<40) return;
+    if(!manifestReady || document.querySelector('.app.menu-mode') || !posterReady && scrollY<40) return;
     const cards=[...specialRow.querySelectorAll('.special-card')];
     if(!cards.length) return;
     const midpoint=innerHeight/2, view=innerHeight;
@@ -1937,9 +1935,14 @@ Payment: confirmed (simulated)`;
   const kick=()=>[video,...[...specialRow.querySelectorAll('.special-card')].map(card=>card.querySelector('video'))].forEach(clip=>clip.play().then(()=>clip.pause()).catch(()=>{}));
   ['touchstart','pointerdown','wheel'].forEach(type=>addEventListener(type,kick,{once:true,passive:true}));
   // startHero();  // DISABLED: hero video moved to index.html
-  // heroReady deliberately stays false: with no hero there is nothing to scrub, so the wheel / touch
-  // handlers above never intercept scrolling and the page scrolls straight from poster D to the menu.
+  // heroReady deliberately stays false: there is no hero to scrub on this page, so the wheel / touch
+  // handlers above never hijack page scrolling. The special clips lazy-load as they approach the
+  // viewport, but only after poster D has finished loading so it keeps the bandwidth first.
   manifestReady=true;
+  const posterImg=document.querySelector('#posterD img');
+  const posterDone=()=>{ if(posterReady) return; posterReady=true; scheduleLive(); };
+  if(!posterImg || posterImg.complete) posterDone();
+  else { posterImg.addEventListener('load',posterDone,{once:true}); posterImg.addEventListener('error',posterDone,{once:true}); setTimeout(posterDone,4000); }
 })();
 </script>
 </body>
