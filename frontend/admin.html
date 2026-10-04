@@ -253,9 +253,12 @@
           <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="videoUploadBtn">Upload and encode</button><button class="action-btn danger" id="bannerReset" type="button" hidden data-ui="heroRemoveBtn">Remove hero video</button><span class="form-note" id="bannerNote" role="status"></span></div>
         </form>
       </div>
+      <!-- HIDDEN: Special section is no longer shown on the main pages. Un-comment this block (and the
+           matching "HIDDEN: special" blocks in the script below) together with SHOW_SPECIAL in menu-page.html to restore.
       <div class="panel-title"><h2 data-ui="specialMediaTitle">Special section videos</h2><button class="action-btn" id="specialRefresh" type="button" data-ui="refresh">Refresh</button></div>
       <p class="form-note" id="specialMediaNote" role="status"></p>
       <div id="specialAdminCards" class="records"></div>
+      -->
     </section>
 
     <section class="admin-panel" id="contactPanel" hidden>
@@ -269,9 +272,12 @@
         <div style="margin-top:12px;">
           <label><span data-ui="cdMapUrl">Map link (Google Maps)</span><input name="mapUrl" id="contactMapUrl" type="url" maxlength="300" autocomplete="off" placeholder="https://maps.app.goo.gl/..."></label>
         </div>
+        <!-- HIDDEN: address is no longer shown on the main pages (the map link is used instead).
+             The saved address is kept untouched in the script (savedContactAddress). Un-comment to restore.
         <div style="margin-top:12px;">
           <label><span data-ui="cdAddress">Address</span><textarea name="address" id="contactAddress" maxlength="300" placeholder="Street, area, city (optional if a map link is set)"></textarea></label>
         </div>
+        -->
         <div class="form-actions"><button class="action-btn primary" id="contactSubmit" type="submit" data-ui="cdSave">Save contact details</button><span class="form-note" id="contactNote" role="status"></span></div>
       </form>
     </section>
@@ -1308,6 +1314,7 @@ wireCardImageUpload({ urlId:'itemFoodUrl', fileId:'itemFoodFile', buttonId:'item
 /* ---------- public-bucket homepage and Special videos ---------- */
 let currentBannerData = null;
 let currentSpecialData = null;
+let savedContactAddress = '';   // address field is hidden; keep the stored value so saving doesn't wipe it
 function bannerErrorText(message){
   const known = [
     ['smaller than 300 MB', 'bannerTooLarge'], ['4.5 MB', 'videoOutputTooLarge'],
@@ -1327,18 +1334,18 @@ function specialErrorText(message){
 }
 async function loadBanner(){
   try{
-    const [heroResponse, special] = await Promise.all([
+    const [heroResponse /*, special */] = await Promise.all([
       fetch(`${API_BASE}/api/banner`, { cache:'no-store' }).then(async response => {
         if(!response.ok) throw new Error('Hero metadata request failed');
         return response.json();
       }),
-      adminRequest('/special'),
+      // HIDDEN: special -- adminRequest('/special'),
     ]);
     renderBanner(heroResponse);
-    renderSpecialAdmin(special);
+    // HIDDEN: special -- renderSpecialAdmin(special);
   }catch(error){
     setFormNote('bannerNote', error.message || adminText('heroLoadFailed'), true);
-    setFormNote('specialMediaNote', adminText('specialLoadFailed'), true);
+    // HIDDEN: special -- setFormNote('specialMediaNote', adminText('specialLoadFailed'), true);
   }
 }
 function renderBanner(banner){
@@ -1401,24 +1408,25 @@ document.getElementById('bannerReset').addEventListener('click',async event=>{
   }catch(error){setFormNote('bannerNote',error.message||adminText('bannerUploadFailed'),true);}
   finally{button.disabled=false;}
 });
-document.getElementById('specialRefresh').addEventListener('click',loadBanner);
-document.getElementById('specialAdminCards').addEventListener('submit',async event=>{
-  const form=event.target.closest('form[data-category]');
-  if(!form)return;
-  event.preventDefault();
-  const itemIds=[...form.querySelectorAll('select')].map(select=>Number(select.value)).filter(Boolean);
-  if(itemIds.length!==5 || new Set(itemIds).size!==5){setFormNote('specialMediaNote',adminText('specialItemsRequired'),true);return;}
-  const body=new FormData(), file=form.querySelector('input[type="file"]').files[0];
-  body.append('item_ids',JSON.stringify(itemIds)); if(file)body.append('video',file);
-  const button=form.querySelector('button[type="submit"]');button.disabled=true;
-  setFormNote('specialMediaNote',adminText('savingSpecial'));
-  try{
-    const result=await adminRequest(`/special/${encodeURIComponent(form.dataset.category)}`,{method:'POST',body});
-    renderSpecialAdmin({...currentSpecialData,categories:result.categories});
-    setFormNote('specialMediaNote',adminText('specialSaved'));
-  }catch(error){setFormNote('specialMediaNote',error.message||adminText('specialSaveFailed'),true);}
-  finally{button.disabled=false;}
-});
+// HIDDEN: special -- listeners disabled while the Special section is off (elements are commented out in the HTML).
+// document.getElementById('specialRefresh').addEventListener('click',loadBanner);
+// document.getElementById('specialAdminCards').addEventListener('submit',async event=>{
+//   const form=event.target.closest('form[data-category]');
+//   if(!form)return;
+//   event.preventDefault();
+//   const itemIds=[...form.querySelectorAll('select')].map(select=>Number(select.value)).filter(Boolean);
+//   if(itemIds.length!==5 || new Set(itemIds).size!==5){setFormNote('specialMediaNote',adminText('specialItemsRequired'),true);return;}
+//   const body=new FormData(), file=form.querySelector('input[type="file"]').files[0];
+//   body.append('item_ids',JSON.stringify(itemIds)); if(file)body.append('video',file);
+//   const button=form.querySelector('button[type="submit"]');button.disabled=true;
+//   setFormNote('specialMediaNote',adminText('savingSpecial'));
+//   try{
+//     const result=await adminRequest(`/special/${encodeURIComponent(form.dataset.category)}`,{method:'POST',body});
+//     renderSpecialAdmin({...currentSpecialData,categories:result.categories});
+//     setFormNote('specialMediaNote',adminText('specialSaved'));
+//   }catch(error){setFormNote('specialMediaNote',error.message||adminText('specialSaveFailed'),true);}
+//   finally{button.disabled=false;}
+// });
 
 /* ---------- contact details (homepage call button) ---------- */
 function contactErrorText(message){
@@ -1438,7 +1446,8 @@ async function loadContact(){
     document.getElementById('contactPhone').value = contact.phone || '';
     document.getElementById('contactPhone2').value = contact.phone2 || '';
     document.getElementById('contactMapUrl').value = contact.mapUrl || '';
-    document.getElementById('contactAddress').value = contact.address || '';
+    savedContactAddress = contact.address || '';
+    // HIDDEN: address -- document.getElementById('contactAddress').value = contact.address || '';
     setFormNote('contactNote', '');
   }catch{
     setFormNote('contactNote', adminText('cdLoadFailed'), true);
@@ -1457,13 +1466,14 @@ document.getElementById('contactForm').addEventListener('submit', async event =>
         phone: document.getElementById('contactPhone').value,
         phone2: document.getElementById('contactPhone2').value,
         mapUrl: document.getElementById('contactMapUrl').value,
-        address: document.getElementById('contactAddress').value,
+        address: savedContactAddress,   // HIDDEN: address field -- was document.getElementById('contactAddress').value
       }),
     });
     document.getElementById('contactPhone').value = result.contact.phone;
     document.getElementById('contactPhone2').value = result.contact.phone2 || '';
     document.getElementById('contactMapUrl').value = result.contact.mapUrl || '';
-    document.getElementById('contactAddress').value = result.contact.address;
+    savedContactAddress = result.contact.address || '';
+    // HIDDEN: address -- document.getElementById('contactAddress').value = result.contact.address;
     setFormNote('contactNote', adminText('cdSaved'));
   }catch(error){
     setFormNote('contactNote', error.message || adminText('cdSaveFailed'), true);
