@@ -24,6 +24,41 @@
 }
 .wa-fab svg{width:58%; height:58%;}
 .wa-fab:active{transform:scale(.94);}
+
+/* contact card (opened by the WhatsApp button) - same content as the menu page's contact card */
+.contact-wrap{position:absolute; inset:0; z-index:5; display:none;}
+.contact-wrap.open{display:block;}
+.contact-bg{position:absolute; inset:0; background:rgba(0,0,0,.6);}
+.contact-sheet{
+  position:absolute; left:0; right:0; bottom:0; background:#121110; border:1px solid var(--line); border-bottom:none;
+  border-radius:calc(var(--fw)*.05) calc(var(--fw)*.05) 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.45);
+  padding-bottom:env(safe-area-inset-bottom,0px); animation:sheetUp .22s ease-out;
+}
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:none;}}
+.contact-head{display:flex; align-items:center; justify-content:space-between; direction:ltr; padding:calc(var(--fw)*.035);}
+.contact-close{
+  width:calc(var(--fw)*.095); height:calc(var(--fw)*.095); border:0; border-radius:50%; flex-shrink:0; cursor:pointer;
+  background:rgba(255,255,255,.08); color:var(--text); display:flex; align-items:center; justify-content:center;
+}
+.contact-close svg{width:50%; height:50%;}
+.contact-title{flex:1; text-align:center; font-weight:700; font-size:calc(var(--fw)*.042);}
+.contact-spacer{width:calc(var(--fw)*.095); flex-shrink:0;}
+.contact-body{padding:calc(var(--fw)*.01) calc(var(--fw)*.045) calc(var(--fw)*.05); display:flex; flex-direction:column; gap:calc(var(--fw)*.03);}
+.contact-row{display:flex; align-items:flex-start; gap:calc(var(--fw)*.03); background:#1c1a18; border:1px solid var(--line); border-radius:calc(var(--fw)*.03); padding:calc(var(--fw)*.035);}
+.contact-row .ico{width:calc(var(--fw)*.05); height:calc(var(--fw)*.05); flex-shrink:0; margin-top:2px; color:var(--gold);}
+.contact-row .wa-ico{color:#25D366;}
+.contact-label{margin:0 0 3px; font-size:calc(var(--fw)*.03); color:#a99f8f;}
+.contact-value{margin:0; font-size:calc(var(--fw)*.038); font-weight:600; line-height:1.5; overflow-wrap:anywhere;}
+.wa-link{display:block; color:var(--gold); font-weight:600; text-decoration:none; padding:2px 0;}
+.contact-actions{display:flex; gap:calc(var(--fw)*.025);}
+.contact-btn{
+  flex:1; text-align:center; text-decoration:none; font-family:inherit; font-weight:700; font-size:calc(var(--fw)*.036);
+  border-radius:calc(var(--fw)*.03); padding:calc(var(--fw)*.033) calc(var(--fw)*.02); border:1px solid var(--gold); color:var(--gold); background:transparent;
+}
+.contact-btn.wa{background:#25D366; color:#fff; border-color:#25D366;}
+.contact-btn[hidden]{display:none;}
+.contact-sheet[dir="rtl"] .contact-body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
+.contact-sheet[lang="zh"]{font-family:'Noto Sans SC','Poppins',sans-serif;}
   /* ONE 9:16 page (IG / TikTok). --fw = frame width, everything inside scales from it. */
   .frame{
     --fw:min(100vw, calc(100vh*9/16));
@@ -90,6 +125,34 @@
     </nav>
   </section>
 
+  <!-- CONTACT CARD (opened by the WhatsApp button) -->
+  <div class="contact-wrap" id="contactWrap">
+    <div class="contact-bg" id="contactBg"></div>
+    <div class="contact-sheet" id="contactSheet" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+      <div class="contact-head">
+        <button class="contact-close" id="contactClose" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <span class="contact-title" id="contactTitle">Contact us</span>
+        <span class="contact-spacer"></span>
+      </div>
+      <div class="contact-body">
+        <div class="contact-row">
+          <svg class="ico wa-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+          <div><p class="contact-label" id="lblWhatsApp">WhatsApp</p><p class="contact-value" id="contactPhone" dir="ltr"></p></div>
+        </div>
+        <div class="contact-row">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          <div><p class="contact-label" id="lblLocation">Location</p><p class="contact-value" id="contactAddress"></p></div>
+        </div>
+        <div class="contact-actions">
+          <a class="contact-btn wa" id="contactCallLink" href="#" target="_blank" rel="noopener">Chat on WhatsApp</a>
+          <a class="contact-btn" id="contactMapLink" href="#" target="_blank" rel="noopener">Open in Maps</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <script>
@@ -126,17 +189,94 @@ document.querySelectorAll('.pill').forEach(function(a){
   ['touchstart','pointerdown'].forEach(function(e){ addEventListener(e, go, { once:true, passive:true }); });
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) go(); });
 })();
-/* WhatsApp button: use the number saved in Admin -> Contact */
-(async function(){
-  try{
-    var r = await fetch('/api/contact', { cache:'no-store' });
-    if(!r.ok) return;
-    var c = await r.json();
-    var d = String(c.phone || '').replace(/\D/g, '');
-    if(d.startsWith('00')) d = d.slice(2);
-    else if(d.startsWith('0')) d = '966' + d.slice(1);   // 056... -> 96656...
-    if(d.length >= 8) document.getElementById('waFab').href = 'https://wa.me/' + d;
-  }catch(_){ /* keep the default number */ }
+/* WhatsApp button: opens the contact card (same details as the menu page), numbers come from Admin -> Contact.
+   The anchor keeps a real wa.me href as a no-JS fallback; with JS the tap opens the card instead. */
+(function(){
+  var STR = {
+    en:{ title:'Contact us', whatsapp:'WhatsApp', location:'Location', chat:'Chat on WhatsApp', map:'Open in Maps' },
+    ar:{ title:'تواصل معنا', whatsapp:'واتساب', location:'الموقع', chat:'تواصل عبر واتساب', map:'افتح في الخرائط' },
+    ur:{ title:'ہم سے رابطہ کریں', whatsapp:'واٹس ایپ', location:'مقام', chat:'واٹس ایپ پر بات کریں', map:'نقشے میں کھولیں' },
+    zh:{ title:'联系我们', whatsapp:'WhatsApp', location:'位置', chat:'通过 WhatsApp 联系', map:'在地图中打开' }
+  };
+  /* shown until /api/contact answers (same defaults as routes/contact.js), so the card is never empty */
+  var CONTACT = { phone:'056 928 3982', phone2:'00966 56 928 3982', address:'', mapUrl:'https://maps.app.goo.gl/SPNMnoHksw7VcNu66' };
+  var WA_COUNTRY = '966';
+  var $ = function(id){ return document.getElementById(id); };
+  var wrap = $('contactWrap'), sheet = $('contactSheet'), fab = $('waFab'), lastFocus = null;
+
+  function esc(v){ return String(v).replace(/[&<>'"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]; }); }
+  function lang(){
+    var l = 'en';
+    try{ l = localStorage.getItem('redhouse_lang') || ''; }catch(_){}
+    if(!STR[l]){ l = (navigator.language || 'en').slice(0,2).toLowerCase(); }
+    return STR[l] ? l : 'en';
+  }
+  /* 00966 56 928 3982 / 056 928 3982 / +966569283982 -> 966569283982 (wa.me format) */
+  function waNumber(raw){
+    var d = String(raw || '').replace(/\D/g, '');
+    if(d.indexOf('00') === 0) d = d.slice(2);
+    else if(d.indexOf('0') === 0) d = WA_COUNTRY + d.slice(1);
+    return d;
+  }
+  function render(){
+    var l = lang(), t = STR[l];
+    sheet.lang = l; sheet.dir = (l === 'ar' || l === 'ur') ? 'rtl' : 'ltr';
+    $('contactTitle').textContent = t.title;
+    $('lblWhatsApp').textContent = t.whatsapp;
+    $('lblLocation').textContent = t.location;
+    $('contactCallLink').textContent = t.chat;
+    $('contactMapLink').textContent = t.map;
+
+    /* both admin numbers; if they are the same line written two ways, show it once */
+    var nums = [], seen = {};
+    [CONTACT.phone, CONTACT.phone2].forEach(function(p){
+      var wa = waNumber(p);
+      if(wa.length >= 8 && !seen[wa]){ seen[wa] = 1; nums.push({ label:String(p).trim(), wa:wa }); }
+    });
+    $('contactPhone').innerHTML = nums.map(function(n){
+      return '<a class="wa-link" dir="ltr" href="https://wa.me/' + n.wa + '" target="_blank" rel="noopener">' + esc(n.label) + '</a>';
+    }).join('');
+    var chat = $('contactCallLink');
+    chat.href = nums.length ? 'https://wa.me/' + nums[0].wa : '#';
+    chat.hidden = !nums.length;
+    if(nums.length) fab.href = 'https://wa.me/' + nums[0].wa;
+
+    var mapHref = CONTACT.mapUrl || (CONTACT.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(CONTACT.address) : '');
+    var addrText = CONTACT.address || (mapHref ? t.map : '');
+    $('contactAddress').innerHTML = mapHref
+      ? '<a class="wa-link" href="' + esc(mapHref) + '" target="_blank" rel="noopener">' + esc(addrText) + '</a>'
+      : esc(addrText);
+    var mapLink = $('contactMapLink');
+    mapLink.href = mapHref || '#';
+    mapLink.hidden = !mapHref;
+  }
+  async function load(){
+    try{
+      var r = await fetch('/api/contact', { cache:'no-store' });
+      if(!r.ok) return;
+      var c = await r.json();
+      CONTACT = { phone:String(c.phone||''), phone2:String(c.phone2||''), address:String(c.address||''), mapUrl:String(c.mapUrl||'') };
+    }catch(_){ /* API slow or down: keep what we have */ }
+  }
+  async function open(){
+    lastFocus = document.activeElement;
+    render();                       /* show what we have instantly... */
+    wrap.classList.add('open');
+    $('contactClose').focus();
+    await load();                   /* ...then pick up any admin edit made since page load */
+    render();
+  }
+  function close(){
+    wrap.classList.remove('open');
+    if(lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  fab.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  $('contactClose').addEventListener('click', close);
+  $('contactBg').addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && wrap.classList.contains('open')) close(); });
+
+  render();
+  load().then(render);              /* warm the details so the card is current even offline-ish */
 })();
 </script>
 </body>
