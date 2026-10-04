@@ -30,7 +30,7 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
 9. `db/09_menu_card_images.sql` — adds `bg_image_url` and `food_png_url` to `menu_items` for the menu card layers (run it before saving these images from the admin).
 
 ### Menu cards (3 layers)
-Each menu item on `/menu` is a 16:9 card built from three layers:
+Each menu item on `/menu` is a short card (about 2:1; its height is set from the screen so three fit at once on a phone, via `--h` on `.row`) built from three layers:
 1. **Background** — `bg_image_url`, fills the card (the left half shows; no image = the same dark brown on every card).
 2. **Card** — the parchment panel covering the right 50%: item name, price and an *Add to cart* button.
 3. **Food PNG** — `food_png_url`, a transparent PNG right-aligned against the card edge and drawn over both the background and the card.

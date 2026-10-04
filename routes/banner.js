@@ -16,7 +16,7 @@ const VIDEO_BUCKET = 'videos';
 const HERO_PATH = 'homepage/hero.mp4';
 const HERO_POSTER_PATH = 'homepage/hero.jpg';
 const MAX_SECONDS = 10;      // category (special) clips
-const HERO_MAX_SECONDS = 4;  // homepage hero: autoplay loop, trimmed to 4 s
+const HERO_MAX_SECONDS = 6;  // homepage hero: autoplay loop, trimmed to 6 s
 const MAX_OUTPUT_BYTES = 4_500_000;
 const ALLOWED_EXT = ['.mp4', '.mov', '.webm', '.mkv', '.avi', '.m4v'];
 
@@ -104,7 +104,7 @@ async function encodeVideo(sourcePath, outputPath) {
 }
 
 // Hero: re-encode only (no 360p/all-keyframe compression, no scrub). Keeps the
-// source resolution up to 720 px wide, trims to 4 s, drops audio, and puts the
+// source resolution up to 720 px wide, trims to 6 s, drops audio, and puts the
 // moov atom first so playback starts before the download finishes.
 async function encodeHero(sourcePath, outputPath) {
   try { fs.chmodSync(FFMPEG_PATH, 0o755); } catch { /* best effort */ }
