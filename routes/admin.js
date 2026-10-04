@@ -68,6 +68,14 @@ function menuItemValues(body = {}) {
     is_available: body.is_available !== false,
     image_path: typeof body.image_path === 'string' && body.image_path.trim() ? body.image_path.trim() : null,
   };
+  // 3-layer menu card images (db/09_menu_card_images.sql). Only written when the
+  // request carries them, so older clients and un-migrated databases keep working.
+  for (const field of ['bg_image_url', 'food_png_url']) {
+    if (!(field in body)) continue;
+    const value = typeof body[field] === 'string' ? body[field].trim() : '';
+    if (value && !/^https?:\/\//i.test(value)) return { error: 'Image links must start with http:// or https://.' };
+    values[field] = value || null;
+  }
   for (const language of LANGUAGES) {
     let name = body[`name_${language}`];
     const description = body[`description_${language}`];

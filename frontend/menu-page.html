@@ -17,7 +17,7 @@
 </script>
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Cinzel:wght@500;600&family=Cormorant+Garamond:wght@600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --brand-h:clamp(84px,29vw,136px);
@@ -121,6 +121,7 @@
   .special-foods{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 14px; margin:8px 2px 0; padding-inline-start:20px; color:var(--muted); font-size:11px; line-height:1.4;}
   .special-foods li{min-width:0; overflow-wrap:anywhere;}
   .special-foods li.is-current{color:var(--gold); font-weight:700;}
+  #special[hidden]{display:none;}
   .special-row.hints-off .hint{opacity:0;}
   .special-video.dragging + .hint{opacity:0;}
 
@@ -143,24 +144,101 @@
   .app.menu-mode .offer-banner{order:1; margin-top:12px;}
   .app.menu-mode .controls{order:2; padding-top:6px;}
 
+  /* ===== MENU CARD: three layers inside one 16:9 box =====
+     1  .bg    background picture (admin: "Card background image"), fills the box
+     2  .card  parchment card covering the right half: name, price, Add to cart
+     3  .food  transparent food PNG (admin: "Food PNG"), right-aligned and drawn over the background AND the card
+     Tune the look with --card-w and --food-overlap. Both are a share of the box width. */
   .row{
-    display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line);
-    cursor:pointer; background:none; border-left:none; border-right:none; border-top:none; width:100%; text-align:start; color:inherit;
+    --u:calc(min(100vw - 32px, 448px) / 100);   /* 1% of the card width (app is 480px wide with 16px side padding) */
+    --card-w:50%;          /* layer 2: how much of the box the card covers */
+    --food-overlap:12%;    /* layer 3: how far the food PNG reaches over the card */
+    --paper:#f6f1e6; --paper-edge:#e9e0cd; --ornament:#b8975a; --ink:#2b2622;
+    position:relative; display:block; width:100%; aspect-ratio:16 / 9; margin:0 0 14px; overflow:hidden;
+    background:radial-gradient(120% 120% at 25% 30%, #3a2d24 0%, #2a211b 60%, #1d1612 100%);  /* shown until/unless a background image is set: same colour on every card */
+    color:var(--ink);
   }
-  html[dir="rtl"] .row{flex-direction:row-reverse; text-align:end;}
-  .row:active{background:rgba(227,178,60,0.06);}
-  .row .thumb{
-    width:96px; height:92px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+
+  /* layer 1 */
+  .row .bg{position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; display:block;}
+
+  /* layer 2 */
+  .row .card{
+    position:absolute; inset-block:0; inset-inline-end:0; z-index:1; width:var(--card-w);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:calc(2.4 * var(--u)); text-align:center;
+    padding:calc(4 * var(--u)) calc(3 * var(--u)) calc(11 * var(--u));
+    padding-inline-start:calc(var(--food-overlap) + 1.5 * var(--u));   /* keep the text clear of the food PNG */
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .25  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+      radial-gradient(120% 90% at 50% 40%, #fbf8f0 0%, var(--paper) 55%, var(--paper-edge) 100%);
+    box-shadow:calc(-1.2 * var(--u)) 0 calc(3 * var(--u)) rgba(0,0,0,.35);
   }
-  .row .thumb img{height:100%; width:auto; max-width:96px; object-fit:contain; display:block;}
-  .row .thumb-fallback{display:none; width:100%; height:100%; align-items:center; justify-content:center;}
+  html[dir="rtl"] .row .card{box-shadow:calc(1.2 * var(--u)) 0 calc(3 * var(--u)) rgba(0,0,0,.35);}
+  .row .card::before{content:""; position:absolute; inset:calc(1.6 * var(--u)); border:1px solid rgba(184,151,90,.55); pointer-events:none;}
+  .row .corner{position:absolute; width:calc(4.6 * var(--u)); height:calc(4.6 * var(--u)); color:var(--ornament); pointer-events:none;}
+  .row .corner.tl{top:calc(1.1 * var(--u)); left:calc(1.1 * var(--u));}
+  .row .corner.tr{top:calc(1.1 * var(--u)); right:calc(1.1 * var(--u)); transform:scaleX(-1);}
+  .row .corner.bl{bottom:calc(1.1 * var(--u)); left:calc(1.1 * var(--u)); transform:scaleY(-1);}
+  .row .corner.br{bottom:calc(1.1 * var(--u)); right:calc(1.1 * var(--u)); transform:scale(-1,-1);}
+  .row .flourish{width:calc(11 * var(--u)); height:auto; color:var(--ornament);}
+  .row .name{
+    margin:0; font-family:'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase; font-size:max(12px, calc(3.2 * var(--u))); line-height:1.2;
+    color:var(--ink); overflow-wrap:anywhere;
+  }
+  .row .price{
+    margin:0; font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:700;
+    font-size:max(16px, calc(4.6 * var(--u))); line-height:1; letter-spacing:.02em; color:#5b4a2c;
+  }
+  /* scripts where uppercase / letter-spacing / Cinzel would break the text */
+  html[lang="ar"] .row .name{font-family:'Noto Naskh Arabic',serif; letter-spacing:0; text-transform:none; line-height:1.5;}
+  html[lang="ur"] .row .name{font-family:'Noto Nastaliq Urdu',serif; letter-spacing:0; text-transform:none; line-height:1.9;}
+  html[lang="zh"] .row .name{font-family:'Noto Sans SC',sans-serif; letter-spacing:.04em; text-transform:none;}
+
+  /* layer 3: the box is card-edge + overlap wide, the PNG sits against its card-side edge, taps pass through to .open */
+  .row .food{
+    position:absolute; z-index:2; pointer-events:none;
+    inset-block:5%; inset-inline-start:0; width:calc(100% - var(--card-w) + var(--food-overlap));
+    display:flex; align-items:center; justify-content:flex-end;
+  }
+  .row .food img{
+    display:block; height:100%; width:auto; max-width:100%; object-fit:contain; object-position:right center;
+    filter:drop-shadow(0 calc(1 * var(--u)) calc(1.4 * var(--u)) rgba(0,0,0,.45));
+  }
+  html[dir="rtl"] .row .food img{object-position:left center;}
+  .row .thumb-fallback{display:none; width:60%; height:60%; align-items:center; justify-content:center;}
   .row .thumb-fallback svg{width:55%; height:55%;}
-  .row .info{flex:1; min-width:0;}
-  .row .info .name{font-size:15px; font-weight:600; line-height:1.3; margin:0 0 6px;}
-  .row .info .price{font-size:14px; color:var(--gold); font-weight:600; margin:0;}
-  .row .offer-tag{
-    font-size:10px; color:var(--red); background:rgba(184,53,43,.12); border:1px solid var(--red);
-    border-radius:6px; padding:1px 6px; margin-inline-end:6px; font-weight:600;
+
+  /* whole card opens the item; the button sits on top of the layers */
+  .row .open{
+    position:absolute; inset:0; z-index:3; width:100%; height:100%; margin:0; padding:0; border:0;
+    background:transparent; cursor:pointer; -webkit-tap-highlight-color:rgba(227,178,60,.18);
+  }
+  .row .open:active{background:rgba(227,178,60,.08);}
+  .row .open:focus-visible{outline:2px solid var(--gold); outline-offset:-3px;}
+
+  .row .add{
+    position:absolute; inset-inline-end:calc(2.4 * var(--u)); bottom:calc(2.4 * var(--u)); z-index:4;
+    display:flex; align-items:center; gap:calc(1.4 * var(--u)); border:0; cursor:pointer;
+    background:var(--gold); color:#1a1408;
+    padding:max(9px, calc(1.3 * var(--u))) max(10px, calc(2.2 * var(--u)));
+    font-family:inherit; font-weight:600; font-size:max(11px, calc(1.9 * var(--u))); line-height:1;
+    box-shadow:0 calc(.3 * var(--u)) calc(1 * var(--u)) rgba(0,0,0,.3);
+    transition:filter .15s, transform .1s;
+  }
+  .row .add:hover{filter:brightness(1.07);}
+  .row .add:active{transform:translateY(1px);}
+  .row .add b{font-weight:700;}
+
+  @media (max-width:420px){
+    .row .card{gap:calc(2 * var(--u)); padding-bottom:calc(12 * var(--u));}
+  }
+  /* small phones: the price is already shown above the button, so keep the button short enough to clear the food PNG */
+  html[lang="ur"] .row .add b{display:none;}   /* the Urdu label is long: same treatment at every width */
+  @media (max-width:400px){
+    .row .add b{display:none;}
+    .row .add{padding:max(9px, calc(1.3 * var(--u))) max(9px, calc(2 * var(--u)));}
   }
 
   .empty{padding:40px 10px; text-align:center; color:var(--muted); font-size:14px;}
@@ -422,8 +500,9 @@
   </div>
 -->
 
-  <!-- SPECIAL SECTION: category videos (scrub) -- sits between poster D and the menu list. Content comes from /api/special (admin: "Special section videos"). -->
-  <section class="section" id="special">
+  <!-- SPECIAL SECTION: category videos (scrub) -- sits between poster D and the menu list. Content comes from /api/special (admin: "Special section videos").
+       PAUSED: hidden, and its data / videos are not loaded. Nothing is removed. Set SHOW_SPECIAL = true in the script below to bring it back. -->
+  <section class="section" id="special" hidden>
     <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
     <div class="special-controls">
       <p class="special-hint" data-i18n="specialHint">Drag left / right · Tap a category</p>
@@ -431,6 +510,12 @@
     </div>
     <div class="special-row" id="specialRow"></div>
   </section>
+
+  <!-- ornaments for the menu cards, defined once and reused with <use> -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <symbol id="rh-corner" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 45V14C3 7 8 3 15 3h30"/><path d="M9 45V18c0-6 3-9 9-9h27" opacity=".6"/><path d="M15 15c4-5 9-5 11-1-4 0-6 2-6 6-4 0-6-2-5-5z"/></g></symbol>
+    <symbol id="rh-flourish" viewBox="0 0 120 24"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 17h38c6 0 8-6 12-6"/><path d="M118 17H80c-6 0-8-6-12-6"/><path d="M52 11c3-9 13-9 16 0-3-4-5-5-8-5s-5 1-8 5z" fill="currentColor" stroke="none"/><circle cx="60" cy="19" r="2" fill="currentColor" stroke="none"/></g></symbol>
+  </defs></svg>
 
   <div id="menu">
     <h2 id="menuTitle" data-i18n="menuTitle">Menu</h2>
@@ -770,9 +855,14 @@ const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,z
 let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
 let SPECIAL_SECTIONS = [];
 
+/* The scrolling Special section is paused: it stays hidden and neither its data nor its videos are loaded.
+   All of its code is still here. Set this to true to bring it back. */
+const SHOW_SPECIAL = false;
+if(SHOW_SPECIAL) document.getElementById('special').hidden = false;
+
 function renderSpecial(){
   const row = document.getElementById('specialRow');
-  if(!row) return;
+  if(!row || !SHOW_SPECIAL) return;
   const ordered = [...CATS].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   row.innerHTML = ordered.map(category=>{
     const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
@@ -826,13 +916,18 @@ function dishImgPath(cat, name){ return `images/${cat}/${slugify(name)}.png`; }
 function catImgPath(cat){ return `images/${cat}.png`; }
 function genericImgPath(){ return `images/food.png`; }
 function hasImageUrl(item){ return typeof item.imagePath === 'string' && item.imagePath.trim().length > 0; }
-function itemImgPath(item){
-  if(!hasImageUrl(item)) return dishImgPath(item.cat, item.name.en);
+// A usable http(s) URL, or '' (blocks javascript: / data: values saved in the database).
+function safeImgUrl(raw){
+  if(typeof raw !== 'string' || !raw.trim()) return '';
   try{
-    const url = new URL(item.imagePath.trim(), window.location.href);
+    const url = new URL(raw.trim(), window.location.href);
     if(url.protocol === 'https:' || url.protocol === 'http:') return url.href;
   }catch{}
   return '';
+}
+function itemImgPath(item){
+  if(!hasImageUrl(item)) return dishImgPath(item.cat, item.name.en);
+  return safeImgUrl(item.imagePath);
 }
 const FALLBACK_ICON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
   '<circle cx="50" cy="50" r="30" fill="none" stroke="#3a3630" stroke-width="3"/>' +
@@ -930,27 +1025,56 @@ function render(){
     return;
   }
 
+  // Three layers per card: 1 background, 2 card (name, price, Add to cart), 3 food PNG over both.
+  // No food PNG? the item's normal image is used, so existing items keep working.
   listEl.innerHTML = items.map(i=>{
     const name = i.name[lang];
-    const imageUrl = itemImgPath(i);
-    const hasUrl = hasImageUrl(i);
-    return `<button class="row" data-id="${i.id}">
-      <div class="thumb">
-        ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(name)}" loading="lazy" data-cat="${escapeHtml(i.cat || '')}" data-has-image-url="${hasUrl}">` : ''}
+    const price = money(i.price);
+    const bgUrl = safeImgUrl(i.bgImage);
+    const pngUrl = safeImgUrl(i.foodPng);
+    const foodUrl = pngUrl || itemImgPath(i);
+    const hasUrl = Boolean(pngUrl) || hasImageUrl(i);
+    const corner = pos => `<svg class="corner ${pos}" viewBox="0 0 48 48" aria-hidden="true"><use href="#rh-corner"/></svg>`;
+    return `<article class="row" data-id="${i.id}">
+      ${bgUrl ? `<img class="bg" src="${escapeHtml(bgUrl)}" alt="" loading="lazy" decoding="async">` : ''}
+      <div class="card">
+        ${corner('tl')}${corner('tr')}${corner('bl')}${corner('br')}
+        <svg class="flourish" viewBox="0 0 120 24" aria-hidden="true"><use href="#rh-flourish"/></svg>
+        <h3 class="name">${escapeHtml(name)}</h3>
+        <p class="price">${escapeHtml(price)}</p>
+      </div>
+      <div class="food">
+        ${foodUrl ? `<img src="${escapeHtml(foodUrl)}" alt="" loading="lazy" decoding="async" data-cat="${escapeHtml(i.cat || '')}" data-has-image-url="${hasUrl}">` : ''}
         ${!hasUrl ? `<div class="thumb-fallback">${FALLBACK_ICON}</div>` : ''}
       </div>
-      <div class="info">
-        <p class="name">${i.offer ? `<span class="offer-tag">${STR[lang].offer}</span>` : ''}${name}</p>
-        <p class="price">$${i.price.toFixed(2)}</p>
-      </div>
-    </button>`;
+      <button class="open" type="button" aria-label="${escapeHtml(name)}"></button>
+      <button class="add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b>${escapeHtml(price)}</b></button>
+    </article>`;
   }).join('');
 
-  listEl.querySelectorAll('.thumb img').forEach(wireImgFallback);
-  listEl.querySelectorAll('.row').forEach(row=>{
-    row.addEventListener('click', ()=> openItemModal(Number(row.dataset.id)));
-  });
+  listEl.querySelectorAll('.food img').forEach(wireImgFallback);
+  // an uploaded image that fails to load just disappears (the card's base colour / the other layers still show)
+  listEl.querySelectorAll('.bg').forEach(img=>img.addEventListener('error', ()=> img.remove(), { once:true }));
+  listEl.querySelectorAll('.food img[data-has-image-url="true"]').forEach(img=>img.addEventListener('error', ()=>{ img.style.display = 'none'; }, { once:true }));
 }
+
+// One listener for every card: the big transparent button opens the item, "Add to cart" adds one.
+listEl.addEventListener('click', e=>{
+  const row = e.target.closest('.row');
+  if(!row) return;
+  const id = Number(row.dataset.id);
+  const addBtn = e.target.closest('.add');
+  if(addBtn){
+    if(!itemById(id)) return;
+    cartSet(id, (cart[id] || 0) + 1);
+    const label = addBtn.querySelector('span');
+    label.textContent = '✓';
+    clearTimeout(addBtn._t);
+    addBtn._t = setTimeout(()=>{ label.textContent = STR[lang].addToCart; }, 800);
+    return;
+  }
+  if(e.target.closest('.open')) openItemModal(id);
+});
 
 categorySelect.addEventListener('change', render);
 sortSelect.addEventListener('change', render);
@@ -1172,6 +1296,8 @@ async function loadMenuData(){
       rating: i.rating != null ? Number(i.rating) : null,
       price: Number(i.price),
       imagePath: i.image_path || '',
+      bgImage: i.bg_image_url || '',      // menu card layer 1
+      foodPng: i.food_png_url || '',      // menu card layer 3
       name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
       desc: { en:i.description_en || null },
     }));
@@ -1184,6 +1310,7 @@ async function loadMenuData(){
 }
 
 async function loadSpecialData(){
+  if(!SHOW_SPECIAL) return;   // paused: don't even request /api/special
   try{
     const response = await fetch(`${API_BASE}/api/special`, { cache:'no-store' });
     if(!response.ok) throw new Error(`GET /api/special failed (${response.status})`);

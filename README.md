@@ -6,7 +6,7 @@ Node/Express API backed by Supabase, deployed on Render.
 | URL | File | What it is |
 |---|---|---|
 | `/` | `frontend/index.html` | Landing page (link in bio): logo, text, 4 s autoplay video, MENU / المنيو / 菜单 buttons. One 9:16 screen, dark only. |
-| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + single poster image (9:16, no video, no language boxes), then straight into categories, items and basket. Language is carried over from the landing page. The old special (video) section is commented out in the file. |
+| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + single poster image (9:16, no video, no language boxes), then straight into categories, items and basket. Language is carried over from the landing page. The scrolling Special (video) section is paused: still in the file but hidden and not loaded (`SHOW_SPECIAL = false` in the script; set it to `true` to bring it back). Menu items are 3-layer cards, see below. |
 | `/homepage.html` | `frontend/homepage.html` | The previous single-page app, kept unchanged for reference. |
 
 Images to replace with the high-resolution originals (same file names): `frontend/images/page1-logo.png` (A) and
@@ -26,6 +26,16 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
 6. `db/06_site_settings.sql` — creates editable contact settings.
 7. `db/07_special_sections.sql` — stores category video paths and five ordered menu-item references per category.
 8. `db/08_contact_whatsapp.sql` — (optional) stores two WhatsApp numbers and a map link in the contact settings; the admin **Contact** tab edits them afterwards.
+
+9. `db/09_menu_card_images.sql` — adds `bg_image_url` and `food_png_url` to `menu_items` for the menu card layers (run it before saving these images from the admin).
+
+### Menu cards (3 layers)
+Each menu item on `/menu` is a 16:9 card built from three layers:
+1. **Background** — `bg_image_url`, fills the card (the left half shows; no image = the same dark brown on every card).
+2. **Card** — the parchment panel covering the right 50%: item name, price and an *Add to cart* button.
+3. **Food PNG** — `food_png_url`, a transparent PNG right-aligned against the card edge and drawn over both the background and the card.
+
+Both images are set per item in Admin → Menu items. If an item has no food PNG, its normal image (`image_path`) is used in layer 3, so existing items keep working. Tapping the card opens the item; *Add to cart* adds one. The look is tuned by `--card-w` (default `50%`) and `--food-overlap` (default `12%`) on `.row` in `frontend/menu-page.html`.
 
 ### Homepage video storage
 Create a **public** Supabase Storage bucket named `videos` with a **5 MB maximum file size**.
@@ -140,7 +150,7 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 
 **Admin** (`/api/admin`, Bearer token from an account with `profiles.is_admin = true`)
 - `GET /categories`, `POST /categories`, `PATCH /categories/:id`, `DELETE /categories/:id`
-- `GET /menu`, `POST /menu`, `PATCH /menu/:id`, `DELETE /menu/:id`
+- `GET /menu`, `POST /menu`, `PATCH /menu/:id`, `DELETE /menu/:id` — items accept optional `bg_image_url` / `food_png_url` (http/https links; empty clears them)
 - `POST /images` — text/plain image data URL; uploads through Imgbb and returns `{ url }`
 - `GET /special`, `POST /banner`, `POST /banner/reset`, `POST /special/:categoryKey` — manage the homepage hero and per-category video/five menu references.
 - `GET /orders?status=<pending|confirmed|preparing|ready|completed|cancelled>` — omit `status` for all orders
