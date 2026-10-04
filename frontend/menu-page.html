@@ -144,20 +144,17 @@
   .app.menu-mode .offer-banner{order:1; margin-top:12px;}
   .app.menu-mode .controls{order:2; padding-top:6px;}
 
-  /* ===== MENU CARD: three layers inside one short box (height set by --h, sized so 3 cards fit a phone screen) =====
+  /* ===== MENU CARD: three layers inside one 16:9 box =====
      1  .bg    background picture (admin: "Card background image"), fills the box
      2  .card  parchment card covering the right half: name, price, Add to cart
      3  .food  transparent food PNG (admin: "Food PNG"), right-aligned and drawn over the background AND the card
      Tune the look with --card-w and --food-overlap. Both are a share of the box width. */
   .row{
-    /* card height: three cards plus the logo bar, filters and tab bar fill the screen (never shorter than 116px or taller than 170px) */
-    --h:clamp(116px, calc((100svh - var(--brand-h) - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) / 3 - 10px), 170px);
-    /* 1u scales every inner size: limited by the card width (app is 480px wide with 16px side padding) and by the card height */
-    --u:min(calc(min(100vw - 32px, 448px) / 100), calc(var(--h) / 50));
+    --u:calc(min(100vw - 32px, 448px) / 100);   /* 1% of the card width (app is 480px wide with 16px side padding) */
     --card-w:50%;          /* layer 2: how much of the box the card covers */
     --food-overlap:12%;    /* layer 3: how far the food PNG reaches over the card */
     --paper:#f6f1e6; --paper-edge:#e9e0cd; --ornament:#b8975a; --ink:#2b2622;
-    position:relative; display:block; width:100%; height:var(--h); aspect-ratio:2 / 1; margin:0 0 10px; overflow:hidden;   /* 2:1 only if --h is unsupported */
+    position:relative; display:block; width:100%; aspect-ratio:16 / 9; margin:0 0 14px; overflow:hidden;
     background:radial-gradient(120% 120% at 25% 30%, #3a2d24 0%, #2a211b 60%, #1d1612 100%);  /* shown until/unless a background image is set: same colour on every card */
     color:var(--ink);
   }
@@ -169,8 +166,8 @@
   .row .card{
     position:absolute; inset-block:0; inset-inline-end:0; z-index:1; width:var(--card-w);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:calc(2 * var(--u)); text-align:center;
-    padding:calc(3 * var(--u)) calc(3 * var(--u)) calc(2.4 * var(--u) + 29px + 4px);   /* bottom: room for the Add to cart button */
+    gap:calc(2.4 * var(--u)); text-align:center;
+    padding:calc(4 * var(--u)) calc(3 * var(--u)) calc(11 * var(--u));
     padding-inline-start:calc(var(--food-overlap) + 1.5 * var(--u));   /* keep the text clear of the food PNG */
     background:
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .25  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
@@ -189,7 +186,6 @@
     margin:0; font-family:'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:600;
     letter-spacing:.06em; text-transform:uppercase; font-size:max(12px, calc(3.2 * var(--u))); line-height:1.2;
     color:var(--ink); overflow-wrap:anywhere;
-    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; line-clamp:3; overflow:hidden;   /* very long names stop at 3 lines */
   }
   .row .price{
     margin:0; font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:700;
@@ -235,8 +231,8 @@
   .row .add:active{transform:translateY(1px);}
   .row .add b{font-weight:700;}
 
-  @media (max-height:700px){
-    .row .flourish{display:none;}   /* short screens: every pixel of height goes to name, price and button */
+  @media (max-width:420px){
+    .row .card{gap:calc(2 * var(--u)); padding-bottom:calc(12 * var(--u));}
   }
   /* small phones: the price is already shown above the button, so keep the button short enough to clear the food PNG */
   html[lang="ur"] .row .add b{display:none;}   /* the Urdu label is long: same treatment at every width */
