@@ -108,7 +108,9 @@
   .special-card{min-width:0; cursor:pointer;}
   .special-video{position:relative; aspect-ratio:16/9; overflow:hidden; background:#000; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab;}
   .special-video.dragging{cursor:grabbing;}
-  .special-video video{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none;}
+  .special-video video{position:relative; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none;}
+  /* first frame of the clip, painted behind the <video>; shows whenever the video is unloaded */
+  .special-cover{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;}
   .special-scrub{position:absolute; inset:auto 0 0; height:3px; background:rgba(244,239,230,.25);}
   .special-scrub i{display:block; width:100%; height:100%; background:var(--gold); transform:scaleX(0); transform-origin:left;}
   .special-card .hint{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; color:#f4efe6; background:rgba(0,0,0,.58); font-size:11px; pointer-events:none; transition:opacity .3s;}
@@ -781,11 +783,39 @@ function renderSpecial(){
       ? money(Number(selectedFoods[0].price))
       : '';
     return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}">
-      <div class="special-video"><video poster="images/offer-demo.png" muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b class="special-add-price">${escapeHtml(featuredPrice)}</b></button></div>
+      <div class="special-video"><canvas class="special-cover" aria-hidden="true"></canvas><video muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b class="special-add-price">${escapeHtml(featuredPrice)}</b></button></div>
       <p class="category-name">${escapeHtml(label)}</p>
       ${foods.some(Boolean) ? `<ol class="special-foods">${foods.map((food,index)=>`<li data-slot="${index+1}">${escapeHtml(food || '')}</li>`).join('')}</ol>` : ''}
     </article>`;
   }).join('');
+  row.querySelectorAll('.special-card').forEach(restoreCover);
+}
+
+/* ---------- special covers: first frame of each clip, used while the video is unloaded ---------- */
+const coverCache = new Map();
+const coverKey = card => card.dataset.videoUrl || 'demo/food-360p.mp4';
+function setCover(card, video){
+  const canvas = card.querySelector('.special-cover');
+  const w = video.videoWidth, h = video.videoHeight;
+  if(!canvas || !w || !h) return false;
+  try{
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+    const copy = document.createElement('canvas');
+    copy.width = w; copy.height = h;
+    copy.getContext('2d').drawImage(canvas, 0, 0);
+    coverCache.set(coverKey(card), copy);   // survives re-renders (e.g. language change)
+    card.dataset.cover = '1';
+    return true;
+  }catch(_){ return false; }
+}
+function restoreCover(card){
+  const copy = coverCache.get(coverKey(card));
+  const canvas = card.querySelector('.special-cover');
+  if(!copy || !canvas) return;
+  canvas.width = copy.width; canvas.height = copy.height;
+  canvas.getContext('2d').drawImage(copy, 0, 0);
+  card.dataset.cover = '1';
 }
 
 let lang = 'en';
@@ -1863,6 +1893,7 @@ Payment: confirmed (simulated)`;
     const kick=()=>{if(!state.raf) state.raf=requestAnimationFrame(tick);};
     const goTo=position=>{if(!duration()) return; state.target=clamp(position,0,1); state.pos=state.target; specialRow.classList.add('hints-off'); kick();};
     clip.addEventListener('loadedmetadata',()=>{state.current=state.target=state.pos;state.lastSeek=-1;state.bar.style.transform=`scaleX(${state.current})`;updateFeaturedProduct();if(state.pos)kick();});
+    clip.addEventListener('loadeddata',()=>{ if(!card.dataset.cover) setCover(card,clip); });
     clip.addEventListener('loadeddata',()=>clip.play().then(()=>{clip.pause();if(state.live){state.lastSeek=-1;kick();}}).catch(()=>{}));
     clip.addEventListener('error',()=>{
       if(state.live && clip.dataset.sourceKind==='bucket'){
@@ -1902,6 +1933,39 @@ Payment: confirmed (simulated)`;
       .filter(item=>item.near).sort((a,b)=>a.distance-b.distance).slice(0,maxLive).map(item=>item.state);
     cards.forEach(card=>{const state=stateFor(card);if(!wanted.includes(state))setLive(state,false);});
     wanted.forEach(state=>setLive(state,true));
+    pumpCovers(cards);
+  }
+  /* Cards that are near the viewport but not live get their first frame as cover, one video at a time. */
+  let coverBusy=false;
+  function captureCover(card){
+    return new Promise(resolve=>{
+      const v=document.createElement('video');
+      v.muted=true; v.playsInline=true; v.preload='auto';
+      let done=false, fellBack=!card.dataset.videoUrl;
+      const finish=ok=>{
+        if(done) return; done=true; clearTimeout(timer);
+        if(ok) setCover(card,v);
+        v.removeAttribute('src'); v.load(); resolve();
+      };
+      const timer=setTimeout(()=>finish(false),8000);
+      v.addEventListener('loadeddata',()=>finish(true));
+      v.addEventListener('error',()=>{
+        if(fellBack) return finish(false);
+        fellBack=true; v.src='demo/food-360p.mp4';
+      });
+      v.src=coverKey(card);
+    });
+  }
+  function pumpCovers(cards){
+    if(coverBusy) return;
+    const midpoint=innerHeight/2;
+    const next=cards
+      .filter(card=>!card.dataset.cover && !card.dataset.coverTried && !stateFor(card).live)
+      .map(card=>{const rect=card.getBoundingClientRect();return {card,distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-innerHeight*.5&&rect.top<innerHeight*1.5};})
+      .filter(item=>item.near).sort((a,b)=>a.distance-b.distance)[0];
+    if(!next) return;
+    coverBusy=true; next.card.dataset.coverTried='1';
+    captureCover(next.card).then(()=>{coverBusy=false; scheduleLive();});
   }
   function scheduleLive(){if(!liveRaf) liveRaf=requestAnimationFrame(refreshLive);}
   addEventListener('scroll',scheduleLive,{passive:true});
