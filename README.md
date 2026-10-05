@@ -30,12 +30,12 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
 9. `db/09_menu_card_images.sql` — adds `bg_image_url` and `food_png_url` to `menu_items` for the menu card layers (run it before saving these images from the admin).
 
 ### Menu cards (3 layers)
-Each menu item on `/menu` is a short 2:1 card built from three layers:
-1. **Background** — `bg_image_url`, fills the card (the left quarter shows; no image = the same dark brown on every card).
-2. **Card** — the parchment panel covering the right 75%: item name, price and an *Add to cart* button.
+Each menu item on `/menu` is a short 2.5:1 card built from three layers:
+1. **Background** — `bg_image_url`, fills the card (the left third shows; no image = the same dark brown on every card).
+2. **Card** — the parchment panel covering the right two thirds: item name, price and an *Add to cart* button.
 3. **Food PNG** — `food_png_url`, a transparent PNG right-aligned against the card edge and drawn over both the background and the card.
 
-Both images are set per item in Admin → Menu items. If an item has no food PNG, its normal image (`image_path`) is used in layer 3, so existing items keep working. Tapping the card opens the item; *Add to cart* adds one. The look is tuned by `--card-w` (default `75%`) and `--food-overlap` (default `20%`) on `.row` in `frontend/menu-page.html`.
+Both images are set per item in Admin → Menu items. If an item has no food PNG, its normal image (`image_path`) is used in layer 3, so existing items keep working. Tapping the card opens the item; *Add to cart* adds one. The look is tuned by `--card-w` (default `66.6667%`) and `--food-overlap` (default `20%`) on `.row` in `frontend/menu-page.html`.
 
 ### Homepage video storage
 Create a **public** Supabase Storage bucket named `videos` with a **5 MB maximum file size**.

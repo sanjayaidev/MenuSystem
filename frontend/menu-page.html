@@ -144,17 +144,17 @@
   .app.menu-mode .offer-banner{order:1; margin-top:12px;}
   .app.menu-mode .controls{order:2; padding-top:6px;}
 
-  /* ===== MENU CARD: three layers inside one 2:1 box =====
+    /* ===== MENU CARD: three layers inside one 2.5:1 box =====
      1  .bg    background picture (admin: "Card background image"), fills the box
-     2  .card  parchment card covering the right three quarters: name, price, Add to cart
+      2  .card  parchment card covering the right two thirds: name, price, Add to cart
      3  .food  transparent food PNG (admin: "Food PNG"), right-aligned and drawn over the background AND the card
      Tune the look with --card-w and --food-overlap. Both are a share of the box width. */
   .row{
     --u:calc(min(100vw - 32px, 448px) / 100);   /* 1% of the card width (app is 480px wide with 16px side padding) */
-    --card-w:75%;          /* layer 2: how much of the box the card covers */
+    --card-w:66.6667%;     /* layer 2: how much of the box the card covers */
     --food-overlap:20%;    /* layer 3: how far the food PNG reaches over the card */
     --paper:#f6f1e6; --paper-edge:#e9e0cd; --ornament:#b8975a; --ink:#2b2622;
-    position:relative; display:block; width:100%; aspect-ratio:2 / 1; margin:0 0 14px; overflow:hidden;
+    position:relative; display:block; width:100%; aspect-ratio:2.5 / 1; margin:0 0 14px; overflow:hidden;
     background:radial-gradient(120% 120% at 25% 30%, #3a2d24 0%, #2a211b 60%, #1d1612 100%);  /* shown until/unless a background image is set: same colour on every card */
     color:var(--ink);
   }
