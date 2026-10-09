@@ -61,7 +61,7 @@ app.use(express.json());
 // straight into the HTML so there is no flash of the default image. Must be registered before
 // express.static so /menu-page.html (used by the landing page buttons) is served this way too.
 const MENU_PAGE_FILE = path.join(__dirname, 'frontend', 'menu-page.html');
-const DEFAULT_POSTER_TAG = 'src="images/page2-poster.png"';
+const DEFAULT_POSTER_TAG = 'src="images/page2img.jpeg"';
 let menuPageHtml = null;
 
 async function sendMenuPage(req, res) {

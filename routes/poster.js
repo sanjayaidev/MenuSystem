@@ -10,7 +10,7 @@ const supabase = require('../db/supabase');
 // The poster / offer image at the top of the menu page (/menu).
 // Admin uploads one image; it is stored in the public `videos` bucket under poster/
 // and described in site_settings under the key "menu_poster". No image set (or
-// Supabase unreachable) = the page keeps its bundled default, frontend/images/page2-poster.png.
+// Supabase unreachable) = the page keeps its bundled default, frontend/images/page2img.jpeg.
 const router = express.Router();
 
 const ROOT = path.join(__dirname, '..');

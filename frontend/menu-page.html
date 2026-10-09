@@ -467,12 +467,11 @@
   @media (prefers-reduced-motion:reduce){.cart-badge.pop{animation:none;}}
 
   /* ===== MENU PAGE (new flow) ===== */
-  /* logo (909x259) + poster D = exactly 9:16: poster ratio = 1 / (16/9 - 259/909) = 8181:12213.
-     If the final logo A has a different ratio, change both numbers. */
+  /* banner (poster D): fits the width of the page; its height follows the image's own proportions (no fixed size, no cropping). */
   .topbar{min-height:0;}
   .topbar .logo-wrap img{max-height:none;}
-  .poster-d{width:100%; aspect-ratio:8181 / 12213; background:#000; overflow:hidden;}
-  .poster-d img{width:100%; height:100%; object-fit:cover; display:block;}
+  .poster-d{width:100%; background:#000; overflow:hidden;}
+  .poster-d img{width:100%; height:auto; display:block;}
   .app.menu-mode .poster-d{display:none;}
   /* WhatsApp */
   .fab-call{background:#25D366; color:#fff;}
@@ -494,7 +493,7 @@
   </header>
 
   <section class="poster-d" id="posterD" aria-label="Red House Catering">
-    <img src="images/page2-poster.png" alt="" fetchpriority="high">
+    <img src="images/page2img.jpeg" alt="" width="1122" height="1402" fetchpriority="high">
   </section>
 
   <!-- HERO VIDEO SECTION DISABLED on the menu page (video now lives on index.html). Original:

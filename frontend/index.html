@@ -15,16 +15,7 @@
   *{box-sizing:border-box;}
   html,body{height:100%; margin:0; background:#000; color:var(--text);}
   body{display:flex; align-items:center; justify-content:center; overflow:hidden; font-family:'Poppins',sans-serif;}
-/* floating WhatsApp button over the video */
-.wa-fab{
-  position:absolute; right:5%; bottom:4%; z-index:3;
-  width:calc(var(--fw)*.14); height:calc(var(--fw)*.14); border-radius:50%;
-  background:#25D366; color:#fff; display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 14px rgba(0,0,0,.5); text-decoration:none; -webkit-tap-highlight-color:transparent;
-}
-.wa-fab svg{width:58%; height:58%;}
-.wa-fab:active{transform:scale(.94);}
-/* music button (added by music.js only when a track is set in Admin -> Music), mirrors the WhatsApp button on the left */
+/* music button (added by music.js only when a track is set in Admin -> Music), bottom-left of the video */
 .music-fab{
   position:absolute; left:5%; bottom:4%; z-index:3; padding:0; cursor:pointer;
   width:calc(var(--fw)*.14); height:calc(var(--fw)*.14); border-radius:50%;
@@ -34,11 +25,11 @@
 }
 .music-fab svg{width:50%; height:50%;}
 .music-fab:active{transform:scale(.94);}
-/* hero sound button: tiny, top-right of the video; toggles the hero's own audio on / off.
+/* hero sound button: bottom-right of the video (where the WhatsApp button used to be); toggles the hero's own audio on / off.
    While the sound is off and the visitor hasn't touched it yet, a soft ring pulses to hint that the clip has sound. */
 .sound-fab{
-  position:absolute; right:5%; top:4%; z-index:3; padding:0; cursor:pointer;
-  width:calc(var(--fw)*.095); height:calc(var(--fw)*.095); border-radius:50%;
+  position:absolute; right:5%; bottom:4%; z-index:3; padding:0; cursor:pointer;
+  width:calc(var(--fw)*.14); height:calc(var(--fw)*.14); border-radius:50%;
   background:rgba(0,0,0,.55); color:var(--gold); border:1px solid rgba(227,178,60,.55);
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 3px 10px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent;
@@ -141,9 +132,6 @@
     <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="demo/hero-poster.png"></video>
     <!-- sound toggle for the hero's own audio (the clip autoplays muted; sound starts on the first tap or this button) -->
     <button class="sound-fab hint" id="soundFab" type="button" data-hero-sound aria-pressed="false"></button>
- <a class="wa-fab" id="waFab" href="https://wa.me/966569283982" target="_blank" rel="noopener" aria-label="WhatsApp">
-  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-</a>
   </section>
 
   <!-- D: MENU in 3 languages -> each opens the menu page in that language -->
@@ -348,7 +336,7 @@ document.querySelectorAll('.pill').forEach(function(a){
     var chat = $('contactCallLink');
     chat.href = nums.length ? 'https://wa.me/' + nums[0].wa : '#';
     chat.hidden = !nums.length;
-    if(nums.length) fab.href = 'https://wa.me/' + nums[0].wa;
+    if(fab && nums.length) fab.href = 'https://wa.me/' + nums[0].wa;
 
     var mapHref = CONTACT.mapUrl || (CONTACT.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(CONTACT.address) : '');
     var addrText = CONTACT.address || (mapHref ? t.map : '');
@@ -379,7 +367,7 @@ document.querySelectorAll('.pill').forEach(function(a){
     wrap.classList.remove('open');
     if(lastFocus && lastFocus.focus) lastFocus.focus();
   }
-  fab.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  if(fab) fab.addEventListener('click', function(e){ e.preventDefault(); open(); });   /* the homepage WhatsApp button was removed; the card stays dormant */
   $('contactClose').addEventListener('click', close);
   $('contactBg').addEventListener('click', close);
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && wrap.classList.contains('open')) close(); });
