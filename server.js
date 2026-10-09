@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
 const path = require('path');
 
 const menuRoutes = require('./routes/menu');
@@ -14,6 +15,7 @@ const adminRoutes = require('./routes/admin');
 const bannerRoutes = require('./routes/banner');
 const contactRoutes = require('./routes/contact');
 const musicRoutes = require('./routes/music');
+const posterRoutes = require('./routes/poster');
 
 const app = express();
 
@@ -55,6 +57,29 @@ app.use(helmet({
   contentSecurityPolicy: false,
 }));
 app.use(express.json());
+// Menu page: the poster image at the top is editable in Admin -> Poster. The custom image URL is put
+// straight into the HTML so there is no flash of the default image. Must be registered before
+// express.static so /menu-page.html (used by the landing page buttons) is served this way too.
+const MENU_PAGE_FILE = path.join(__dirname, 'frontend', 'menu-page.html');
+const DEFAULT_POSTER_TAG = 'src="images/page2-poster.png"';
+let menuPageHtml = null;
+
+async function sendMenuPage(req, res) {
+  try {
+    if (menuPageHtml === null) menuPageHtml = await fs.promises.readFile(MENU_PAGE_FILE, 'utf8');
+    const posterUrl = await posterRoutes.getPosterUrl();
+    const html = posterUrl
+      ? menuPageHtml.replace(DEFAULT_POSTER_TAG, `src="${posterUrl.replace(/"/g, '&quot;')}"`)
+      : menuPageHtml;
+    res.set('Cache-Control', 'no-cache');
+    res.type('html').send(html);
+  } catch (error) {
+    console.error('Could not serve the menu page:', error.message);
+    res.sendFile(MENU_PAGE_FILE);
+  }
+}
+app.get('/menu-page.html', sendMenuPage);
+
 app.use('/demo', express.static(path.join(__dirname, 'demo')));
 app.use(express.static(path.join(__dirname, 'frontend')));
 
@@ -64,9 +89,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
-app.get('/menu', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'menu-page.html'));
-});
+app.get('/menu', sendMenuPage);
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'admin.html'));
@@ -91,6 +114,7 @@ app.use('/api', cartRoutes);
 app.use('/api', bannerRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', musicRoutes);
+app.use('/api', posterRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 

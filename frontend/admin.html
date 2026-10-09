@@ -202,6 +202,7 @@
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
       <button class="admin-tab" data-panel="bannerPanel" type="button" data-ui="banner">Banner</button>
+      <button class="admin-tab" data-panel="posterPanel" type="button" data-ui="posterTab">Menu poster</button>
       <button class="admin-tab" data-panel="musicPanel" type="button" data-ui="musicTab">Music</button>
       <button class="admin-tab" data-panel="contactPanel" type="button" data-ui="cdTab">Contact</button>
     </nav>
@@ -260,6 +261,12 @@
       <p class="form-note" id="specialMediaNote" role="status"></p>
       <div id="specialAdminCards" class="records"></div>
       -->
+    </section>
+
+    <section class="admin-panel" id="posterPanel" hidden>
+      <div class="panel-title"><h2 data-ui="posterTitle">Menu page poster</h2></div>
+      <p class="form-note" style="margin:0 0 12px;" data-ui="posterHint">The image at the top of the menu page, under the logo. Use it for your current offer. If none is uploaded, the default poster is shown.</p>
+      <div id="posterCard"></div>
     </section>
 
     <section class="admin-panel" id="musicPanel" hidden>
@@ -673,6 +680,63 @@ const MUSIC_ADMIN_STRINGS = {
 };
 Object.keys(MUSIC_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], MUSIC_ADMIN_STRINGS[code]));
 
+// Strings for the Menu poster tab (image at the top of the menu page).
+const POSTER_ADMIN_STRINGS = {
+  en: { posterTab:'Menu poster', posterTitle:'Menu page poster',
+        posterHint:'The image at the top of the menu page, under the logo. Use it for your current offer. If none is uploaded, the default poster is shown.',
+        posterCurrent:'Current poster: {name}', posterNone:'No custom poster. The default poster is shown on the menu page.',
+        posterFile:'Poster image (PNG, JPG or WEBP, source max 25 MB)', posterPreviewAlt:'Current menu poster',
+        posterUploadBtn:'Upload poster', posterReplaceBtn:'Replace poster', posterRemoveBtn:'Use default poster',
+        posterRemoveConfirm:'Remove the custom poster and go back to the default one?', posterUploading:'Uploading...',
+        posterUploaded:'Poster saved. Refresh the menu page to see it.', posterRemoved:'Default poster restored.',
+        posterChooseFile:'Choose an image first.', posterLoadFailed:'Could not load the poster settings.',
+        posterEncodingHint:'Best size: portrait 2:3 (for example 1200 x 1790 px). Other ratios are cropped to fit. Files under 4.5 MB are stored as they are; larger ones are converted to JPG automatically.',
+        posterUploadFailed:'Poster upload failed.', posterTooLarge:'Image must be smaller than 25 MB.', posterOutputTooLarge:'The image is still larger than 4.5 MB after conversion. Use a smaller image.',
+        posterUnsupported:'Unsupported image type. Allowed: PNG, JPG, WEBP.', posterBusy:'An image is already being processed. Please wait.',
+        posterProcessFailed:'Could not process this image. Try a PNG or JPG.',
+        posterTableMissing:'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' },
+  ar: { posterTab:'ملصق المنيو', posterTitle:'ملصق صفحة المنيو',
+        posterHint:'الصورة التي تظهر أعلى صفحة المنيو أسفل الشعار. استخدمها لعرضك الحالي. إذا لم ترفع صورة تُعرض الصورة الافتراضية.',
+        posterCurrent:'الملصق الحالي: {name}', posterNone:'لا يوجد ملصق مخصص. تُعرض الصورة الافتراضية في صفحة المنيو.',
+        posterFile:'صورة الملصق (PNG أو JPG أو WEBP، بحد أقصى 25 ميغابايت)', posterPreviewAlt:'ملصق المنيو الحالي',
+        posterUploadBtn:'رفع الملصق', posterReplaceBtn:'استبدال الملصق', posterRemoveBtn:'استخدام الملصق الافتراضي',
+        posterRemoveConfirm:'هل تريد حذف الملصق المخصص والعودة إلى الافتراضي؟', posterUploading:'جارٍ الرفع...',
+        posterUploaded:'تم حفظ الملصق. حدّث صفحة المنيو لرؤيته.', posterRemoved:'تمت استعادة الملصق الافتراضي.',
+        posterChooseFile:'اختر صورة أولاً.', posterLoadFailed:'تعذّر تحميل إعدادات الملصق.',
+        posterEncodingHint:'أفضل مقاس: عمودي بنسبة 2:3 (مثلاً 1200 × 1790 بكسل). تُقص النسب الأخرى لتناسب. الملفات الأصغر من 4.5 ميغابايت تُحفظ كما هي، والأكبر تُحوَّل إلى JPG تلقائياً.',
+        posterUploadFailed:'فشل رفع الملصق.', posterTooLarge:'يجب أن تكون الصورة أصغر من 25 ميغابايت.', posterOutputTooLarge:'ما زالت الصورة أكبر من 4.5 ميغابايت بعد التحويل. استخدم صورة أصغر.',
+        posterUnsupported:'نوع الصورة غير مدعوم. الأنواع المسموحة: PNG وJPG وWEBP.', posterBusy:'تتم معالجة صورة أخرى حالياً. يرجى الانتظار.',
+        posterProcessFailed:'تعذّرت معالجة هذه الصورة. جرّب PNG أو JPG.',
+        posterTableMissing:'جدول site_settings غير موجود. شغّل db/06_site_settings.sql في Supabase.' },
+  ur: { posterTab:'مینو پوسٹر', posterTitle:'مینو پیج کا پوسٹر',
+        posterHint:'مینو پیج پر لوگو کے نیچے سب سے اوپر نظر آنے والی تصویر۔ اسے اپنے موجودہ آفر کے لیے استعمال کریں۔ اگر کوئی تصویر اپ لوڈ نہ ہو تو ڈیفالٹ پوسٹر دکھایا جاتا ہے۔',
+        posterCurrent:'موجودہ پوسٹر: {name}', posterNone:'کوئی حسبِ ضرورت پوسٹر نہیں۔ مینو پیج پر ڈیفالٹ پوسٹر دکھایا جا رہا ہے۔',
+        posterFile:'پوسٹر کی تصویر (PNG، JPG یا WEBP، زیادہ سے زیادہ 25 MB)', posterPreviewAlt:'موجودہ مینو پوسٹر',
+        posterUploadBtn:'پوسٹر اپ لوڈ کریں', posterReplaceBtn:'پوسٹر تبدیل کریں', posterRemoveBtn:'ڈیفالٹ پوسٹر استعمال کریں',
+        posterRemoveConfirm:'کیا حسبِ ضرورت پوسٹر ہٹا کر ڈیفالٹ پر واپس جانا ہے؟', posterUploading:'اپ لوڈ ہو رہا ہے...',
+        posterUploaded:'پوسٹر محفوظ ہو گیا۔ دیکھنے کے لیے مینو پیج ری فریش کریں۔', posterRemoved:'ڈیفالٹ پوسٹر بحال ہو گیا۔',
+        posterChooseFile:'پہلے تصویر منتخب کریں۔', posterLoadFailed:'پوسٹر کی ترتیبات لوڈ نہیں ہو سکیں۔',
+        posterEncodingHint:'بہترین سائز: عمودی 2:3 (مثلاً 1200 x 1790 پکسل)۔ دوسرے تناسب فٹ کرنے کے لیے کاٹے جاتے ہیں۔ 4.5 MB سے چھوٹی فائلیں جیسی ہیں ویسی محفوظ ہوتی ہیں، بڑی فائلیں خود بخود JPG میں بدل جاتی ہیں۔',
+        posterUploadFailed:'پوسٹر اپ لوڈ ناکام ہو گیا۔', posterTooLarge:'تصویر 25 MB سے چھوٹی ہونی چاہیے۔', posterOutputTooLarge:'تبدیلی کے بعد بھی تصویر 4.5 MB سے بڑی ہے۔ چھوٹی تصویر استعمال کریں۔',
+        posterUnsupported:'تصویر کی یہ قسم معاون نہیں۔ اجازت شدہ اقسام: PNG، JPG، WEBP۔', posterBusy:'ایک اور تصویر پر کام جاری ہے۔ براہِ کرم انتظار کریں۔',
+        posterProcessFailed:'یہ تصویر پروسیس نہیں ہو سکی۔ PNG یا JPG آزمائیں۔',
+        posterTableMissing:'site_settings ٹیبل موجود نہیں۔ Supabase میں db/06_site_settings.sql چلائیں۔' },
+  zh: { posterTab:'菜单海报', posterTitle:'菜单页海报',
+        posterHint:'显示在菜单页顶部、标志下方的图片，可用于当前优惠。未上传时显示默认海报。',
+        posterCurrent:'当前海报：{name}', posterNone:'没有自定义海报，菜单页显示默认海报。',
+        posterFile:'海报图片（PNG、JPG 或 WEBP，最大 25 MB）', posterPreviewAlt:'当前菜单海报',
+        posterUploadBtn:'上传海报', posterReplaceBtn:'更换海报', posterRemoveBtn:'使用默认海报',
+        posterRemoveConfirm:'要删除自定义海报并恢复默认海报吗？', posterUploading:'正在上传...',
+        posterUploaded:'海报已保存。刷新菜单页即可查看。', posterRemoved:'已恢复默认海报。',
+        posterChooseFile:'请先选择图片。', posterLoadFailed:'无法加载海报设置。',
+        posterEncodingHint:'最佳尺寸：竖版 2:3（例如 1200 x 1790 像素）。其他比例会被裁剪。小于 4.5 MB 的文件原样保存，更大的会自动转换为 JPG。',
+        posterUploadFailed:'海报上传失败。', posterTooLarge:'图片必须小于 25 MB。', posterOutputTooLarge:'转换后图片仍大于 4.5 MB，请使用更小的图片。',
+        posterUnsupported:'不支持此图片类型。允许的类型：PNG、JPG、WEBP。', posterBusy:'正在处理另一张图片，请稍候。',
+        posterProcessFailed:'无法处理此图片，请尝试 PNG 或 JPG。',
+        posterTableMissing:'缺少 site_settings 表。请在 Supabase 中运行 db/06_site_settings.sql。' },
+};
+Object.keys(POSTER_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], POSTER_ADMIN_STRINGS[code]));
+
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
 if(adminUiLanguage === 'ur') adminUiLanguage = 'en'; // Urdu hidden for now
@@ -722,6 +786,7 @@ function applyAdminUiLanguage(language){
   if(currentBannerData) renderBanner(currentBannerData);
   if(currentSpecialData) renderSpecialAdmin(currentSpecialData);
   if(currentMusicData) renderMusic(currentMusicData);
+  if(currentPosterData !== undefined) renderPoster(currentPosterData);
 
   renderFilters();
   if(ordersLoaded) renderOrders(currentOrders);
@@ -963,6 +1028,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'categoriesPanel') loadCategories();
     if(tab.dataset.panel === 'menuPanel') loadMenu();
     if(tab.dataset.panel === 'bannerPanel') loadBanner();
+    if(tab.dataset.panel === 'posterPanel') loadPoster();
     if(tab.dataset.panel === 'musicPanel') loadMusic();
     if(tab.dataset.panel === 'contactPanel') loadContact();
   });
@@ -991,6 +1057,7 @@ async function adminRequest(path, options = {}){
     if(path.startsWith('/special')) throw new Error(specialErrorText(message));
     if(path.startsWith('/contact')) throw new Error(contactErrorText(message));
     if(path.startsWith('/music')) throw new Error(musicErrorText(message));
+    if(path.startsWith('/poster')) throw new Error(posterErrorText(message));
     let key = 'requestFailed';
     if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
     else if(message.includes('This record is still in use')) key = 'recordInUse';
@@ -1498,6 +1565,82 @@ document.getElementById('bannerReset').addEventListener('click',async event=>{
 //   }catch(error){setFormNote('specialMediaNote',error.message||adminText('specialSaveFailed'),true);}
 //   finally{button.disabled=false;}
 // });
+
+/* ---------- menu page poster ---------- */
+let currentPosterData;   // undefined = not loaded yet, null = no custom poster, object = { url, name }
+
+function posterErrorText(message){
+  const known = [
+    ['smaller than 25 MB', 'posterTooLarge'], ['4.5 MB', 'posterOutputTooLarge'],
+    ['Unsupported image type', 'posterUnsupported'], ['already being processed', 'posterBusy'],
+    ['Could not process this image', 'posterProcessFailed'], ['No image file received', 'posterChooseFile'],
+    ['site_settings table is missing', 'posterTableMissing'],
+  ];
+  const hit = known.find(([text]) => (message || '').includes(text));
+  return adminText(hit ? hit[1] : 'posterUploadFailed');
+}
+async function loadPoster(){
+  try{
+    const response = await fetch(`${API_BASE}/api/poster`, { cache:'no-store' });
+    if(!response.ok) throw new Error();
+    const data = await response.json();
+    renderPoster(data.poster || null);
+  }catch{
+    document.getElementById('posterCard').innerHTML = `<p class="form-note error">${escapeHtml(adminText('posterLoadFailed'))}</p>`;
+  }
+}
+function renderPoster(poster){
+  currentPosterData = poster;
+  const preview = poster
+    ? `<img src="${escapeHtml(poster.url)}" alt="${escapeHtml(adminText('posterPreviewAlt'))}" style="display:block; width:100%; max-width:240px; aspect-ratio:2/3; object-fit:cover; border-radius:8px; margin:0 0 10px;">
+       <p class="form-note" style="margin:0 0 12px;">${escapeHtml(adminText('posterCurrent', { name: poster.name || '?' }))}</p>`
+    : `<p class="form-note" style="margin:0 0 12px;">${escapeHtml(adminText('posterNone'))}</p>`;
+  document.getElementById('posterCard').innerHTML = `<form class="manager-form" id="posterForm" novalidate>
+    ${preview}
+    <label class="field-label" for="posterFile">${escapeHtml(adminText('posterFile'))}</label>
+    <input type="file" id="posterFile" name="image" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp">
+    <p class="form-note" style="margin:10px 0 0;">${escapeHtml(adminText('posterEncodingHint'))}</p>
+    <div class="form-actions">
+      <button class="action-btn primary" type="submit">${escapeHtml(adminText(poster ? 'posterReplaceBtn' : 'posterUploadBtn'))}</button>
+      ${poster ? `<button class="action-btn danger" type="button" data-poster-remove>${escapeHtml(adminText('posterRemoveBtn'))}</button>` : ''}
+      <span class="form-note" id="posterNote" role="status"></span>
+    </div>
+  </form>`;
+}
+document.getElementById('posterCard').addEventListener('submit', async event => {
+  const form = event.target.closest('#posterForm');
+  if(!form) return;
+  event.preventDefault();
+  const file = form.querySelector('input[type="file"]').files[0];
+  if(!file){ setFormNote('posterNote', adminText('posterChooseFile'), true); return; }
+  const button = form.querySelector('button[type="submit"]'), body = new FormData();
+  body.append('image', file);
+  button.disabled = true;
+  setFormNote('posterNote', adminText('posterUploading'));
+  try{
+    const result = await adminRequest('/poster', { method:'POST', body });
+    renderPoster(result.poster);
+    setFormNote('posterNote', adminText('posterUploaded'));
+  }catch(error){
+    setFormNote('posterNote', error.message || adminText('posterUploadFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+});
+document.getElementById('posterCard').addEventListener('click', async event => {
+  const button = event.target.closest('[data-poster-remove]');
+  if(!button) return;
+  if(!confirm(adminText('posterRemoveConfirm'))) return;
+  button.disabled = true;
+  try{
+    const result = await adminRequest('/poster', { method:'DELETE' });
+    renderPoster(result.poster);
+    setFormNote('posterNote', adminText('posterRemoved'));
+  }catch(error){
+    button.disabled = false;
+    setFormNote('posterNote', error.message || adminText('posterUploadFailed'), true);
+  }
+});
 
 /* ---------- background music (index + menu pages) ---------- */
 const MUSIC_PAGES = ['index', 'menu'];
