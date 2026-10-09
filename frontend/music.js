@@ -93,7 +93,7 @@
 
     // Returns a promise-like; resolves to true when playback started.
     function play() {
-      if (removed || !wanted || document.hidden) return Promise.resolve(false);
+      if (removed || !wanted || document.hidden || window.rhHeroSoundOn) return Promise.resolve(false);   // the hero video's own sound takes priority
       var p;
       try { p = audio.play(); } catch (e) { return Promise.resolve(false); }
       if (!p || typeof p.then !== 'function') { unlocked = true; fadeTo(TARGET_VOLUME); return Promise.resolve(true); }
@@ -125,6 +125,7 @@
       if (audio.paused) {
         wanted = true;
         writePref(true);
+        try { window.dispatchEvent(new Event('rh-music-start')); } catch (e) { /* ignore */ }   // lets the hero video go quiet
         play().then(function (ok) { if (ok) removeGestureListeners(); render(); });
       } else {
         wanted = false;
@@ -139,6 +140,12 @@
       removed = true;
       removeGestureListeners();
       if (btn.parentNode) btn.parentNode.removeChild(btn);
+    });
+
+    // the landing page's hero video has its own sound: music yields while it is on and resumes when it is muted again
+    window.addEventListener('rh-hero-sound', function (e) {
+      if (e.detail && e.detail.on) { if (!audio.paused) stop(); }
+      else if (wanted) { play().then(function (ok) { if (ok) removeGestureListeners(); render(); }); }
     });
 
     document.addEventListener('visibilitychange', function () {

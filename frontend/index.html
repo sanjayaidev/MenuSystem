@@ -34,6 +34,24 @@
 }
 .music-fab svg{width:50%; height:50%;}
 .music-fab:active{transform:scale(.94);}
+/* hero sound button: tiny, top-right of the video; toggles the hero's own audio on / off.
+   While the sound is off and the visitor hasn't touched it yet, a soft ring pulses to hint that the clip has sound. */
+.sound-fab{
+  position:absolute; right:5%; top:4%; z-index:3; padding:0; cursor:pointer;
+  width:calc(var(--fw)*.095); height:calc(var(--fw)*.095); border-radius:50%;
+  background:rgba(0,0,0,.55); color:var(--gold); border:1px solid rgba(227,178,60,.55);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent;
+}
+.sound-fab[hidden]{display:none;}
+.sound-fab svg{width:52%; height:52%;}
+.sound-fab:active{transform:scale(.92);}
+.sound-fab.hint::after{
+  content:''; position:absolute; inset:-1px; border-radius:50%; border:1px solid rgba(227,178,60,.9);
+  pointer-events:none; animation:soundPing 1.8s ease-out infinite;
+}
+@keyframes soundPing{from{transform:scale(1); opacity:.9;}to{transform:scale(1.7); opacity:0;}}
+@media (prefers-reduced-motion:reduce){ .sound-fab.hint::after{animation:none;} }
 
 /* contact card (opened by the WhatsApp button) - same content as the menu page's contact card */
 .contact-wrap{position:absolute; inset:0; z-index:5; display:none;}
@@ -120,7 +138,9 @@
 
   <!-- C: 4-second autoplay loop. No scrub, no scroll control. -->
   <section class="sec-c">
-    <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="demo/hero-poster.png" aria-hidden="true"></video>
+    <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="demo/hero-poster.png"></video>
+    <!-- sound toggle for the hero's own audio (the clip autoplays muted; sound starts on the first tap or this button) -->
+    <button class="sound-fab hint" id="soundFab" type="button" data-hero-sound aria-pressed="false"></button>
  <a class="wa-fab" id="waFab" href="https://wa.me/966569283982" target="_blank" rel="noopener" aria-label="WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
 </a>
@@ -198,6 +218,85 @@ document.querySelectorAll('.pill').forEach(function(a){
   go();
   ['touchstart','pointerdown'].forEach(function(e){ addEventListener(e, go, { once:true, passive:true }); });
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) go(); });
+})();
+
+/* hero sound: the clip keeps its original audio but must autoplay muted (browser rule). Sound turns on with the
+   first tap anywhere, or with the sound button, which toggles it on / off. The visitor's choice is remembered
+   (localStorage "redhouse_hero_sound"). Background music (music.js) yields while the hero sound is on. */
+(function(){
+  var v = document.getElementById('heroVideo'), fab = document.getElementById('soundFab');
+  if(!v || !fab) return;
+  var KEY = 'redhouse_hero_sound';
+  var LABELS = {
+    en:{ on:'Sound on - tap to mute', off:'Sound off - tap to turn on' },
+    ar:{ on:'الصوت يعمل - اضغط لكتمه', off:'الصوت متوقف - اضغط للتشغيل' },
+    ur:{ on:'آواز چل رہی ہے - خاموش کرنے کے لیے ٹیپ کریں', off:'آواز بند ہے - چلانے کے لیے ٹیپ کریں' },
+    zh:{ on:'声音已开启 - 点击静音', off:'声音已关闭 - 点击开启' }
+  };
+  var ICON_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+  var touched = false;                    // the visitor has used the button: stop the hint ring
+  var armed = true;                       // first-tap auto unmute still pending
+
+  function wantSound(){ try{ return localStorage.getItem(KEY) !== 'off'; }catch(_){ return true; } }
+  function remember(on){ try{ localStorage.setItem(KEY, on ? 'on' : 'off'); }catch(_){} }
+  function lang(){
+    var l = ''; try{ l = localStorage.getItem('redhouse_lang') || ''; }catch(_){}
+    if(!LABELS[l]) l = (navigator.language || 'en').slice(0,2).toLowerCase();
+    return LABELS[l] ? l : 'en';
+  }
+  /* best effort: hide the button when the browser says the clip has no audio track (older uploads were encoded without sound) */
+  function hasNoAudio(){
+    try{
+      if(v.readyState >= 1 && v.audioTracks && v.audioTracks.length === 0) return true;
+      if(v.mozHasAudio === false) return true;
+    }catch(_){}
+    return false;
+  }
+  function render(){
+    var on = !v.muted;
+    fab.innerHTML = on ? ICON_ON : ICON_OFF;
+    fab.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var label = LABELS[lang()][on ? 'on' : 'off'];
+    fab.setAttribute('aria-label', label); fab.title = label;
+    fab.classList.toggle('hint', !on && !touched);
+  }
+  function setSound(on, save){
+    v.muted = !on;
+    if(on) v.volume = 1;
+    window.rhHeroSoundOn = on;
+    if(save) remember(on);
+    try{ window.dispatchEvent(new CustomEvent('rh-hero-sound', { detail:{ on:on } })); }catch(_){}
+    var p = v.play();
+    if(p && p.catch) p.catch(function(){
+      /* browser refused (no real user gesture): go back to muted autoplay */
+      if(on){ v.muted = true; window.rhHeroSoundOn = false; v.play().catch(function(){}); render(); }
+    });
+    render();
+  }
+
+  fab.addEventListener('click', function(){
+    touched = true; armed = false; removeGesture();
+    setSound(v.muted, true);
+  });
+
+  var events = ['pointerup','touchend','click','keydown'];
+  function onGesture(e){
+    if(e.target && e.target.closest && e.target.closest('[data-hero-sound],[data-rh-music]')) return;  // those buttons handle themselves
+    if(!armed) return;
+    armed = false; removeGesture();
+    if(wantSound() && !hasNoAudio()) setSound(true, false);
+  }
+  function removeGesture(){ events.forEach(function(n){ document.removeEventListener(n, onGesture, true); }); }
+  events.forEach(function(n){ document.addEventListener(n, onGesture, true); });
+
+  /* turning the background music on switches the hero sound off (never both at once) */
+  window.addEventListener('rh-music-start', function(){ if(!v.muted){ v.muted = true; window.rhHeroSoundOn = false; render(); } });
+
+  function checkAudio(){ fab.hidden = hasNoAudio(); }
+  v.addEventListener('loadedmetadata', checkAudio);
+  v.addEventListener('volumechange', render);
+  checkAudio(); render();
 })();
 /* WhatsApp button: opens the contact card (same details as the menu page), numbers come from Admin -> Contact.
    The anchor keeps a real wa.me href as a no-JS fallback; with JS the tap opens the card instead. */

@@ -251,7 +251,7 @@
         <form id="bannerForm" novalidate>
           <label class="field-label" for="bannerFile" data-ui="heroVideoFile">Upload hero video (source max 300 MB)</label>
           <input type="file" id="bannerFile" accept="video/*,.mp4,.mov,.webm,.mkv,.avi,.m4v" required>
-          <p class="form-note" style="margin:10px 0 0;" data-ui="videoEncodingHint">Hero video: trimmed to 6 seconds, muted, re-encoded (not shrunk, max 720 px wide) and played as an autoplay loop. The first frame is used as the poster. Output limit: 4.5 MB.</p>
+          <p class="form-note" style="margin:10px 0 0;" data-ui="videoEncodingHint">Hero video: trimmed to 6 seconds, original sound kept, re-encoded (not shrunk, max 720 px wide) and played as an autoplay loop (starts muted; visitors turn the sound on with the sound button or a tap). The first frame is used as the poster. Output limit: 4.5 MB.</p>
           <div class="form-actions"><button class="action-btn primary" id="bannerSubmit" type="submit" data-ui="videoUploadBtn">Upload and encode</button><button class="action-btn danger" id="bannerReset" type="button" hidden data-ui="heroRemoveBtn">Remove hero video</button><span class="form-note" id="bannerNote" role="status"></span></div>
         </form>
       </div>
@@ -544,7 +544,7 @@ const ADMIN_UI_STRINGS = {
 const VIDEO_ADMIN_STRINGS = {
   en: {
     mediaTitle:'Homepage videos', heroVideoTitle:'Hero video', heroVideoFile:'Hero video file (source max 300 MB)',
-    videoEncodingHint:'Hero video: first 6 seconds only, muted, re-encoded (not shrunk, max 720 px wide), autoplay loop. First frame is the poster. Output stays below 4.5 MB.',
+    videoEncodingHint:'Hero video: first 6 seconds only, original sound kept, re-encoded (not shrunk, max 720 px wide), autoplay loop (starts muted; sound button or first tap turns sound on). First frame is the poster. Output stays below 4.5 MB.',
     videoUploadBtn:'Upload and encode', heroRemoveBtn:'Remove hero video', heroRemoveConfirm:'Remove the hero video from the videos bucket?',
     heroRemoved:'Hero video removed.', heroMissing:'No hero video uploaded.', heroLoadFailed:'Could not load homepage video settings.',
     specialMediaTitle:'Special section videos', specialVideoFile:'Category video (optional; source max 300 MB)', specialFoodsLabel:'Five menu items shown with this category',
@@ -553,7 +553,7 @@ const VIDEO_ADMIN_STRINGS = {
   },
   ar: {
     mediaTitle:'فيديوهات الصفحة الرئيسية', heroVideoTitle:'فيديو المقدمة', heroVideoFile:'ملف فيديو المقدمة (المصدر 300 ميغابايت كحد أقصى)',
-    videoEncodingHint:'فيديو الواجهة: أول 6 ثوانٍ فقط، بدون صوت، يُعاد ترميزه دون تصغير (حتى 720 بكسل عرضاً) ويعمل تلقائياً بشكل متكرر. الإطار الأول هو الصورة المؤقتة. الحجم أقل من 4.5 ميجابايت.',
+    videoEncodingHint:'فيديو الواجهة: أول 6 ثوانٍ فقط، مع الاحتفاظ بالصوت الأصلي (يبدأ صامتاً ويُفعَّل الصوت بزر الصوت أو بأول لمسة)، يُعاد ترميزه دون تصغير (حتى 720 بكسل عرضاً) ويعمل تلقائياً بشكل متكرر. الإطار الأول هو الصورة المؤقتة. الحجم أقل من 4.5 ميجابايت.',
     videoUploadBtn:'رفع وتحويل', heroRemoveBtn:'حذف فيديو المقدمة', heroRemoveConfirm:'حذف فيديو المقدمة من مساحة videos؟',
     heroRemoved:'تم حذف فيديو المقدمة.', heroMissing:'لم يتم رفع فيديو المقدمة.', heroLoadFailed:'تعذر تحميل إعدادات الفيديو.',
     specialMediaTitle:'فيديوهات قسم المميز', specialVideoFile:'فيديو الفئة (اختياري؛ المصدر 300 ميغابايت كحد أقصى)', specialFoodsLabel:'الأصناف الخمسة المعروضة مع هذه الفئة',
@@ -562,7 +562,7 @@ const VIDEO_ADMIN_STRINGS = {
   },
   ur: {
     mediaTitle:'ہوم پیج ویڈیوز', heroVideoTitle:'ہیرو ویڈیو', heroVideoFile:'ہیرو ویڈیو فائل (اصل زیادہ سے زیادہ 300 MB)',
-    videoEncodingHint:'ہیرو ویڈیو: صرف پہلے 6 سیکنڈ، آواز کے بغیر، دوبارہ انکوڈ (چھوٹا نہیں، زیادہ سے زیادہ 720 پکسل چوڑائی)، خودکار لوپ۔ پہلا فریم پوسٹر ہے۔ سائز 4.5 MB سے کم۔',
+    videoEncodingHint:'ہیرو ویڈیو: صرف پہلے 6 سیکنڈ، اصل آواز برقرار (شروع میں خاموش؛ ساؤنڈ بٹن یا پہلے ٹچ سے آواز چلتی ہے)، دوبارہ انکوڈ (چھوٹا نہیں، زیادہ سے زیادہ 720 پکسل چوڑائی)، خودکار لوپ۔ پہلا فریم پوسٹر ہے۔ سائز 4.5 MB سے کم۔',
     videoUploadBtn:'اپ لوڈ اور encode کریں', heroRemoveBtn:'ہیرو ویڈیو ہٹائیں', heroRemoveConfirm:'videos bucket سے ہیرو ویڈیو ہٹائیں؟',
     heroRemoved:'ہیرو ویڈیو ہٹا دی گئی۔', heroMissing:'ہیرو ویڈیو اپ لوڈ نہیں ہوئی۔', heroLoadFailed:'ہوم پیج ویڈیو کی ترتیبات لوڈ نہیں ہو سکیں۔',
     specialMediaTitle:'خصوصی سیکشن کی ویڈیوز', specialVideoFile:'زمرے کی ویڈیو (اختیاری؛ اصل زیادہ سے زیادہ 300 MB)', specialFoodsLabel:'اس زمرے کے ساتھ دکھائے جانے والے پانچ مینو آئٹمز',
@@ -571,7 +571,7 @@ const VIDEO_ADMIN_STRINGS = {
   },
   zh: {
     mediaTitle:'首页视频', heroVideoTitle:'首页主视频', heroVideoFile:'主视频文件（源文件最大 300 MB）',
-    videoEncodingHint:'首页视频：仅使用前 6 秒，静音，重新编码（不压缩画质，最大宽度 720 像素），自动循环播放。首帧作为封面。输出小于 4.5 MB。',
+    videoEncodingHint:'首页视频：仅使用前 6 秒，保留原声（默认静音开始，点击声音按钮或首次触摸即可开启声音），重新编码（不压缩画质，最大宽度 720 像素），自动循环播放。首帧作为封面。输出小于 4.5 MB。',
     videoUploadBtn:'上传并编码', heroRemoveBtn:'移除主视频', heroRemoveConfirm:'要从 videos 存储桶中移除主视频吗？',
     heroRemoved:'主视频已移除。', heroMissing:'尚未上传主视频。', heroLoadFailed:'无法加载首页视频设置。',
     specialMediaTitle:'精选分类视频', specialVideoFile:'分类视频（可选；源文件最大 300 MB）', specialFoodsLabel:'此分类下显示的五个菜单商品',

@@ -104,15 +104,18 @@ async function encodeVideo(sourcePath, outputPath) {
 }
 
 // Hero: re-encode only (no 360p/all-keyframe compression, no scrub). Keeps the
-// source resolution up to 720 px wide, trims to 6 s, drops audio, and puts the
+// source resolution up to 720 px wide, trims to 6 s, KEEPS the original audio
+// (re-encoded to AAC; a source with no audio track still works), and puts the
 // moov atom first so playback starts before the download finishes.
 async function encodeHero(sourcePath, outputPath) {
   try { fs.chmodSync(FFMPEG_PATH, 0o755); } catch { /* best effort */ }
   await runFfmpeg([
-    '-y', '-i', sourcePath, '-t', String(HERO_MAX_SECONDS), '-an',
+    '-y', '-i', sourcePath, '-t', String(HERO_MAX_SECONDS),
+    '-map', '0:v:0', '-map', '0:a:0?',
     '-vf', "scale='min(720,iw)':-2",
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
     '-maxrate', '6000k', '-bufsize', '12000k',
+    '-c:a', 'aac', '-b:a', '96k', '-ac', '2',
     '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outputPath,
   ]);
   if (fs.statSync(outputPath).size >= MAX_OUTPUT_BYTES) {
