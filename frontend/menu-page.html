@@ -887,7 +887,8 @@ if(SHOW_SPECIAL) document.getElementById('special').hidden = false;
 function renderSpecial(){
   const row = document.getElementById('specialRow');
   if(!row || !SHOW_SPECIAL) return;
-  const ordered = [...CATS].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  // "Most Popular" is a virtual box (no video, no dishes of its own), so it gets no card here; it stays in the category row under the menu title.
+  const ordered = CATS.filter(c=>c.key!==POPULAR_KEY).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
   row.innerHTML = ordered.map(category=>{
     const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
     const label = category.label[lang] || category.label.en || category.key;
