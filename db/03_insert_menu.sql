@@ -8,9 +8,9 @@ insert into categories (key, label_en, label_ar, label_ur, label_zh, sort_order)
   ('beef',    'Beef Meal',         'وجبة لحم بقر',       'بیف میل',                '牛肉套餐',     1),
   ('chicken', 'Chicken Meal',      'وجبة دجاج',          'چکن میل',                '鸡肉套餐',     2),
   ('shrimp',  'Shrimp Meal',       'وجبة روبيان',        'جھینگا میل',             '虾仁套餐',     3),
-  ('tofu',    'Tofu & Noodle',     'توفو ونودلز',        'توفو اور نوڈلز',         '豆腐面食',     4),
-  ('soup',    'Soup & Rice',       'شوربة وأرز',         'سوپ اور چاول',           '汤与米饭',     5),
-  ('salad',   'Salad & Appetizer', 'سلطة ومقبلات',       'سلاد اور شروعات',        '沙拉与开胃菜', 6)
+  ('tofu',    'Tofu Noodle',       'توفو ونودلز',        'توفو اور نوڈلز',         '豆腐面食',     4),
+  ('soup',    'Soup Rice',         'شوربة وأرز',         'سوپ اور چاول',           '汤与米饭',     5),
+  ('salad',   'Salad Appetizer',   'سلطة ومقبلات',       'سلاد اور شروعات',        '沙拉与开胃菜', 6)
 on conflict (key) do update set
   label_en = excluded.label_en,
   label_ar = excluded.label_ar,

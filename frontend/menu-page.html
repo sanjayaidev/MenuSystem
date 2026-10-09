@@ -128,11 +128,25 @@
   /* ===== MENU ===== */
   #menu{display:flex; flex-direction:column; scroll-margin-top:var(--brand-h);}
   #menuTitle{margin:8px 16px 0; font-size:22px;}
-  .controls{display:flex; gap:10px; padding:14px 16px 8px; order:1;}
+  .controls{display:flex; flex-direction:column; gap:10px; padding:14px 0 8px; order:1;}
   .controls select{
-    flex:1; background:var(--surface); color:var(--text); border:1px solid var(--line);
+    flex:none; width:calc(100% - 32px); margin:0 16px; background:var(--surface); color:var(--text); border:1px solid var(--line);
     border-radius:10px; padding:10px 10px; font-family:inherit; font-size:13px; appearance:none;
   }
+  /* category boxes: one horizontally scrolling row (replaces the old category dropdown) */
+  .cat-row{
+    display:flex; gap:8px; overflow-x:auto; padding:2px 16px 4px; scroll-snap-type:x proximity;
+    scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain;
+  }
+  .cat-row::-webkit-scrollbar{display:none;}
+  .cat-chip{
+    flex:0 0 auto; scroll-snap-align:start; white-space:nowrap; cursor:pointer;
+    background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; font-family:inherit; font-size:13px; font-weight:600; -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .cat-chip.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .cat-chip:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
   .offer-banner{order:2; display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:8px 16px 10px; padding:0; overflow:hidden; background:var(--gold); color:#1a1408;}
   .offer-banner-copy{grid-row:2; min-width:0; padding:14px 16px;}
   .offer-banner h3{margin:0 0 4px; font-size:14px; line-height:1.25;}
@@ -462,6 +476,8 @@
   .app.menu-mode .poster-d{display:none;}
   /* WhatsApp */
   .fab-call{background:#25D366; color:#fff;}
+  /* music button (added by music.js only when a track is set in Admin -> Music) */
+  .fab-music{background:#000; color:var(--gold); border:1px solid rgba(227,178,60,.55);}
   .contact-btn.wa{background:#25D366; color:#fff; border-color:#25D366;}
   .contact-row .wa-ico{color:#25D366;}
   .wa-link{display:block; color:var(--gold); font-weight:600; text-decoration:none; padding:2px 0;}
@@ -528,7 +544,7 @@
   <div id="menu">
     <h2 id="menuTitle" data-i18n="menuTitle">Menu</h2>
     <div class="controls">
-      <select id="categorySelect" aria-label="Filter by category"></select>
+      <div class="cat-row" id="categoryRow" role="group" aria-label="Filter by category"></div>
       <select id="sortSelect" aria-label="Sort menu"></select>
     </div>
 
@@ -994,8 +1010,7 @@ function setLang(code){
     el.textContent = STR[lang][el.dataset.i18n];
   });
 
-  categorySelect.innerHTML = `<option value="all">${STR[lang].allCategories}</option>` +
-    CATS.map(c=>`<option value="${c.key}">${c.label[lang]}</option>`).join('');
+  renderCategoryRow();
 
   sortSelect.innerHTML = `
     <option value="popular">${STR[lang].sortPopular}</option>
@@ -1013,14 +1028,44 @@ function setLang(code){
 }
 
 /* ---------- menu list ---------- */
-const categorySelect = document.getElementById('categorySelect');
+const categoryRow = document.getElementById('categoryRow');
 const sortSelect = document.getElementById('sortSelect');
 const listEl = document.getElementById('list');
 
+/* ---------- category boxes (one scrolling row) ----------
+   'all' = nothing selected: every dish is listed. Tap a box to filter, tap it again to clear.
+   POPULAR_KEY is the virtual "Most Popular" box: the POPULAR_COUNT best-selling dishes, whatever their category. */
+const POPULAR_KEY = '__popular';
+const POPULAR_COUNT = 8;
+const POPULAR_SORT_ORDER = 7;   // position of the Most Popular box among the category sort_order values
+let currentCat = 'all';
+
+function renderCategoryRow(){
+  categoryRow.innerHTML = CATS.map(c=>
+    `<button type="button" class="cat-chip${c.key===currentCat ? ' active' : ''}" data-cat="${escapeHtml(c.key)}" aria-pressed="${c.key===currentCat}">${escapeHtml(c.label[lang] || c.label.en || c.key)}</button>`
+  ).join('');
+}
+function setCat(key, { scroll = true, toggle = true } = {}){
+  currentCat = (!key || (toggle && key === currentCat)) ? 'all' : key;
+  categoryRow.querySelectorAll('.cat-chip').forEach(chip=>{
+    const on = chip.dataset.cat === currentCat;
+    chip.classList.toggle('active', on);
+    chip.setAttribute('aria-pressed', String(on));
+    if(on && scroll) chip.scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' });
+  });
+  render();
+}
+categoryRow.addEventListener('click', e=>{
+  const chip = e.target.closest('.cat-chip');
+  if(chip) setCat(chip.dataset.cat);
+});
+
 function render(){
-  const cat = categorySelect.value;
+  const cat = currentCat;
   const sort = sortSelect.value;
-  let items = ITEMS.filter(i => cat==='all' || i.cat===cat);
+  let items;
+  if(cat === POPULAR_KEY) items = ITEMS.slice().sort((a,b)=>b.pop-a.pop).slice(0, POPULAR_COUNT);
+  else items = ITEMS.filter(i => cat==='all' || i.cat===cat);
 
   if(sort==='name') items.sort((a,b)=>a.name[lang].localeCompare(b.name[lang]));
   else if(sort==='time') items.sort((a,b)=>b.id-a.id);
@@ -1084,7 +1129,6 @@ listEl.addEventListener('click', e=>{
   if(e.target.closest('.open')) openItemModal(id);
 });
 
-categorySelect.addEventListener('change', render);
 sortSelect.addEventListener('change', render);
 
 /* ---------- overlay and tab state ---------- */
@@ -1173,8 +1217,7 @@ document.getElementById('specialRow').addEventListener('click', e=>{
     return;
   }
   if(!card || card.dataset.drag) return;
-  categorySelect.value = card.dataset.cat;
-  render();
+  setCat(card.dataset.cat, { toggle:false });
   scrollToTab('menu');
 });
 document.getElementById('specialRow').addEventListener('keydown', e=>{
@@ -1182,8 +1225,7 @@ document.getElementById('specialRow').addEventListener('keydown', e=>{
   const card = e.target.closest('.special-card');
   if(!card) return;
   e.preventDefault();
-  categorySelect.value = card.dataset.cat;
-  render();
+  setCat(card.dataset.cat, { toggle:false });
   scrollToTab('menu');
 });
 
@@ -1294,6 +1336,15 @@ async function loadMenuData(){
       sort_order: c.sort_order,
       label: { en:c.label_en, ar:c.label_ar, ur:c.label_ur, zh:c.label_zh },
     }));
+
+    // "Most Popular" is not a database category: it is a box that lists the best-selling dishes.
+    // It sits 7th, between the six food categories and Dine In / Outside Catering (see db/10_nine_categories.sql).
+    CATS.push({
+      key: POPULAR_KEY,
+      sort_order: POPULAR_SORT_ORDER,
+      label: { en:'Most Popular', ar:'الأكثر طلباً', ur:'سب سے مقبول', zh:'最受欢迎' },
+    });
+    CATS.sort((a,b)=>(a.sort_order - b.sort_order));
 
     ITEMS = items.map(i => ({
       id: i.id,
@@ -2144,5 +2195,7 @@ Payment: confirmed (simulated)`;
   else { posterImg.addEventListener('load',posterDone,{once:true}); posterImg.addEventListener('error',posterDone,{once:true}); setTimeout(posterDone,4000); }
 })();
 </script>
+<!-- background music: track + on/off are set in Admin -> Music -->
+<script src="music.js" data-page="menu" data-host=".floating" data-class="fab fab-music" defer></script>
 </body>
 </html>

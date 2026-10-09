@@ -6,7 +6,7 @@ Node/Express API backed by Supabase, deployed on Render.
 | URL | File | What it is |
 |---|---|---|
 | `/` | `frontend/index.html` | Landing page (link in bio): logo, text, 4 s autoplay video, MENU / المنيو / 菜单 buttons. One 9:16 screen, dark only. |
-| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + single poster image (9:16, no video, no language boxes), then straight into categories, items and basket. Language is carried over from the landing page. The scrolling Special (video) section is paused: still in the file but hidden and not loaded (`SHOW_SPECIAL = false` in the script; set it to `true` to bring it back). Menu items are 3-layer cards, see below. |
+| `/menu` (or `/menu-page.html?lang=ar`) | `frontend/menu-page.html` | Logo + single poster image (9:16, no video, no language boxes), then straight into the scrolling category boxes, items and basket. Language is carried over from the landing page. The scrolling Special (video) section is paused: still in the file but hidden and not loaded (`SHOW_SPECIAL = false` in the script; set it to `true` to bring it back). Menu items are 3-layer cards, see below. |
 | `/homepage.html` | `frontend/homepage.html` | The previous single-page app, kept unchanged for reference. |
 
 Images to replace with the high-resolution originals (same file names): `frontend/images/page1-logo.png` (A) and
@@ -28,6 +28,14 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
 8. `db/08_contact_whatsapp.sql` — (optional) stores two WhatsApp numbers and a map link in the contact settings; the admin **Contact** tab edits them afterwards.
 
 9. `db/09_menu_card_images.sql` — adds `bg_image_url` and `food_png_url` to `menu_items` for the menu card layers (run it before saving these images from the admin).
+10. `db/10_nine_categories.sql` — the nine category boxes on the menu page: renames the six food categories (Beef Meal, Chicken Meal, Shrimp Meal, Tofu Noodle, Soup Rice, Salad Appetizer) and adds **Dine In** and **Outside Catering**. *Most Popular* is added by the page itself. Safe to re-run.
+
+### Category boxes (menu page)
+The category dropdown is now one horizontally scrolling row of nine boxes, in this order: Beef Meal, Chicken Meal, Shrimp Meal, Tofu Noodle, Soup Rice, Salad Appetizer, **Most Popular**, Dine In, Outside Catering. Nothing selected shows every dish; tap a box to filter and tap it again to clear. *Most Popular* is not a database category: it lists the 8 best-selling dishes (`POPULAR_COUNT` in `menu-page.html`). *Dine In* and *Outside Catering* are normal categories and start empty — give dishes to them in Admin → Menu items (a dish belongs to one category). The Arabic / Urdu / Chinese names of those two are drafts to be confirmed by a native speaker.
+
+### Background music (index + menu pages)
+Admin → **Music** sets one track per page (landing page `index`, and `menu`). The file is converted to a 96 kbps MP3 (first 5 minutes, looped), stored in the `videos` bucket at `music/index.mp3` / `music/menu.mp3`, and described in `site_settings` (key `music`, needs `db/06_site_settings.sql`). Each track can be switched off without deleting it, replaced, or removed.
+On the public pages `frontend/music.js` adds a small music button (bottom-left on the landing page, in the floating buttons on the menu page). Browsers block sound until the visitor taps, so playback starts straight away when the browser allows it, otherwise on the first tap. The visitor's on/off choice is remembered (`localStorage` key `redhouse_music`) and shared by both pages. No track set = no button.
 
 ### Menu cards (3 layers)
 Each menu item on `/menu` is a short 2.5:1 card built from three layers:
@@ -132,6 +140,7 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `GET /api/menu?category=<key>&sort=popular|name|time|offer|price`
 - `GET /api/menu/:id`
 - `GET /api/banner` and `GET /api/special` — public video URLs and category-specific featured menu references.
+- `GET /api/music` — `{ index, menu }`, each `null` or `{ url, name, enabled }`; read by `music.js` on the public pages.
 - `POST /api/orders` — rate-limited (20/15min/IP). Re-checks every item's price server-side (never trusts client prices), computes subtotal/delivery fee/total, marks `payment_status='paid'` (simulated — swap for a real gateway later). Returns `{ id, order_token, subtotal, deliveryFee, total, status, payment_status }`. **Keep `order_token` client-side** — it's the only way to look this order up again without an account.
 - `GET /api/orders/:id?token=<order_token>` — order + line items. Requires the matching `order_token`, or a signed-in request from the order's own `user_id`, or an admin. Otherwise `403`. (Ids are small sequential integers, so without this check anyone could just walk them and read other customers' names/phones/addresses.)
 
@@ -153,6 +162,7 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `GET /menu`, `POST /menu`, `PATCH /menu/:id`, `DELETE /menu/:id` — items accept optional `bg_image_url` / `food_png_url` (http/https links; empty clears them)
 - `POST /images` — text/plain image data URL; uploads through Imgbb and returns `{ url }`
 - `GET /special`, `POST /banner`, `POST /banner/reset`, `POST /special/:categoryKey` — manage the homepage hero and per-category video/five menu references.
+- `POST /music/:page` (multipart field `audio`), `PATCH /music/:page` (`{ enabled }`), `DELETE /music/:page` — background music for `index` or `menu`.
 - `GET /orders?status=<pending|confirmed|preparing|ready|completed|cancelled>` — omit `status` for all orders
 - `GET /orders/:id`
 - `PATCH /orders/:id/status` — `{ status }`

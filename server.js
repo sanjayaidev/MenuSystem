@@ -13,6 +13,7 @@ const cartRoutes = require('./routes/cart');
 const adminRoutes = require('./routes/admin');
 const bannerRoutes = require('./routes/banner');
 const contactRoutes = require('./routes/contact');
+const musicRoutes = require('./routes/music');
 
 const app = express();
 
@@ -89,6 +90,7 @@ app.use('/api', orderRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', bannerRoutes);
 app.use('/api', contactRoutes);
+app.use('/api', musicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 

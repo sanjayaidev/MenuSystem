@@ -202,6 +202,7 @@
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
       <button class="admin-tab" data-panel="bannerPanel" type="button" data-ui="banner">Banner</button>
+      <button class="admin-tab" data-panel="musicPanel" type="button" data-ui="musicTab">Music</button>
       <button class="admin-tab" data-panel="contactPanel" type="button" data-ui="cdTab">Contact</button>
     </nav>
     <section class="admin-panel" id="ordersPanel">
@@ -259,6 +260,12 @@
       <p class="form-note" id="specialMediaNote" role="status"></p>
       <div id="specialAdminCards" class="records"></div>
       -->
+    </section>
+
+    <section class="admin-panel" id="musicPanel" hidden>
+      <div class="panel-title"><h2 data-ui="musicTitle">Background music</h2></div>
+      <p class="form-note" style="margin:0 0 12px;" data-ui="musicHint">Each page can play its own track. Visitors see a small music button and can switch it off; the browser only starts the sound after their first tap.</p>
+      <div id="musicCards"></div>
     </section>
 
     <section class="admin-panel" id="contactPanel" hidden>
@@ -605,6 +612,67 @@ const CONTACT_ADMIN_STRINGS_2 = {
 };
 Object.keys(CONTACT_ADMIN_STRINGS_2).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS_2[code]));
 
+// Strings for the Music tab (background music for the index and menu pages).
+const MUSIC_ADMIN_STRINGS = {
+  en: { musicTab:'Music', musicTitle:'Background music',
+        musicHint:'Each page can play its own track. Visitors see a small music button and can switch it off; the browser only starts the sound after their first tap.',
+        musicPageIndex:'Landing page (index)', musicPageMenu:'Menu page',
+        musicNone:'No music uploaded for this page.', musicCurrent:'Current track: {name}',
+        musicFile:'Audio file (MP3, M4A, WAV, OGG... source max 60 MB)', musicEnabled:'Play this music on the page',
+        musicUploadBtn:'Upload and convert', musicReplaceBtn:'Replace music', musicRemoveBtn:'Remove music',
+        musicRemoveConfirm:'Remove the music from this page?', musicUploading:'Uploading and converting - this can take a minute...',
+        musicUploaded:'Music saved. Refresh the page to hear it.', musicRemoved:'Music removed.', musicEnabledSaved:'Saved.',
+        musicChooseFile:'Choose an audio file first.', musicLoadFailed:'Could not load the music settings.',
+        musicEncodingHint:'Converted to MP3 (96 kbps), first 5 minutes only, played as a loop.',
+        musicUploadFailed:'Music upload failed.', musicTooLarge:'Audio must be smaller than 60 MB.', musicOutputTooLarge:'The converted audio is larger than 4.5 MB. Use a shorter file.',
+        musicUnsupported:'Unsupported audio type. Allowed: MP3, M4A, AAC, WAV, OGG, OPUS, FLAC, WEBM, MP4.',
+        musicBusy:'A music file is already being processed. Please wait.', musicProcessFailed:'Could not process this audio file. Try an MP3.',
+        musicTableMissing:'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' },
+  ar: { musicTab:'الموسيقى', musicTitle:'الموسيقى الخلفية',
+        musicHint:'يمكن لكل صفحة تشغيل مقطعها الخاص. يرى الزوار زراً صغيراً للموسيقى ويمكنهم إيقافها؛ ولا يبدأ المتصفح الصوت إلا بعد أول لمسة منهم.',
+        musicPageIndex:'الصفحة الرئيسية (index)', musicPageMenu:'صفحة القائمة',
+        musicNone:'لم يتم رفع موسيقى لهذه الصفحة.', musicCurrent:'المقطع الحالي: {name}',
+        musicFile:'ملف صوتي (MP3 أو M4A أو WAV أو OGG... بحد أقصى 60 ميغابايت)', musicEnabled:'تشغيل هذه الموسيقى في الصفحة',
+        musicUploadBtn:'رفع وتحويل', musicReplaceBtn:'استبدال الموسيقى', musicRemoveBtn:'حذف الموسيقى',
+        musicRemoveConfirm:'هل تريد حذف الموسيقى من هذه الصفحة؟', musicUploading:'جارٍ الرفع والتحويل - قد يستغرق ذلك دقيقة...',
+        musicUploaded:'تم حفظ الموسيقى. حدّث الصفحة لسماعها.', musicRemoved:'تم حذف الموسيقى.', musicEnabledSaved:'تم الحفظ.',
+        musicChooseFile:'اختر ملفاً صوتياً أولاً.', musicLoadFailed:'تعذّر تحميل إعدادات الموسيقى.',
+        musicEncodingHint:'يتم التحويل إلى MP3 (96 كيلوبت/ث) وأول 5 دقائق فقط، ويُشغَّل بشكل متكرر.',
+        musicUploadFailed:'فشل رفع الموسيقى.', musicTooLarge:'يجب أن يكون الملف الصوتي أصغر من 60 ميغابايت.', musicOutputTooLarge:'الملف الصوتي بعد التحويل أكبر من 4.5 ميغابايت. استخدم ملفاً أقصر.',
+        musicUnsupported:'نوع الملف الصوتي غير مدعوم. الأنواع المسموحة: MP3 وM4A وAAC وWAV وOGG وOPUS وFLAC وWEBM وMP4.',
+        musicBusy:'تتم معالجة ملف موسيقى آخر حالياً. يرجى الانتظار.', musicProcessFailed:'تعذّرت معالجة هذا الملف الصوتي. جرّب ملف MP3.',
+        musicTableMissing:'جدول site_settings غير موجود. شغّل db/06_site_settings.sql في Supabase.' },
+  ur: { musicTab:'موسیقی', musicTitle:'پس منظر کی موسیقی',
+        musicHint:'ہر صفحہ اپنا ٹریک چلا سکتا ہے۔ وزیٹرز کو موسیقی کا چھوٹا بٹن نظر آتا ہے اور وہ اسے بند کر سکتے ہیں؛ براؤزر ان کے پہلے ٹیپ کے بعد ہی آواز شروع کرتا ہے۔',
+        musicPageIndex:'لینڈنگ صفحہ (index)', musicPageMenu:'مینو صفحہ',
+        musicNone:'اس صفحے کے لیے موسیقی اپ لوڈ نہیں ہوئی۔', musicCurrent:'موجودہ ٹریک: {name}',
+        musicFile:'آڈیو فائل (MP3، M4A، WAV، OGG... زیادہ سے زیادہ 60 MB)', musicEnabled:'اس صفحے پر یہ موسیقی چلائیں',
+        musicUploadBtn:'اپ لوڈ اور تبدیل کریں', musicReplaceBtn:'موسیقی تبدیل کریں', musicRemoveBtn:'موسیقی ہٹائیں',
+        musicRemoveConfirm:'کیا اس صفحے سے موسیقی ہٹا دیں؟', musicUploading:'اپ لوڈ اور تبدیلی جاری ہے - اس میں ایک منٹ لگ سکتا ہے...',
+        musicUploaded:'موسیقی محفوظ ہو گئی۔ سننے کے لیے صفحہ ری فریش کریں۔', musicRemoved:'موسیقی ہٹا دی گئی۔', musicEnabledSaved:'محفوظ ہو گیا۔',
+        musicChooseFile:'پہلے آڈیو فائل منتخب کریں۔', musicLoadFailed:'موسیقی کی ترتیبات لوڈ نہیں ہو سکیں۔',
+        musicEncodingHint:'MP3 (96 kbps) میں تبدیل ہوتی ہے، صرف پہلے 5 منٹ، بار بار چلتی ہے۔',
+        musicUploadFailed:'موسیقی اپ لوڈ ناکام ہو گئی۔', musicTooLarge:'آڈیو 60 MB سے چھوٹی ہونی چاہیے۔', musicOutputTooLarge:'تبدیل شدہ آڈیو 4.5 MB سے بڑی ہے۔ چھوٹی فائل استعمال کریں۔',
+        musicUnsupported:'آڈیو کی یہ قسم معاون نہیں۔ اجازت شدہ اقسام: MP3، M4A، AAC، WAV، OGG، OPUS، FLAC، WEBM، MP4۔',
+        musicBusy:'ایک اور موسیقی فائل پر کام جاری ہے۔ براہِ کرم انتظار کریں۔', musicProcessFailed:'یہ آڈیو فائل پروسیس نہیں ہو سکی۔ MP3 آزمائیں۔',
+        musicTableMissing:'site_settings ٹیبل موجود نہیں۔ Supabase میں db/06_site_settings.sql چلائیں۔' },
+  zh: { musicTab:'音乐', musicTitle:'背景音乐',
+        musicHint:'每个页面可以播放各自的曲目。访客会看到一个小的音乐按钮，可以随时关闭；浏览器只会在访客第一次点击后才开始播放声音。',
+        musicPageIndex:'首页 (index)', musicPageMenu:'菜单页',
+        musicNone:'此页面尚未上传音乐。', musicCurrent:'当前曲目：{name}',
+        musicFile:'音频文件（MP3、M4A、WAV、OGG 等，最大 60 MB）', musicEnabled:'在页面上播放这首音乐',
+        musicUploadBtn:'上传并转换', musicReplaceBtn:'更换音乐', musicRemoveBtn:'移除音乐',
+        musicRemoveConfirm:'要从此页面移除音乐吗？', musicUploading:'正在上传并转换 - 可能需要一分钟...',
+        musicUploaded:'音乐已保存。刷新页面即可听到。', musicRemoved:'音乐已移除。', musicEnabledSaved:'已保存。',
+        musicChooseFile:'请先选择音频文件。', musicLoadFailed:'无法加载音乐设置。',
+        musicEncodingHint:'转换为 MP3（96 kbps），仅保留前 5 分钟，循环播放。',
+        musicUploadFailed:'音乐上传失败。', musicTooLarge:'音频必须小于 60 MB。', musicOutputTooLarge:'转换后的音频超过 4.5 MB。请使用更短的文件。',
+        musicUnsupported:'不支持的音频类型。允许：MP3、M4A、AAC、WAV、OGG、OPUS、FLAC、WEBM、MP4。',
+        musicBusy:'正在处理另一个音乐文件。请稍候。', musicProcessFailed:'无法处理此音频文件。请尝试 MP3。',
+        musicTableMissing:'缺少 site_settings 表。请在 Supabase 中运行 db/06_site_settings.sql。' },
+};
+Object.keys(MUSIC_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], MUSIC_ADMIN_STRINGS[code]));
+
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
 if(adminUiLanguage === 'ur') adminUiLanguage = 'en'; // Urdu hidden for now
@@ -653,6 +721,7 @@ function applyAdminUiLanguage(language){
 
   if(currentBannerData) renderBanner(currentBannerData);
   if(currentSpecialData) renderSpecialAdmin(currentSpecialData);
+  if(currentMusicData) renderMusic(currentMusicData);
 
   renderFilters();
   if(ordersLoaded) renderOrders(currentOrders);
@@ -894,6 +963,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'categoriesPanel') loadCategories();
     if(tab.dataset.panel === 'menuPanel') loadMenu();
     if(tab.dataset.panel === 'bannerPanel') loadBanner();
+    if(tab.dataset.panel === 'musicPanel') loadMusic();
     if(tab.dataset.panel === 'contactPanel') loadContact();
   });
 });
@@ -920,6 +990,7 @@ async function adminRequest(path, options = {}){
     if(path.startsWith('/banner')) throw new Error(bannerErrorText(message));
     if(path.startsWith('/special')) throw new Error(specialErrorText(message));
     if(path.startsWith('/contact')) throw new Error(contactErrorText(message));
+    if(path.startsWith('/music')) throw new Error(musicErrorText(message));
     let key = 'requestFailed';
     if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
     else if(message.includes('This record is still in use')) key = 'recordInUse';
@@ -1427,6 +1498,108 @@ document.getElementById('bannerReset').addEventListener('click',async event=>{
 //   }catch(error){setFormNote('specialMediaNote',error.message||adminText('specialSaveFailed'),true);}
 //   finally{button.disabled=false;}
 // });
+
+/* ---------- background music (index + menu pages) ---------- */
+const MUSIC_PAGES = ['index', 'menu'];
+let currentMusicData = null;
+
+function musicErrorText(message){
+  const known = [
+    ['smaller than 60 MB', 'musicTooLarge'], ['4.5 MB', 'musicOutputTooLarge'],
+    ['Unsupported audio type', 'musicUnsupported'], ['already being processed', 'musicBusy'],
+    ['Could not process this audio', 'musicProcessFailed'], ['No audio file received', 'musicChooseFile'],
+    ['site_settings table is missing', 'musicTableMissing'],
+  ];
+  const hit = known.find(([text]) => (message || '').includes(text));
+  return adminText(hit ? hit[1] : 'musicUploadFailed');
+}
+async function loadMusic(){
+  try{
+    const response = await fetch(`${API_BASE}/api/music`, { cache:'no-store' });
+    if(!response.ok) throw new Error();
+    renderMusic(await response.json());
+  }catch{
+    document.getElementById('musicCards').innerHTML = `<p class="form-note error">${escapeHtml(adminText('musicLoadFailed'))}</p>`;
+  }
+}
+function renderMusic(music){
+  currentMusicData = music;
+  document.getElementById('musicCards').innerHTML = MUSIC_PAGES.map(page => {
+    const track = music[page];
+    const title = adminText(page === 'index' ? 'musicPageIndex' : 'musicPageMenu');
+    const current = track
+      ? `<p class="form-note" style="margin:0 0 8px;">${escapeHtml(adminText('musicCurrent', { name: track.name || '—' }))}</p>
+         <audio controls preload="none" style="width:100%; max-width:480px; margin-bottom:12px;" src="${escapeHtml(track.url)}"></audio>
+         <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><input type="checkbox" data-music-enabled style="width:auto; margin:0;" ${track.enabled ? 'checked' : ''}><span>${escapeHtml(adminText('musicEnabled'))}</span></label>`
+      : `<p class="form-note" style="margin:0 0 12px;">${escapeHtml(adminText('musicNone'))}</p>`;
+    return `<form class="manager-form" data-music-page="${page}" novalidate>
+      <h3>${escapeHtml(title)}</h3>
+      ${current}
+      <label class="field-label" for="musicFile-${page}">${escapeHtml(adminText('musicFile'))}</label>
+      <input type="file" id="musicFile-${page}" name="audio" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm,.mp4">
+      <p class="form-note" style="margin:10px 0 0;">${escapeHtml(adminText('musicEncodingHint'))}</p>
+      <div class="form-actions">
+        <button class="action-btn primary" type="submit">${escapeHtml(adminText(track ? 'musicReplaceBtn' : 'musicUploadBtn'))}</button>
+        ${track ? `<button class="action-btn danger" type="button" data-music-remove>${escapeHtml(adminText('musicRemoveBtn'))}</button>` : ''}
+        <span class="form-note" id="musicNote-${page}" role="status"></span>
+      </div>
+    </form>`;
+  }).join('');
+}
+document.getElementById('musicCards').addEventListener('submit', async event => {
+  const form = event.target.closest('form[data-music-page]');
+  if(!form) return;
+  event.preventDefault();
+  const page = form.dataset.musicPage, noteId = `musicNote-${page}`;
+  const file = form.querySelector('input[type="file"]').files[0];
+  if(!file){ setFormNote(noteId, adminText('musicChooseFile'), true); return; }
+  const button = form.querySelector('button[type="submit"]'), body = new FormData();
+  body.append('audio', file);
+  button.disabled = true;
+  setFormNote(noteId, adminText('musicUploading'));
+  try{
+    const result = await adminRequest(`/music/${page}`, { method:'POST', body });
+    renderMusic(result.music);
+    setFormNote(noteId, adminText('musicUploaded'));
+  }catch(error){
+    setFormNote(noteId, error.message || adminText('musicUploadFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+});
+document.getElementById('musicCards').addEventListener('click', async event => {
+  const button = event.target.closest('[data-music-remove]');
+  if(!button) return;
+  const form = button.closest('form[data-music-page]'), page = form.dataset.musicPage, noteId = `musicNote-${page}`;
+  if(!confirm(adminText('musicRemoveConfirm'))) return;
+  button.disabled = true;
+  try{
+    const result = await adminRequest(`/music/${page}`, { method:'DELETE' });
+    renderMusic(result.music);
+    setFormNote(`musicNote-${page}`, adminText('musicRemoved'));
+  }catch(error){
+    button.disabled = false;
+    setFormNote(noteId, error.message || adminText('musicUploadFailed'), true);
+  }
+});
+document.getElementById('musicCards').addEventListener('change', async event => {
+  const box = event.target.closest('[data-music-enabled]');
+  if(!box) return;
+  const form = box.closest('form[data-music-page]'), page = form.dataset.musicPage, noteId = `musicNote-${page}`;
+  box.disabled = true;
+  try{
+    const result = await adminRequest(`/music/${page}`, {
+      method:'PATCH', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ enabled: box.checked }),
+    });
+    currentMusicData = result.music;
+    setFormNote(noteId, adminText('musicEnabledSaved'));
+  }catch(error){
+    box.checked = !box.checked;
+    setFormNote(noteId, error.message || adminText('musicUploadFailed'), true);
+  }finally{
+    box.disabled = false;
+  }
+});
 
 /* ---------- contact details (homepage call button) ---------- */
 function contactErrorText(message){

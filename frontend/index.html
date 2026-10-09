@@ -24,6 +24,16 @@
 }
 .wa-fab svg{width:58%; height:58%;}
 .wa-fab:active{transform:scale(.94);}
+/* music button (added by music.js only when a track is set in Admin -> Music), mirrors the WhatsApp button on the left */
+.music-fab{
+  position:absolute; left:5%; bottom:4%; z-index:3; padding:0; cursor:pointer;
+  width:calc(var(--fw)*.14); height:calc(var(--fw)*.14); border-radius:50%;
+  background:rgba(0,0,0,.6); color:var(--gold); border:1px solid rgba(227,178,60,.55);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent;
+}
+.music-fab svg{width:50%; height:50%;}
+.music-fab:active{transform:scale(.94);}
 
 /* contact card (opened by the WhatsApp button) - same content as the menu page's contact card */
 .contact-wrap{position:absolute; inset:0; z-index:5; display:none;}
@@ -279,5 +289,7 @@ document.querySelectorAll('.pill').forEach(function(a){
   load().then(render);              /* warm the details so the card is current even offline-ish */
 })();
 </script>
+<!-- background music: track + on/off are set in Admin -> Music -->
+<script src="music.js" data-page="index" data-host=".sec-c" data-class="music-fab" defer></script>
 </body>
 </html>
