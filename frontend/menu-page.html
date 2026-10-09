@@ -524,7 +524,7 @@
 -->
 
   <!-- SPECIAL SECTION: category videos (scrub) -- sits between poster D and the menu list. Content comes from /api/special (admin: "Special section videos").
-       PAUSED: hidden, and its data / videos are not loaded. Nothing is removed. Set SHOW_SPECIAL = true in the script below to bring it back. -->
+       Shown when SHOW_SPECIAL = true in the script below (set it to false to pause it: the section stays hidden and nothing is loaded). -->
   <section class="section" id="special" hidden>
     <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
     <div class="special-controls">
@@ -878,9 +878,10 @@ const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,z
 let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
 let SPECIAL_SECTIONS = [];
 
-/* The scrolling Special section is paused: it stays hidden and neither its data nor its videos are loaded.
-   All of its code is still here. Set this to true to bring it back. */
-const SHOW_SPECIAL = false;
+/* The scrolling Special section (category cards with drag-to-scrub video, between the poster and the menu list).
+   Set this to false to pause it again: it is hidden and neither its data nor its videos are loaded.
+   A card with no video set in Admin -> Special section videos falls back to demo/food-360p.mp4. */
+const SHOW_SPECIAL = true;
 if(SHOW_SPECIAL) document.getElementById('special').hidden = false;
 
 function renderSpecial(){
