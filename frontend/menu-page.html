@@ -475,8 +475,8 @@
   /* ===== MENU PAGE (new flow) ===== */
   /* banner (poster D): logo + banner always make exactly one screen. The banner takes whatever height the device leaves under the logo
      (100svh = the screen as seen with the browser bars showing, so it still fits on phones). --topbar-h is the logo bar's real height,
-     measured by the script at the bottom of the page; until then it falls back to --brand-h. The image fills that box, trimming a little
-     from the sides / top and bottom where the screen's shape differs from the image's. */
+     measured by the script at the bottom of the page; until then it falls back to --brand-h. The whole image is shown (never trimmed): it is fitted
+     to the width or the height of that box, whichever is needed, and the rest of the box stays black (the box background). */
   .topbar{min-height:0;}
   .topbar .logo-wrap img{max-height:none;}
   .poster-d{
@@ -484,7 +484,7 @@
     height:calc(100vh - var(--topbar-h, var(--brand-h)));
     height:calc(100svh - var(--topbar-h, var(--brand-h)));
   }
-  .poster-d img{width:100%; height:100%; object-fit:cover; object-position:center; display:block;}
+  .poster-d img{width:100%; height:100%; object-fit:contain; object-position:center; display:block;}
   .app.menu-mode .poster-d{display:none;}
   /* scroll indicator at the bottom of the second page: tells the visitor the menu is below, tap to go there */
   .poster-cue{
