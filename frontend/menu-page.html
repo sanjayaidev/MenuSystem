@@ -973,7 +973,11 @@ function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]/g,''); }
 function dishImgPath(cat, name){ return `images/${cat}/${slugify(name)}.png`; }
 function catImgPath(cat){ return `images/${cat}.png`; }
 function genericImgPath(){ return `images/food.png`; }
-function hasImageUrl(item){ return typeof item.imagePath === 'string' && item.imagePath.trim().length > 0; }
+// True when the item has a real image saved in the admin (Image URL or Food PNG), so the local demo images are never used for it.
+function hasImageUrl(item){
+  return (typeof item.imagePath === 'string' && item.imagePath.trim().length > 0)
+      || (typeof item.foodPng === 'string' && item.foodPng.trim().length > 0);
+}
 // A usable http(s) URL, or '' (blocks javascript: / data: values saved in the database).
 function safeImgUrl(raw){
   if(typeof raw !== 'string' || !raw.trim()) return '';
@@ -985,7 +989,7 @@ function safeImgUrl(raw){
 }
 function itemImgPath(item){
   if(!hasImageUrl(item)) return dishImgPath(item.cat, item.name.en);
-  return safeImgUrl(item.imagePath);
+  return safeImgUrl(item.imagePath) || safeImgUrl(item.foodPng);   // Image URL first, then the Food PNG used on the menu card
 }
 const FALLBACK_ICON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
   '<circle cx="50" cy="50" r="30" fill="none" stroke="#3a3630" stroke-width="3"/>' +
@@ -1633,6 +1637,8 @@ function openItemModal(id){
   const imageUrl = itemImgPath(modalItem);
   if(imageUrl){
     modalImg.style.display = '';
+    // a transparent food PNG should be shown whole, not cropped to the square hero
+    modalImg.style.objectFit = (!safeImgUrl(modalItem.imagePath) && safeImgUrl(modalItem.foodPng)) ? 'contain' : '';
     modalImg.src = imageUrl;
   }else{
     modalImg.removeAttribute('src');
