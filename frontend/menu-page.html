@@ -488,12 +488,15 @@
   .app.menu-mode .poster-d{display:none;}
   /* scroll indicator at the bottom of the second page: tells the visitor the menu is below, tap to go there */
   .poster-cue{
-    position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:2;
-    display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 14px 4px;
-    border:0; border-radius:999px; background:rgba(0,0,0,.55); color:#f4efe6; cursor:pointer;
-    font:600 11px/1.2 'Poppins',sans-serif; -webkit-tap-highlight-color:transparent;
+    position:absolute; left:16px; bottom:14px; z-index:2;
+    display:flex; align-items:center; justify-content:center; width:42px; height:42px; padding:0;
+    border:1px solid rgba(227,178,60,.5); border-radius:50%; background:rgba(38,38,38,.88); color:#f4efe6; cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
   }
-  .poster-cue svg{width:18px; height:18px; color:var(--gold); animation:bob 1.6s ease-in-out infinite;}
+  html[dir="rtl"] .poster-cue{left:auto; right:16px;}
+  .poster-cue svg{width:22px; height:22px; color:var(--gold); animation:bob 1.6s ease-in-out infinite;}
+  /* the label is kept for screen readers only */
+  .poster-cue .sr-only{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;}
   .poster-cue:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
   @media (prefers-reduced-motion:reduce){ .poster-cue svg{animation:none;} }
   /* WhatsApp */
@@ -518,7 +521,7 @@
   <section class="poster-d" id="posterD" aria-label="Red House Catering">
     <img src="images/page2img.jpeg" alt="" width="1122" height="1402" fetchpriority="high">
     <button type="button" class="poster-cue" id="posterCue">
-      <span data-i18n="scrollMenu">Scroll for menu</span>
+      <span class="sr-only" data-i18n="scrollMenu">Scroll for menu</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
     </button>
   </section>
