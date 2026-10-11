@@ -305,7 +305,7 @@
   }
 
   /* item modal */
-  .item-hero{position:relative; width:100%; aspect-ratio:1/1; max-height:340px; flex:0 0 auto; overflow:hidden; background:#000;}
+  .item-hero{position:relative; width:100%; aspect-ratio:1/1; max-height:340px; flex:0 0 auto; overflow:hidden; background:#000 center bottom / cover no-repeat;}   /* the item's card background image is set inline by openItemModal; black until/unless there is one */
   .item-hero img{width:100%; height:100%; object-fit:cover;}
   .item-hero .icon-btn{position:absolute; top:12px; inset-inline-start:12px;}
   .item-tag{
@@ -633,7 +633,7 @@
 
   <!-- ===== ITEM DETAIL MODAL ===== -->
   <div class="overlay" id="itemModal">
-    <div class="item-hero">
+    <div class="item-hero" id="itemHero">
       <button class="icon-btn" id="itemModalClose" aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
@@ -1634,11 +1634,16 @@ function openItemModal(id){
     if(modalImg.dataset.stage === 'dish'){ modalImg.dataset.stage = 'cat'; modalImg.src = catImgPath(modalItem.cat); }
     else if(modalImg.dataset.stage === 'cat'){ modalImg.dataset.stage = 'generic'; modalImg.src = genericImgPath(); }
   };
+  // same background picture as the menu card (layer 1) behind the food image; cleared when the item has none
+  const modalBgUrl = safeImgUrl(modalItem.bgImage);
+  document.getElementById('itemHero').style.backgroundImage = modalBgUrl ? `url("${modalBgUrl}")` : '';
   const imageUrl = itemImgPath(modalItem);
   if(imageUrl){
     modalImg.style.display = '';
-    // a transparent food PNG should be shown whole, not cropped to the square hero
-    modalImg.style.objectFit = (!safeImgUrl(modalItem.imagePath) && safeImgUrl(modalItem.foodPng)) ? 'contain' : '';
+    // a transparent food PNG should be shown whole (not cropped to the hero) and lifted off the background with a soft shadow
+    const pngMode = !safeImgUrl(modalItem.imagePath) && Boolean(safeImgUrl(modalItem.foodPng));
+    modalImg.style.objectFit = pngMode ? 'contain' : '';
+    modalImg.style.filter = pngMode ? 'drop-shadow(0 6px 10px rgba(0,0,0,.45))' : '';
     modalImg.src = imageUrl;
   }else{
     modalImg.removeAttribute('src');
