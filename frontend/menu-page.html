@@ -221,13 +221,13 @@
   .row .food{
     position:absolute; z-index:2; pointer-events:none;
     inset-block:5%; inset-inline-start:0; width:calc(100% - var(--card-w) + var(--food-overlap));
-    display:flex; align-items:center; justify-content:flex-end;
+    display:flex; align-items:flex-end; justify-content:flex-end;
   }
   .row .food img{
-    display:block; height:100%; width:auto; max-width:100%; object-fit:contain; object-position:right center;
+    display:block; height:100%; width:auto; max-width:100%; object-fit:contain; object-position:right bottom;
     filter:drop-shadow(0 calc(1 * var(--u)) calc(1.4 * var(--u)) rgba(0,0,0,.45));
   }
-  html[dir="rtl"] .row .food img{object-position:left center;}
+  html[dir="rtl"] .row .food img{object-position:left bottom;}
   .row .thumb-fallback{display:none; width:60%; height:60%; align-items:center; justify-content:center;}
   .row .thumb-fallback svg{width:55%; height:55%;}
 
