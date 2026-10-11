@@ -139,6 +139,12 @@
     scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain;
   }
   .cat-row::-webkit-scrollbar{display:none;}
+  /* mouse devices: drag / wheel scrolling is done in script, so no snapping to fight it */
+  @media (hover:hover) and (pointer:fine){
+    .cat-row{scroll-snap-type:none; cursor:grab;}
+    .cat-row.dragging{cursor:grabbing; user-select:none; -webkit-user-select:none;}
+    .cat-row.dragging .cat-chip{cursor:grabbing;}
+  }
   .cat-chip{
     flex:0 0 auto; scroll-snap-align:start; white-space:nowrap; cursor:pointer;
     background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:10px;
@@ -1076,6 +1082,49 @@ categoryRow.addEventListener('click', e=>{
   const chip = e.target.closest('.cat-chip');
   if(chip) setCat(chip.dataset.cat);
 });
+
+/* Desktop: the row also scrolls with a mouse (touch scrolling already works natively).
+   Drag it with the left button, or turn the wheel while the pointer is over it; at either end the wheel
+   goes back to scrolling the page. A drag never selects a box (the click that ends it is swallowed). */
+(()=>{
+  let down = false, moved = false, startX = 0, startLeft = 0, pid = null;
+  categoryRow.addEventListener('pointerdown', e=>{
+    if(e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; startX = e.clientX; startLeft = categoryRow.scrollLeft; pid = e.pointerId;
+  });
+  categoryRow.addEventListener('pointermove', e=>{
+    if(!down || e.pointerId !== pid) return;
+    const dx = e.clientX - startX;
+    if(!moved){
+      if(Math.abs(dx) < 5) return;
+      moved = true;
+      categoryRow.classList.add('dragging');
+      try{ categoryRow.setPointerCapture(pid); }catch(_){}
+    }
+    categoryRow.scrollLeft = startLeft - dx;
+  });
+  const endDrag = e=>{
+    if(!down || e.pointerId !== pid) return;
+    down = false;
+    categoryRow.classList.remove('dragging');
+    try{ categoryRow.releasePointerCapture(pid); }catch(_){}
+  };
+  ['pointerup','pointercancel'].forEach(type=>categoryRow.addEventListener(type, endDrag));
+  categoryRow.addEventListener('click', e=>{
+    if(!moved) return;
+    moved = false;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }, true);
+  categoryRow.addEventListener('wheel', e=>{
+    if(e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // sideways trackpad swipes already work
+    const max = categoryRow.scrollWidth - categoryRow.clientWidth;
+    if(max <= 0) return;
+    if((e.deltaY < 0 && categoryRow.scrollLeft <= 0) || (e.deltaY > 0 && categoryRow.scrollLeft >= max - 1)) return;
+    e.preventDefault();
+    categoryRow.scrollLeft += e.deltaY * (e.deltaMode === 1 ? 33 : 1);
+  }, { passive:false });
+})();
 
 function render(){
   const cat = currentCat;
