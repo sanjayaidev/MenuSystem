@@ -165,7 +165,7 @@
   .app.menu-mode .controls{order:2; padding-top:6px;}
 
     /* ===== MENU CARD: three layers inside one 2.5:1 box =====
-     1  .bg    background picture (admin: "Card background image"), fills the box
+     1  .bg    background picture (admin: "Card background image"), fills the strip left of the card (best: 3:4 portrait)
       2  .card  parchment card covering the right two thirds: name, price, Add to cart
      3  .food  transparent food PNG (admin: "Food PNG"), right-aligned and drawn over the background AND the card
      Tune the look with --card-w and --food-overlap. Both are a share of the box width. */
@@ -179,8 +179,9 @@
     color:var(--ink);
   }
 
-  /* layer 1 */
-  .row .bg{position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; display:block;}
+  /* layer 1: only the strip not covered by the card is ever visible (left third; right third in RTL), so the picture is sized to that
+     strip, not the whole box. A 3:4 portrait image fills it by width and loses only ~10% of its height. The 1px tucks under the card edge. */
+  .row .bg{position:absolute; inset-block:0; inset-inline-start:0; z-index:0; width:calc(100% - var(--card-w) + 1px); height:100%; object-fit:cover; object-position:center center; display:block;}
 
   /* layer 2 */
   .row .card{
