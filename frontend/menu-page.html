@@ -470,9 +470,19 @@
   /* banner (poster D): fits the width of the page; its height follows the image's own proportions (no fixed size, no cropping). */
   .topbar{min-height:0;}
   .topbar .logo-wrap img{max-height:none;}
-  .poster-d{width:100%; background:#000; overflow:hidden;}
+  .poster-d{position:relative; width:100%; background:#000; overflow:hidden;}
   .poster-d img{width:100%; height:auto; display:block;}
   .app.menu-mode .poster-d{display:none;}
+  /* scroll indicator at the bottom of the second page: tells the visitor the menu is below, tap to go there */
+  .poster-cue{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:2;
+    display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 14px 4px;
+    border:0; border-radius:999px; background:rgba(0,0,0,.55); color:#f4efe6; cursor:pointer;
+    font:600 11px/1.2 'Poppins',sans-serif; -webkit-tap-highlight-color:transparent;
+  }
+  .poster-cue svg{width:18px; height:18px; color:var(--gold); animation:bob 1.6s ease-in-out infinite;}
+  .poster-cue:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+  @media (prefers-reduced-motion:reduce){ .poster-cue svg{animation:none;} }
   /* WhatsApp */
   .fab-call{background:#25D366; color:#fff;}
   /* music button (added by music.js only when a track is set in Admin -> Music) */
@@ -494,6 +504,10 @@
 
   <section class="poster-d" id="posterD" aria-label="Red House Catering">
     <img src="images/page2img.jpeg" alt="" width="1122" height="1402" fetchpriority="high">
+    <button type="button" class="poster-cue" id="posterCue">
+      <span data-i18n="scrollMenu">Scroll for menu</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
   </section>
 
   <!-- HERO VIDEO SECTION DISABLED on the menu page (video now lives on index.html). Original:
@@ -523,8 +537,9 @@
   </div>
 -->
 
-  <!-- SPECIAL SECTION: category videos (scrub) -- sits between poster D and the menu list. Content comes from /api/special (admin: "Special section videos").
-       Shown when SHOW_SPECIAL = true in the script below (set it to false to pause it: the section stays hidden and nothing is loaded). -->
+  <!-- SPECIAL SECTION PAUSED (commented out for now, not removed): the scrolling category videos that sat between poster D and the menu list.
+       Content comes from /api/special (admin: "Special section videos"). To bring it back: delete the opening and closing comment markers
+       around this block, and strip the "//~ " prefix from the script lines further down (see README, "Special section").
   <section class="section" id="special" hidden>
     <div class="sec-head"><h2 data-i18n="specialTitle">Special</h2></div>
     <div class="special-controls">
@@ -533,6 +548,7 @@
     </div>
     <div class="special-row" id="specialRow"></div>
   </section>
+  -->
 
   <!-- ornaments for the menu cards, defined once and reused with <use> -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -762,7 +778,7 @@ const LANGS = { en:{dir:'ltr'}, ar:{dir:'rtl'}, ur:{dir:'rtl'}, zh:{dir:'ltr'} }
 
 const STR = {
     en:{ loading:'Loading', explore:'Explore menu', allCategories:'All categories',
-      specialTitle:'Special', specialHint:'Drag left / right · Tap a category', videoSpeed:'Speed', menuTitle:'Menu',
+      specialTitle:'Special', specialHint:'Drag left / right · Tap a category', videoSpeed:'Speed', menuTitle:'Menu', scrollMenu:'Scroll for menu',
       offerTitle:'All meals served with', offerText:'Chinese fried egg rice, egg seaweed soup, vegetable salad with sauce, and bottled water.',
        sortName:'Name (A–Z)', sortTime:'Newest', sortOffer:'Offers first',
        sortPrice:'Price: low to high', sortPopular:'Most popular',
@@ -786,7 +802,7 @@ const STR = {
        includesTitle:'This meal automatically includes:', includesText:'Steamed rice, soup, salad and bottled water.',
        descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
     ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
-      specialTitle:'المميز', specialHint:'اسحب يميناً أو يساراً · اضغط على الصنف', videoSpeed:'السرعة', menuTitle:'القائمة',
+      specialTitle:'المميز', specialHint:'اسحب يميناً أو يساراً · اضغط على الصنف', videoSpeed:'السرعة', menuTitle:'القائمة', scrollMenu:'مرر لأسفل لعرض القائمة',
       offerTitle:'تُقدَّم جميع الوجبات مع', offerText:'أرز مقلي بالبيض الصيني، شوربة البيض والأعشاب البحرية، سلطة خضار مع الصلصة وماء معبأ.',
        sortName:'الاسم (أ-ي)', sortTime:'الأحدث', sortOffer:'العروض أولاً',
        sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً',
@@ -810,7 +826,7 @@ const STR = {
        includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'أرز مطهو على البخار، شوربة، سلطة وماء معبأ.',
        descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
     ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
-      specialTitle:'خاص', specialHint:'دائیں یا بائیں سوائپ کریں · زمرہ منتخب کریں', videoSpeed:'رفتار', menuTitle:'مینو',
+      specialTitle:'خاص', specialHint:'دائیں یا بائیں سوائپ کریں · زمرہ منتخب کریں', videoSpeed:'رفتار', menuTitle:'مینو', scrollMenu:'مینو کے لیے نیچے سکرول کریں',
       offerTitle:'تمام کھانوں کے ساتھ', offerText:'چائنیز ایگ فرائیڈ رائس، انڈے اور سی ویڈ کا سوپ، ساس کے ساتھ سبزیوں کا سلاد اور بوتل بند پانی۔',
        sortName:'نام (اے-زیڈ)', sortTime:'تازہ ترین', sortOffer:'پہلے آفرز',
        sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین',
@@ -834,7 +850,7 @@ const STR = {
        includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'ابلے چاول، سوپ، سلاد اور بوتل بند پانی۔',
        descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
     zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
-      specialTitle:'精选', specialHint:'左右拖动 · 点击分类', videoSpeed:'速度', menuTitle:'菜单',
+      specialTitle:'精选', specialHint:'左右拖动 · 点击分类', videoSpeed:'速度', menuTitle:'菜单', scrollMenu:'向下滑动查看菜单',
       offerTitle:'所有餐点均配有', offerText:'中式鸡蛋炒饭、鸡蛋海藻汤、配酱汁的蔬菜沙拉和瓶装水。',
        sortName:'名称（A-Z）', sortTime:'最新', sortOffer:'优惠优先',
        sortPrice:'价格：从低到高', sortPopular:'最受欢迎',
@@ -876,62 +892,62 @@ let CATS = [];
 let ITEMS = [];
 const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,zh:k} };
 let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
-let SPECIAL_SECTIONS = [];
+//~ let SPECIAL_SECTIONS = [];
 
-/* The scrolling Special section (category cards with drag-to-scrub video, between the poster and the menu list).
-   Set this to false to pause it again: it is hidden and neither its data nor its videos are loaded.
-   A card with no video set in Admin -> Special section videos falls back to demo/food-360p.mp4. */
-const SHOW_SPECIAL = true;
-if(SHOW_SPECIAL) document.getElementById('special').hidden = false;
+//~ /* The scrolling Special section (category cards with drag-to-scrub video, between the poster and the menu list).
+//~    Set this to false to pause it again: it is hidden and neither its data nor its videos are loaded.
+//~    A card with no video set in Admin -> Special section videos falls back to demo/food-360p.mp4. */
+//~ const SHOW_SPECIAL = true;
+//~ if(SHOW_SPECIAL) document.getElementById('special').hidden = false;
 
-function renderSpecial(){
-  const row = document.getElementById('specialRow');
-  if(!row || !SHOW_SPECIAL) return;
-  // "Most Popular" is a virtual box (no video, no dishes of its own), so it gets no card here; it stays in the category row under the menu title.
-  const ordered = CATS.filter(c=>c.key!==POPULAR_KEY).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  row.innerHTML = ordered.map(category=>{
-    const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
-    const label = category.label[lang] || category.label.en || category.key;
-    const selectedFoods = config?.items || [];
-    const foods = selectedFoods.map(item=>item[`name_${lang}`] || item.name_en);
-    const featuredPrice = selectedFoods[0] && Number.isFinite(Number(selectedFoods[0].price))
-      ? money(Number(selectedFoods[0].price))
-      : '';
-    return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}">
-      <div class="special-video"><canvas class="special-cover" aria-hidden="true"></canvas><video muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b class="special-add-price">${escapeHtml(featuredPrice)}</b></button></div>
-      <p class="category-name">${escapeHtml(label)}</p>
-      ${foods.some(Boolean) ? `<ol class="special-foods">${foods.map((food,index)=>`<li data-slot="${index+1}">${escapeHtml(food || '')}</li>`).join('')}</ol>` : ''}
-    </article>`;
-  }).join('');
-  row.querySelectorAll('.special-card').forEach(restoreCover);
-}
+//~ function renderSpecial(){
+//~   const row = document.getElementById('specialRow');
+//~   if(!row || !SHOW_SPECIAL) return;
+//~   // "Most Popular" is a virtual box (no video, no dishes of its own), so it gets no card here; it stays in the category row under the menu title.
+//~   const ordered = CATS.filter(c=>c.key!==POPULAR_KEY).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+//~   row.innerHTML = ordered.map(category=>{
+//~     const config = SPECIAL_SECTIONS.find(section=>section.key===category.key);
+//~     const label = category.label[lang] || category.label.en || category.key;
+//~     const selectedFoods = config?.items || [];
+//~     const foods = selectedFoods.map(item=>item[`name_${lang}`] || item.name_en);
+//~     const featuredPrice = selectedFoods[0] && Number.isFinite(Number(selectedFoods[0].price))
+//~       ? money(Number(selectedFoods[0].price))
+//~       : '';
+//~     return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}">
+//~       <div class="special-video"><canvas class="special-cover" aria-hidden="true"></canvas><video muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b class="special-add-price">${escapeHtml(featuredPrice)}</b></button></div>
+//~       <p class="category-name">${escapeHtml(label)}</p>
+//~       ${foods.some(Boolean) ? `<ol class="special-foods">${foods.map((food,index)=>`<li data-slot="${index+1}">${escapeHtml(food || '')}</li>`).join('')}</ol>` : ''}
+//~     </article>`;
+//~   }).join('');
+//~   row.querySelectorAll('.special-card').forEach(restoreCover);
+//~ }
 
-/* ---------- special covers: first frame of each clip, used while the video is unloaded ---------- */
-const coverCache = new Map();
-const coverKey = card => card.dataset.videoUrl || 'demo/food-360p.mp4';
-function setCover(card, video){
-  const canvas = card.querySelector('.special-cover');
-  const w = video.videoWidth, h = video.videoHeight;
-  if(!canvas || !w || !h) return false;
-  try{
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
-    const copy = document.createElement('canvas');
-    copy.width = w; copy.height = h;
-    copy.getContext('2d').drawImage(canvas, 0, 0);
-    coverCache.set(coverKey(card), copy);   // survives re-renders (e.g. language change)
-    card.dataset.cover = '1';
-    return true;
-  }catch(_){ return false; }
-}
-function restoreCover(card){
-  const copy = coverCache.get(coverKey(card));
-  const canvas = card.querySelector('.special-cover');
-  if(!copy || !canvas) return;
-  canvas.width = copy.width; canvas.height = copy.height;
-  canvas.getContext('2d').drawImage(copy, 0, 0);
-  card.dataset.cover = '1';
-}
+//~ /* ---------- special covers: first frame of each clip, used while the video is unloaded ---------- */
+//~ const coverCache = new Map();
+//~ const coverKey = card => card.dataset.videoUrl || 'demo/food-360p.mp4';
+//~ function setCover(card, video){
+//~   const canvas = card.querySelector('.special-cover');
+//~   const w = video.videoWidth, h = video.videoHeight;
+//~   if(!canvas || !w || !h) return false;
+//~   try{
+//~     canvas.width = w; canvas.height = h;
+//~     canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+//~     const copy = document.createElement('canvas');
+//~     copy.width = w; copy.height = h;
+//~     copy.getContext('2d').drawImage(canvas, 0, 0);
+//~     coverCache.set(coverKey(card), copy);   // survives re-renders (e.g. language change)
+//~     card.dataset.cover = '1';
+//~     return true;
+//~   }catch(_){ return false; }
+//~ }
+//~ function restoreCover(card){
+//~   const copy = coverCache.get(coverKey(card));
+//~   const canvas = card.querySelector('.special-cover');
+//~   if(!copy || !canvas) return;
+//~   canvas.width = copy.width; canvas.height = copy.height;
+//~   canvas.getContext('2d').drawImage(copy, 0, 0);
+//~   card.dataset.cover = '1';
+//~ }
 
 let lang = 'en';
 
@@ -1021,7 +1037,7 @@ function setLang(code){
     <option value="price">${STR[lang].sortPrice}</option>`;
 
   render();
-  renderSpecial();
+//~   renderSpecial();
   refreshCartStaticText();
   refreshCheckoutStaticText();
   if(!cartOverlay.classList.contains('is-open')) {/* no-op, guards below re-render only if open */}
@@ -1200,35 +1216,41 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
 // (hero explore cue removed with the hero section)
 // document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDefault(); scrollToTab('menu'); });
 
-document.getElementById('specialRow').addEventListener('click', e=>{
-  const card = e.target.closest('.special-card');
-  const addBtn = e.target.closest('.special-add');
-  if(card && addBtn){
-    e.stopPropagation();
-    // Add the product currently shown in the video (2 s per product).
-    const items = SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items || [];
-    const item = items[Number(card.dataset.idx) || 0] || items[0];
-    if(!item || !itemById(Number(item.id))) return;
-    cartSet(item.id, (cart[Number(item.id)] || 0) + 1);
-    const label = addBtn.querySelector('span');
-    const original = STR[lang].addToCart;
-    label.textContent = '✓';
-    clearTimeout(addBtn._t);
-    addBtn._t = setTimeout(()=>{ label.textContent = original; }, 800);
-    return;
-  }
-  if(!card || card.dataset.drag) return;
-  setCat(card.dataset.cat, { toggle:false });
-  scrollToTab('menu');
+// scroll indicator at the bottom of the poster (second page): scrolls down to the menu
+document.getElementById('posterCue').addEventListener('click', ()=>{
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.getElementById('menu').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block:'start' });
 });
-document.getElementById('specialRow').addEventListener('keydown', e=>{
-  if(e.key !== 'Enter' && e.key !== ' ') return;
-  const card = e.target.closest('.special-card');
-  if(!card) return;
-  e.preventDefault();
-  setCat(card.dataset.cat, { toggle:false });
-  scrollToTab('menu');
-});
+
+//~ document.getElementById('specialRow').addEventListener('click', e=>{
+//~   const card = e.target.closest('.special-card');
+//~   const addBtn = e.target.closest('.special-add');
+//~   if(card && addBtn){
+//~     e.stopPropagation();
+//~     // Add the product currently shown in the video (2 s per product).
+//~     const items = SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items || [];
+//~     const item = items[Number(card.dataset.idx) || 0] || items[0];
+//~     if(!item || !itemById(Number(item.id))) return;
+//~     cartSet(item.id, (cart[Number(item.id)] || 0) + 1);
+//~     const label = addBtn.querySelector('span');
+//~     const original = STR[lang].addToCart;
+//~     label.textContent = '✓';
+//~     clearTimeout(addBtn._t);
+//~     addBtn._t = setTimeout(()=>{ label.textContent = original; }, 800);
+//~     return;
+//~   }
+//~   if(!card || card.dataset.drag) return;
+//~   setCat(card.dataset.cat, { toggle:false });
+//~   scrollToTab('menu');
+//~ });
+//~ document.getElementById('specialRow').addEventListener('keydown', e=>{
+//~   if(e.key !== 'Enter' && e.key !== ' ') return;
+//~   const card = e.target.closest('.special-card');
+//~   if(!card) return;
+//~   e.preventDefault();
+//~   setCat(card.dataset.cat, { toggle:false });
+//~   scrollToTab('menu');
+//~ });
 
 /* =====================================================================
    CONFIG — DELIVERY_FEE / WHATSAPP_NUMBER / BRANCH_NAME now come from
@@ -1369,18 +1391,18 @@ async function loadMenuData(){
   }
 }
 
-async function loadSpecialData(){
-  if(!SHOW_SPECIAL) return;   // paused: don't even request /api/special
-  try{
-    const response = await fetch(`${API_BASE}/api/special`, { cache:'no-store' });
-    if(!response.ok) throw new Error(`GET /api/special failed (${response.status})`);
-    const data = await response.json();
-    SPECIAL_SECTIONS = data.categories || [];
-  }catch(error){
-    console.error('Failed to load Special section:', error);
-    SPECIAL_SECTIONS = [];
-  }
-}
+//~ async function loadSpecialData(){
+//~   if(!SHOW_SPECIAL) return;   // paused: don't even request /api/special
+//~   try{
+//~     const response = await fetch(`${API_BASE}/api/special`, { cache:'no-store' });
+//~     if(!response.ok) throw new Error(`GET /api/special failed (${response.status})`);
+//~     const data = await response.json();
+//~     SPECIAL_SECTIONS = data.categories || [];
+//~   }catch(error){
+//~     console.error('Failed to load Special section:', error);
+//~     SPECIAL_SECTIONS = [];
+//~   }
+//~ }
 
 /* ---------- theme (light/dark) ---------- */
 const THEME_KEY = 'redhouse_theme';
@@ -1934,7 +1956,8 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
+//~   await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
+  await Promise.all([loadMenuData(), loadConfig(), loadContact()]);   // SPECIAL-PAUSED: loadSpecialData() left out
   if(authToken){
     await loadCartFromServer();
   }else{
@@ -1943,7 +1966,7 @@ Payment: confirmed (simulated)`;
   updateCartBadge();
   setLang(initialLang());
   syncFooter();
-  renderSpecial();
+//~   renderSpecial();
 })();
 
 /* ================= HERO + SPECIAL VIDEO SCRUBBING ================= */
@@ -1952,20 +1975,20 @@ Payment: confirmed (simulated)`;
   const hero = document.getElementById('hero') || document.createElement('div');
   const stage = document.getElementById('heroStage') || document.createElement('div');
   const video = document.getElementById('heroVideo') || document.createElement('video');
-  const speedInput = document.getElementById('speed');
-  const speedValue = document.getElementById('speedval');
+//~   const speedInput = document.getElementById('speed');
+//~   const speedValue = document.getElementById('speedval');
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (value,min,max)=>Math.min(max,Math.max(min,value));
   const smooth = value=>value*value*(3-2*value);
   let speed = 4;
   try { const saved = Number(localStorage.getItem('scrubSpeedUI')); if(saved >= 1 && saved <= 10) speed = saved; } catch(_){}
-  speedInput.value = speed;
-  speedValue.textContent = speed;
-  speedInput.addEventListener('input',()=>{
-    speed = Number(speedInput.value) || 4;
-    speedValue.textContent = speed;
-    try { localStorage.setItem('scrubSpeedUI', String(speed)); } catch(_){}
-  });
+//~   speedInput.value = speed;
+//~   speedValue.textContent = speed;
+//~   speedInput.addEventListener('input',()=>{
+//~     speed = Number(speedInput.value) || 4;
+//~     speedValue.textContent = speed;
+//~     try { localStorage.setItem('scrubSpeedUI', String(speed)); } catch(_){}
+//~   });
   const dragGain = ()=>speed*0.12;
   const wheelGain = ()=>speed/4;
 
@@ -2043,121 +2066,123 @@ Payment: confirmed (simulated)`;
   }
   requestAnimationFrame(autoStep);
 
-  const specialRow=document.getElementById('specialRow');
-  const specialStates=new WeakMap();
-  const maxLive=3;
-  let liveRaf=0;
-  function stateFor(card){
-    let state=specialStates.get(card);
-    if(state) return state;
-    const element=card.querySelector('.special-video'), clip=element.querySelector('video'), bar=card.querySelector('.special-scrub i');
-    state={card,element,clip,bar,items:SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items||[],priceLabel:card.querySelector('.special-add-price'),foodRows:[...card.querySelectorAll('.special-foods li')],pos:0,target:0,current:0,lastSeek:-1,raf:0,live:false};
-    const duration=()=>clip.duration||0;
-    function updateFeaturedProduct(){
-      if(!state.items.length || !duration()) return;
-      const index=Math.min(state.items.length-1,Math.floor(state.current*duration()/2));
-      const item=state.items[index];
-      state.card.dataset.idx=String(index);
-      const price=Number(item?.price);
-      state.priceLabel.textContent=Number.isFinite(price)?money(price):'';
-      state.foodRows.forEach((food,rowIndex)=>food.classList.toggle('is-current',rowIndex===index));
-    }
-    function tick(){
-      state.raf=0; state.current+=(state.target-state.current)*ease;
-      if(Math.abs(state.target-state.current)<0.0004) state.current=state.target;
-      state.bar.style.transform=`scaleX(${state.current})`;
-      updateFeaturedProduct();
-      let settled=true;
-      if(duration()){
-        const time=state.current*(duration()-0.04);
-        if(Math.abs(time-state.lastSeek)>=0.008){
-          if(clip.seeking) settled=false;
-          else { state.lastSeek=time; clip.fastSeek?clip.fastSeek(time):(clip.currentTime=time); }
-        }
-      }
-      if(state.current!==state.target || !settled) state.raf=requestAnimationFrame(tick);
-    }
-    const kick=()=>{if(!state.raf) state.raf=requestAnimationFrame(tick);};
-    const goTo=position=>{if(!duration()) return; state.target=clamp(position,0,1); state.pos=state.target; specialRow.classList.add('hints-off'); kick();};
-    clip.addEventListener('loadedmetadata',()=>{state.current=state.target=state.pos;state.lastSeek=-1;state.bar.style.transform=`scaleX(${state.current})`;updateFeaturedProduct();if(state.pos)kick();});
-    clip.addEventListener('loadeddata',()=>{ if(!card.dataset.cover) setCover(card,clip); });
-    clip.addEventListener('loadeddata',()=>clip.play().then(()=>{clip.pause();if(state.live){state.lastSeek=-1;kick();}}).catch(()=>{}));
-    clip.addEventListener('error',()=>{
-      if(state.live && clip.dataset.sourceKind==='bucket'){
-        clip.dataset.sourceKind='fallback';
-        clip.src='demo/food-360p.mp4';
-      }
-    });
-    scrubPointer(element,()=>state.live&&duration()>0,()=>state.target,(base,dx)=>goTo(base-dx/element.clientWidth*dragGain()),card);
-    element.addEventListener('wheel',event=>{
-      if(!state.live || !duration() || Math.abs(event.deltaX)<=Math.abs(event.deltaY)) return;
-      event.preventDefault(); goTo(state.target+event.deltaX/600*wheelGain());
-    },{passive:false});
-    specialStates.set(card,state);
-    return state;
-  }
-  function setLive(state,on){
-    if(state.live===on) return;
-    state.live=on;
-    if(on){
-      const source=state.card.dataset.videoUrl;
-      state.clip.preload='auto';
-      state.clip.dataset.sourceKind=source?'bucket':'fallback';
-      state.clip.src=source || 'demo/food-360p.mp4';
-    }
-    else{
-      cancelAnimationFrame(state.raf);state.raf=0;state.lastSeek=-1;state.clip.pause();
-      state.clip.removeAttribute('src');state.clip.load();state.bar.style.transform='scaleX(0)';
-    }
-  }
-  function refreshLive(){
-    liveRaf=0;
-    if(!manifestReady || document.querySelector('.app.menu-mode') || !posterReady && scrollY<40) return;
-    const cards=[...specialRow.querySelectorAll('.special-card')];
-    if(!cards.length) return;
-    const midpoint=innerHeight/2, view=innerHeight;
-    const wanted=cards.map(card=>{const rect=card.getBoundingClientRect();return {state:stateFor(card),distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-view*.5&&rect.top<view*1.5};})
-      .filter(item=>item.near).sort((a,b)=>a.distance-b.distance).slice(0,maxLive).map(item=>item.state);
-    cards.forEach(card=>{const state=stateFor(card);if(!wanted.includes(state))setLive(state,false);});
-    wanted.forEach(state=>setLive(state,true));
-    pumpCovers(cards);
-  }
-  /* Cards that are near the viewport but not live get their first frame as cover, one video at a time. */
-  let coverBusy=false;
-  function captureCover(card){
-    return new Promise(resolve=>{
-      const v=document.createElement('video');
-      v.muted=true; v.playsInline=true; v.preload='auto';
-      let done=false, fellBack=!card.dataset.videoUrl;
-      const finish=ok=>{
-        if(done) return; done=true; clearTimeout(timer);
-        if(ok) setCover(card,v);
-        v.removeAttribute('src'); v.load(); resolve();
-      };
-      const timer=setTimeout(()=>finish(false),8000);
-      v.addEventListener('loadeddata',()=>finish(true));
-      v.addEventListener('error',()=>{
-        if(fellBack) return finish(false);
-        fellBack=true; v.src='demo/food-360p.mp4';
-      });
-      v.src=coverKey(card);
-    });
-  }
-  function pumpCovers(cards){
-    if(coverBusy) return;
-    const midpoint=innerHeight/2;
-    const next=cards
-      .filter(card=>!card.dataset.cover && !card.dataset.coverTried && !stateFor(card).live)
-      .map(card=>{const rect=card.getBoundingClientRect();return {card,distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-innerHeight*.5&&rect.top<innerHeight*1.5};})
-      .filter(item=>item.near).sort((a,b)=>a.distance-b.distance)[0];
-    if(!next) return;
-    coverBusy=true; next.card.dataset.coverTried='1';
-    captureCover(next.card).then(()=>{coverBusy=false; scheduleLive();});
-  }
-  function scheduleLive(){if(!liveRaf) liveRaf=requestAnimationFrame(refreshLive);}
-  addEventListener('scroll',scheduleLive,{passive:true});
-  addEventListener('resize',scheduleLive);
-  scheduleLive();
+//~   const specialRow=document.getElementById('specialRow');
+//~   const specialStates=new WeakMap();
+//~   const maxLive=3;
+//~   let liveRaf=0;
+//~   function stateFor(card){
+//~     let state=specialStates.get(card);
+//~     if(state) return state;
+//~     const element=card.querySelector('.special-video'), clip=element.querySelector('video'), bar=card.querySelector('.special-scrub i');
+//~     state={card,element,clip,bar,items:SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items||[],priceLabel:card.querySelector('.special-add-price'),foodRows:[...card.querySelectorAll('.special-foods li')],pos:0,target:0,current:0,lastSeek:-1,raf:0,live:false};
+//~     const duration=()=>clip.duration||0;
+//~     function updateFeaturedProduct(){
+//~       if(!state.items.length || !duration()) return;
+//~       const index=Math.min(state.items.length-1,Math.floor(state.current*duration()/2));
+//~       const item=state.items[index];
+//~       state.card.dataset.idx=String(index);
+//~       const price=Number(item?.price);
+//~       state.priceLabel.textContent=Number.isFinite(price)?money(price):'';
+//~       state.foodRows.forEach((food,rowIndex)=>food.classList.toggle('is-current',rowIndex===index));
+//~     }
+//~     function tick(){
+//~       state.raf=0; state.current+=(state.target-state.current)*ease;
+//~       if(Math.abs(state.target-state.current)<0.0004) state.current=state.target;
+//~       state.bar.style.transform=`scaleX(${state.current})`;
+//~       updateFeaturedProduct();
+//~       let settled=true;
+//~       if(duration()){
+//~         const time=state.current*(duration()-0.04);
+//~         if(Math.abs(time-state.lastSeek)>=0.008){
+//~           if(clip.seeking) settled=false;
+//~           else { state.lastSeek=time; clip.fastSeek?clip.fastSeek(time):(clip.currentTime=time); }
+//~         }
+//~       }
+//~       if(state.current!==state.target || !settled) state.raf=requestAnimationFrame(tick);
+//~     }
+//~     const kick=()=>{if(!state.raf) state.raf=requestAnimationFrame(tick);};
+//~     const goTo=position=>{if(!duration()) return; state.target=clamp(position,0,1); state.pos=state.target; specialRow.classList.add('hints-off'); kick();};
+//~     clip.addEventListener('loadedmetadata',()=>{state.current=state.target=state.pos;state.lastSeek=-1;state.bar.style.transform=`scaleX(${state.current})`;updateFeaturedProduct();if(state.pos)kick();});
+//~     clip.addEventListener('loadeddata',()=>{ if(!card.dataset.cover) setCover(card,clip); });
+//~     clip.addEventListener('loadeddata',()=>clip.play().then(()=>{clip.pause();if(state.live){state.lastSeek=-1;kick();}}).catch(()=>{}));
+//~     clip.addEventListener('error',()=>{
+//~       if(state.live && clip.dataset.sourceKind==='bucket'){
+//~         clip.dataset.sourceKind='fallback';
+//~         clip.src='demo/food-360p.mp4';
+//~       }
+//~     });
+//~     scrubPointer(element,()=>state.live&&duration()>0,()=>state.target,(base,dx)=>goTo(base-dx/element.clientWidth*dragGain()),card);
+//~     element.addEventListener('wheel',event=>{
+//~       if(!state.live || !duration() || Math.abs(event.deltaX)<=Math.abs(event.deltaY)) return;
+//~       event.preventDefault(); goTo(state.target+event.deltaX/600*wheelGain());
+//~     },{passive:false});
+//~     specialStates.set(card,state);
+//~     return state;
+//~   }
+//~   function setLive(state,on){
+//~     if(state.live===on) return;
+//~     state.live=on;
+//~     if(on){
+//~       const source=state.card.dataset.videoUrl;
+//~       state.clip.preload='auto';
+//~       state.clip.dataset.sourceKind=source?'bucket':'fallback';
+//~       state.clip.src=source || 'demo/food-360p.mp4';
+//~     }
+//~     else{
+//~       cancelAnimationFrame(state.raf);state.raf=0;state.lastSeek=-1;state.clip.pause();
+//~       state.clip.removeAttribute('src');state.clip.load();state.bar.style.transform='scaleX(0)';
+//~     }
+//~   }
+//~   function refreshLive(){
+//~     liveRaf=0;
+//~     if(!manifestReady || document.querySelector('.app.menu-mode') || !posterReady && scrollY<40) return;
+//~     const cards=[...specialRow.querySelectorAll('.special-card')];
+//~     if(!cards.length) return;
+//~     const midpoint=innerHeight/2, view=innerHeight;
+//~     const wanted=cards.map(card=>{const rect=card.getBoundingClientRect();return {state:stateFor(card),distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-view*.5&&rect.top<view*1.5};})
+//~       .filter(item=>item.near).sort((a,b)=>a.distance-b.distance).slice(0,maxLive).map(item=>item.state);
+//~     cards.forEach(card=>{const state=stateFor(card);if(!wanted.includes(state))setLive(state,false);});
+//~     wanted.forEach(state=>setLive(state,true));
+//~     pumpCovers(cards);
+//~   }
+//~   /* Cards that are near the viewport but not live get their first frame as cover, one video at a time. */
+//~   let coverBusy=false;
+//~   function captureCover(card){
+//~     return new Promise(resolve=>{
+//~       const v=document.createElement('video');
+//~       v.muted=true; v.playsInline=true; v.preload='auto';
+//~       let done=false, fellBack=!card.dataset.videoUrl;
+//~       const finish=ok=>{
+//~         if(done) return; done=true; clearTimeout(timer);
+//~         if(ok) setCover(card,v);
+//~         v.removeAttribute('src'); v.load(); resolve();
+//~       };
+//~       const timer=setTimeout(()=>finish(false),8000);
+//~       v.addEventListener('loadeddata',()=>finish(true));
+//~       v.addEventListener('error',()=>{
+//~         if(fellBack) return finish(false);
+//~         fellBack=true; v.src='demo/food-360p.mp4';
+//~       });
+//~       v.src=coverKey(card);
+//~     });
+//~   }
+//~   function pumpCovers(cards){
+//~     if(coverBusy) return;
+//~     const midpoint=innerHeight/2;
+//~     const next=cards
+//~       .filter(card=>!card.dataset.cover && !card.dataset.coverTried && !stateFor(card).live)
+//~       .map(card=>{const rect=card.getBoundingClientRect();return {card,distance:Math.abs((rect.top+rect.bottom)/2-midpoint),near:rect.bottom>-innerHeight*.5&&rect.top<innerHeight*1.5};})
+//~       .filter(item=>item.near).sort((a,b)=>a.distance-b.distance)[0];
+//~     if(!next) return;
+//~     coverBusy=true; next.card.dataset.coverTried='1';
+//~     captureCover(next.card).then(()=>{coverBusy=false; scheduleLive();});
+//~   }
+//~   function scheduleLive(){if(!liveRaf) liveRaf=requestAnimationFrame(refreshLive);}
+//~   addEventListener('scroll',scheduleLive,{passive:true});
+//~   addEventListener('resize',scheduleLive);
+//~   scheduleLive();
+
+  function scheduleLive(){}   // SPECIAL-PAUSED: no-op stand-in so the hero / poster code below stays valid
 
   async function startHero(){
     try{
@@ -2183,8 +2208,8 @@ Payment: confirmed (simulated)`;
     video.load();
     setTimeout(()=>{if(!heroReady){heroReady=true;scheduleLive();}},8000);
   }
-  const kick=()=>[video,...[...specialRow.querySelectorAll('.special-card')].map(card=>card.querySelector('video'))].forEach(clip=>clip.play().then(()=>clip.pause()).catch(()=>{}));
-  ['touchstart','pointerdown','wheel'].forEach(type=>addEventListener(type,kick,{once:true,passive:true}));
+//~   const kick=()=>[video,...[...specialRow.querySelectorAll('.special-card')].map(card=>card.querySelector('video'))].forEach(clip=>clip.play().then(()=>clip.pause()).catch(()=>{}));
+//~   ['touchstart','pointerdown','wheel'].forEach(type=>addEventListener(type,kick,{once:true,passive:true}));
   // startHero();  // DISABLED: hero video moved to index.html
   // heroReady deliberately stays false: there is no hero to scrub on this page, so the wheel / touch
   // handlers above never hijack page scrolling. The special clips lazy-load as they approach the
