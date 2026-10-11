@@ -473,11 +473,18 @@
   @media (prefers-reduced-motion:reduce){.cart-badge.pop{animation:none;}}
 
   /* ===== MENU PAGE (new flow) ===== */
-  /* banner (poster D): fits the width of the page; its height follows the image's own proportions (no fixed size, no cropping). */
+  /* banner (poster D): logo + banner always make exactly one screen. The banner takes whatever height the device leaves under the logo
+     (100svh = the screen as seen with the browser bars showing, so it still fits on phones). --topbar-h is the logo bar's real height,
+     measured by the script at the bottom of the page; until then it falls back to --brand-h. The image fills that box, trimming a little
+     from the sides / top and bottom where the screen's shape differs from the image's. */
   .topbar{min-height:0;}
   .topbar .logo-wrap img{max-height:none;}
-  .poster-d{position:relative; width:100%; background:#000; overflow:hidden;}
-  .poster-d img{width:100%; height:auto; display:block;}
+  .poster-d{
+    position:relative; width:100%; background:#000; overflow:hidden; min-height:160px;
+    height:calc(100vh - var(--topbar-h, var(--brand-h)));
+    height:calc(100svh - var(--topbar-h, var(--brand-h)));
+  }
+  .poster-d img{width:100%; height:100%; object-fit:cover; object-position:center; display:block;}
   .app.menu-mode .poster-d{display:none;}
   /* scroll indicator at the bottom of the second page: tells the visitor the menu is below, tap to go there */
   .poster-cue{
@@ -1264,6 +1271,16 @@ document.querySelectorAll('footer.tabs button').forEach(btn=>{
 });
 // (hero explore cue removed with the hero section)
 // document.getElementById('exploreCue').addEventListener('click', e=>{ e.preventDefault(); scrollToTab('menu'); });
+
+// logo bar + banner = one screen: tell the CSS how tall the (sticky) logo bar really is, so the banner can take the rest of the screen
+(()=>{
+  const bar = document.querySelector('.topbar');
+  if(!bar) return;
+  const set = ()=>document.documentElement.style.setProperty('--topbar-h', bar.offsetHeight + 'px');
+  set();
+  if(window.ResizeObserver) new ResizeObserver(set).observe(bar);   // logo image finishing loading, rotation, window resize
+  addEventListener('resize', set);
+})();
 
 // scroll indicator at the bottom of the poster (second page): scrolls down to the menu
 document.getElementById('posterCue').addEventListener('click', ()=>{
