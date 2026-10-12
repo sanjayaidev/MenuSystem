@@ -95,7 +95,7 @@ cp .env.example .env
 | `SUPABASE_URL` | yes | Your project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Server-side only, bypasses RLS |
 | `SUPABASE_ANON_KEY` | yes | Used only to verify login credentials on a client isolated from the service-role one (prevents a logged-in user's session from leaking into other requests) |
-| `IMGBB_API_KEY` | yes for menu image uploads | Imgbb API key used by the admin image upload proxy; never exposed to the browser |
+| `IMGBB_API_KEY` | no | Optional backup for admin menu image uploads. Images are stored in the Supabase `videos` bucket under `menu/`; Imgbb is only tried if that fails. Never exposed to the browser |
 | `PORT` | no (default 3000) | Local port |
 | `APP_URL` | yes | Used for the keep-alive pinger **and** as the base for the password-reset redirect link (see below) |
 | `ALLOWED_ORIGINS` | recommended | Comma-separated list of origins allowed to call this API cross-origin, e.g. `https://your-service.onrender.com,https://yourdomain.com`. Falls back to `APP_URL` alone if unset. Requests with no `Origin` header (curl, same-origin page loads) are always allowed regardless. |
@@ -186,7 +186,7 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 `frontend/admin.html`, served at `/admin`. Staff sign in with their normal email/password
 (must have `is_admin = true` — see section 1). The dashboard manages orders, categories,
 and menu items; category and item names/descriptions support English, Arabic, Urdu, and
-Chinese. Menu image uploads use `IMGBB_API_KEY` on the server. Category deletion is
+Chinese. Menu image uploads are stored in the Supabase `videos` bucket (`menu/`); `IMGBB_API_KEY` is an optional backup. Category deletion is
 blocked while it contains menu items, and menu item deletion keeps existing order snapshots.
 
 ## Order + WhatsApp flow (as built)

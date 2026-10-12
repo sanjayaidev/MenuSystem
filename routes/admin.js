@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const supabase = require('../db/supabase');
 const { parseOrderRef, sanitizeSearch } = require('../db/order-ref');
 const { requireAdmin } = require('../middleware/auth');
@@ -205,9 +206,37 @@ router.delete('/menu/:id', asyncHandler(async (req, res) => {
   res.json({ ok: true });
 }));
 
-// POST /api/admin/images — upload a data URL through the server so the Imgbb key stays private.
+// POST /api/admin/images — store a menu image and return its public URL.
+// Primary: the existing public `videos` bucket in Supabase (same one the poster, hero video and music use; see README),
+// under menu/. No third-party service or extra key is needed. Backup: Imgbb, only when IMGBB_API_KEY is set.
+const IMAGE_BUCKET = 'videos';
+const IMAGE_EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+
+async function uploadToSupabase(buffer, contentType) {
+  const objectPath = `menu/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${IMAGE_EXTENSIONS[contentType]}`;
+  const storage = supabase.storage.from(IMAGE_BUCKET);
+  const { error } = await storage.upload(objectPath, buffer, { contentType, cacheControl: '31536000', upsert: false });
+  if (error) throw new Error(error.message || 'Storage upload failed');
+  return storage.getPublicUrl(objectPath).data.publicUrl;
+}
+
+// Same request shape as the upload-imgbb.js script (multipart form with the file as a Blob), which is known to work.
+async function uploadToImgbb(buffer, contentType) {
+  const body = new FormData();
+  body.append('image', new Blob([buffer], { type: contentType }), `menu-${Date.now()}.${IMAGE_EXTENSIONS[contentType]}`);
+  body.append('name', `menu-${Date.now()}`);
+  const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(process.env.IMGBB_API_KEY.trim())}`, { method: 'POST', body });
+  const text = await response.text();
+  let result = null;
+  try { result = JSON.parse(text); } catch { /* not JSON, e.g. a block page */ }
+  if (!response.ok || !result?.success) {
+    throw new Error(result?.error?.message || result?.status_txt || `HTTP ${response.status}`);
+  }
+  // `url` is the original file exactly as uploaded; `display_url` can be resized/recompressed and made food photos look soft.
+  return result.data.url || result.data.image?.url || result.data.display_url;
+}
+
 router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), asyncHandler(async (req, res) => {
-  if (!process.env.IMGBB_API_KEY) return res.status(503).json({ error: 'IMGBB_API_KEY is not configured.' });
   const imageMatch = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/.exec(req.body || '');
   if (!imageMatch) return res.status(400).json({ error: 'Choose a JPEG, PNG, WebP, or GIF image.' });
 
@@ -216,28 +245,23 @@ router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), async
     return res.status(413).json({ error: 'Image must be smaller than 5 MB.' });
   }
 
-  // Same request shape as the upload-imgbb.js script (multipart form with the file as a Blob), which is known to work
-  // with this key. The old version sent the whole base64 string url-encoded, which imgbb can reject differently.
-  const extension = imageMatch[1].split('/')[1].replace('jpeg', 'jpg');
-  const uploadBody = new FormData();
-  uploadBody.append('image', new Blob([imageBuffer], { type: imageMatch[1] }), `menu-${Date.now()}.${extension}`);
-  uploadBody.append('name', `menu-${Date.now()}`);
-  const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(process.env.IMGBB_API_KEY.trim())}`, {
-    method: 'POST',
-    body: uploadBody,
-  });
-  const text = await response.text();
-  let result = null;
-  try { result = JSON.parse(text); } catch { /* not JSON, e.g. a block page */ }
-  if (!response.ok || !result?.success) {
-    const reason = result?.error?.message || result?.status_txt || `HTTP ${response.status}`;
-    console.error(`Imgbb upload failed (HTTP ${response.status}):`, reason);
-    // imgbb's own reason is safe to show to the (logged-in) admin and tells them whether it is the key, the size or a block.
-    return res.status(502).json({ error: `Image upload failed. Imgbb said: ${reason}` });
+  const reasons = [];
+  try {
+    return res.status(201).json({ url: await uploadToSupabase(imageBuffer, imageMatch[1]) });
+  } catch (error) {
+    console.error('Supabase image upload failed:', error.message);
+    reasons.push(`Storage said: ${error.message}`);
   }
-  // `url` is the original file exactly as uploaded. `display_url` is ImgBB's viewer copy, which can be
-  // resized/recompressed, so it was making sharp food photos look soft. Always store the original.
-  res.status(201).json({ url: result.data.url || result.data.image?.url || result.data.display_url });
+  if (process.env.IMGBB_API_KEY) {
+    try {
+      return res.status(201).json({ url: await uploadToImgbb(imageBuffer, imageMatch[1]) });
+    } catch (error) {
+      console.error('Imgbb image upload failed:', error.message);
+      reasons.push(`Imgbb said: ${error.message}`);
+    }
+  }
+  // These reasons come from Supabase / imgbb (never the keys) and are shown to the logged-in admin so they can fix the cause.
+  res.status(502).json({ error: `Image upload failed. ${reasons.join(' ')}` });
 }));
 
 // GET /api/admin/orders?status=pending&q=RH-2609&date=2026-09-28

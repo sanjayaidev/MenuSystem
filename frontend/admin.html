@@ -134,6 +134,9 @@
   .card-image-preview img{width:132px; height:74px; object-fit:cover; border:1px solid var(--line); border-radius:6px; background:var(--bg);}
   .card-image-preview.is-png img{object-fit:contain; background:#fff repeating-conic-gradient(#d9d9d9 0 25%, #fff 0 50%) 0 0/14px 14px;}
   .field-hint{margin:4px 0 0; color:var(--muted); font-size:11px;}
+  .image-advanced{margin-top:14px;}
+  .image-advanced summary{cursor:pointer; color:var(--muted); font-size:12px;}
+  .image-advanced .image-tools{grid-template-columns:minmax(0,1fr);}
   .form-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px;}
   .action-btn{border:1px solid var(--line); border-radius:6px; padding:8px 12px; background:#26231f; color:var(--text); font:inherit; font-size:12px; font-weight:650; cursor:pointer;}
   .action-btn.primary{background:var(--gold); color:#1a1408; border-color:var(--gold);}
@@ -327,10 +330,6 @@
           <label><input type="checkbox" name="is_available" id="itemAvailable" checked> <span data-ui="availableToOrder">Available to order</span></label>
           <label><input type="checkbox" name="is_offer" id="itemOffer"> <span data-ui="featuredOffer">Featured offer</span></label>
         </div>
-        <div class="image-tools">
-          <label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label>
-          <div><label><span data-ui="uploadImage">Upload image</span><input id="itemImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><button class="action-btn" id="imageUploadBtn" type="button" disabled data-ui="uploadToImgbb">Upload to Imgbb</button></div>
-        </div>
         <!-- Menu card layers: 1 = background (this block), 2 = the card (automatic), 3 = food PNG (next block) -->
         <div class="image-tools">
           <label><span data-ui="cardBgImage">Card background image (layer 1)</span><input name="bg_image_url" id="itemBgUrl" type="url" placeholder="https://..."></label>
@@ -343,6 +342,10 @@
         </div>
         <p class="field-hint" data-ui="foodPngHint">Leave the food PNG empty to use the item image above on the menu card.</p>
         <div class="image-preview card-image-preview is-png" id="itemFoodPreview"></div>
+        <details class="image-advanced">
+          <summary data-ui="plainPhotoSummary">Plain product photo URL (optional, fills itself from the Food PNG)</summary>
+          <div class="image-tools"><label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label></div>
+        </details>
         <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit" data-ui="createMenuItem">Create menu item</button><button class="action-btn" id="itemCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
       </form>
       <div class="toolbar"><span class="count" id="menuResultCount"></span><input class="search-input" id="menuSearch" type="search" placeholder="Search menu items" data-ui-placeholder="searchMenuItems"></div>
@@ -370,9 +373,9 @@ const ADMIN_UI_STRINGS = {
     newMenuItem:'New menu item', editMenuItem:'Edit menu item', fallbackFoodImage:'Fallback food image',
     category:'Category', chooseCategory:'Choose a category', price:'Price', calories:'Calories', rating:'Rating', popularity:'Popularity',
     itemTranslationLanguage:'Menu item translation language', availableToOrder:'Available to order', featuredOffer:'Featured offer',
-    imageUrl:'Image URL', uploadImage:'Upload image', uploadToImgbb:'Upload to Imgbb', createMenuItem:'Create menu item',
+    imageUrl:'Image URL', uploadImage:'Upload image', uploadToImgbb:'Upload', createMenuItem:'Create menu item',
     cardBgImage:'Card background image (layer 1)', foodPngImage:'Food PNG, transparent (layer 3)',
-    foodPngHint:'Leave the food PNG empty to use the item image above on the menu card.',
+    foodPngHint:'This is the dish picture everywhere: menu card, details page and cart.', plainPhotoSummary:'Plain product photo URL (optional, fills itself from the Food PNG)',
     saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', searchOrders:'Search order no. or phone', edit:'Edit', delete:'Delete',
     all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', completed:'Completed', cancelled:'Cancelled',
     orderCount:'{count} orders', orderCountOne:'1 order', paid:'Paid', unpaid:'Unpaid',
@@ -415,9 +418,9 @@ const ADMIN_UI_STRINGS = {
     newMenuItem:'صنف جديد', editMenuItem:'تعديل الصنف', fallbackFoodImage:'صورة الطعام الافتراضية',
     category:'الفئة', chooseCategory:'اختر فئة', price:'السعر', calories:'السعرات الحرارية', rating:'التقييم', popularity:'الشعبية',
     itemTranslationLanguage:'لغة ترجمة الصنف', availableToOrder:'متاح للطلب', featuredOffer:'عرض مميز',
-    imageUrl:'رابط الصورة', uploadImage:'رفع صورة', uploadToImgbb:'رفع إلى Imgbb', createMenuItem:'إنشاء صنف',
+    imageUrl:'رابط الصورة', uploadImage:'رفع صورة', uploadToImgbb:'رفع', createMenuItem:'إنشاء صنف',
     cardBgImage:'صورة خلفية البطاقة (الطبقة 1)', foodPngImage:'صورة الطعام PNG شفافة (الطبقة 3)',
-    foodPngHint:'اترك صورة PNG فارغة لاستخدام صورة الصنف أعلاه في بطاقة القائمة.',
+    foodPngHint:'هذه صورة الطبق في كل مكان: بطاقة القائمة وصفحة التفاصيل والسلة.', plainPhotoSummary:'رابط صورة عادية للمنتج (اختياري، يُملأ تلقائياً من صورة PNG)',
     saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', searchOrders:'بحث برقم الطلب أو الهاتف', edit:'تعديل', delete:'حذف',
     all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', completed:'مكتمل', cancelled:'ملغي',
     orderCount:'عدد الطلبات: {count}', orderCountOne:'طلب واحد', paid:'مدفوع', unpaid:'غير مدفوع',
@@ -460,9 +463,9 @@ const ADMIN_UI_STRINGS = {
     newMenuItem:'نیا مینو آئٹم', editMenuItem:'مینو آئٹم تبدیل کریں', fallbackFoodImage:'متبادل کھانے کی تصویر',
     category:'زمرہ', chooseCategory:'زمرہ منتخب کریں', price:'قیمت', calories:'کیلوریز', rating:'ریٹنگ', popularity:'مقبولیت',
     itemTranslationLanguage:'مینو آئٹم کی ترجمہ زبان', availableToOrder:'آرڈر کے لیے دستیاب', featuredOffer:'نمایاں آفر',
-    imageUrl:'تصویر کا URL', uploadImage:'تصویر اپ لوڈ کریں', uploadToImgbb:'Imgbb پر اپ لوڈ کریں', createMenuItem:'مینو آئٹم بنائیں',
+    imageUrl:'تصویر کا URL', uploadImage:'تصویر اپ لوڈ کریں', uploadToImgbb:'اپ لوڈ', createMenuItem:'مینو آئٹم بنائیں',
     cardBgImage:'کارڈ کی پس منظر تصویر (پرت 1)', foodPngImage:'کھانے کی شفاف PNG تصویر (پرت 3)',
-    foodPngHint:'مینو کارڈ پر اوپر والی آئٹم تصویر استعمال کرنے کے لیے PNG خالی چھوڑ دیں۔',
+    foodPngHint:'یہ ہر جگہ ڈش کی تصویر ہے: مینو کارڈ، تفصیل کا صفحہ اور کارٹ۔', plainPhotoSummary:'سادہ پروڈکٹ تصویر کا لنک (اختیاری، PNG سے خود بھر جاتا ہے)',
     saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', searchOrders:'آرڈر نمبر یا فون سے تلاش کریں', edit:'ترمیم', delete:'حذف',
     all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', completed:'مکمل', cancelled:'منسوخ',
     orderCount:'آرڈرز: {count}', orderCountOne:'ایک آرڈر', paid:'ادا شدہ', unpaid:'غیر ادا شدہ',
@@ -505,9 +508,9 @@ const ADMIN_UI_STRINGS = {
     newMenuItem:'新建菜单商品', editMenuItem:'编辑菜单商品', fallbackFoodImage:'默认食物图片',
     category:'分类', chooseCategory:'选择分类', price:'价格', calories:'卡路里', rating:'评分', popularity:'人气',
     itemTranslationLanguage:'商品翻译语言', availableToOrder:'可供下单', featuredOffer:'精选优惠',
-    imageUrl:'图片网址', uploadImage:'上传图片', uploadToImgbb:'上传到 Imgbb', createMenuItem:'创建商品',
+    imageUrl:'图片网址', uploadImage:'上传图片', uploadToImgbb:'上传', createMenuItem:'创建商品',
     cardBgImage:'卡片背景图（第 1 层）', foodPngImage:'食物透明 PNG（第 3 层）',
-    foodPngHint:'食物 PNG 留空时，菜单卡片将使用上方的商品图片。',
+    foodPngHint:'这是菜品在各处使用的图片：菜单卡片、详情页和购物车。', plainPhotoSummary:'普通商品图片链接（可选，自动取自食物 PNG）',
     saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', searchOrders:'按订单号或电话搜索', edit:'编辑', delete:'删除',
     all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', completed:'已完成', cancelled:'已取消',
     orderCount:'共 {count} 个订单', orderCountOne:'1 个订单', paid:'已付款', unpaid:'未付款',
@@ -739,6 +742,7 @@ Object.keys(POSTER_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS
 
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
+let plainPhotoSyncedTo = '';   // Food PNG URL last copied into the plain Image URL field (see syncPlainPhoto)
 if(adminUiLanguage === 'ur') adminUiLanguage = 'en'; // Urdu hidden for now
 let currentFilter = 'all';
 let autoRefreshTimer = null;
@@ -1254,7 +1258,7 @@ function renderMenu(){
     return;
   }
   records.innerHTML = filtered.map(item => {
-    const imageUrl = typeof item.image_path === 'string' ? item.image_path.trim() : '';
+    const imageUrl = (typeof item.food_png_url === 'string' && item.food_png_url.trim()) || (typeof item.image_path === 'string' ? item.image_path.trim() : '');
     return `
       <div class="record">
         <div class="record-main">
@@ -1278,9 +1282,9 @@ function renderMenu(){
 
 function updateImagePreview(url){
   const preview = document.getElementById('itemImagePreview');
-  // Same order as the customer menu: the Image URL, otherwise the Food PNG. Only when both are empty is it the fallback.
+  // Same order as the customer menu: the Food PNG, otherwise the plain Image URL. Only when both are empty is it the fallback.
   const foodUrl = (document.getElementById('itemFoodUrl')?.value || '').trim();
-  const imageUrl = (typeof url === 'string' ? url.trim() : '') || foodUrl;
+  const imageUrl = foodUrl || (typeof url === 'string' ? url.trim() : '');
   const label = adminText(imageUrl ? 'imagePreview' : 'fallbackFoodImage');
   preview.innerHTML = `<img src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(label)}"><span>${label}</span>`;
 }
@@ -1301,8 +1305,7 @@ function resetItemForm(){
   document.getElementById('itemFormTitle').textContent = adminText('newMenuItem');
   document.getElementById('itemSubmit').textContent = adminText('createMenuItem');
   document.getElementById('itemCancel').hidden = true;
-  document.getElementById('itemImageFile').value = '';
-  document.getElementById('imageUploadBtn').disabled = true;
+  plainPhotoSyncedTo = '';
   for(const id of ['itemBgFile', 'itemFoodFile']) document.getElementById(id).value = '';
   for(const id of ['itemBgUploadBtn', 'itemFoodUploadBtn']) document.getElementById(id).disabled = true;
   updateCardPreview('itemBgPreview', '');
@@ -1357,6 +1360,7 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
     document.getElementById('itemFormTitle').textContent = adminText('editMenuItem');
     document.getElementById('itemSubmit').textContent = adminText('saveMenuItem');
     document.getElementById('itemCancel').hidden = false;
+    plainPhotoSyncedTo = (item.food_png_url && item.image_path === item.food_png_url) ? item.food_png_url : '';
     updateImagePreview(item.image_path || '');
     updateCardPreview('itemBgPreview', item.bg_image_url || '');
     updateCardPreview('itemFoodPreview', item.food_png_url || '');
@@ -1379,48 +1383,27 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
 
 document.getElementById('menuSearch').addEventListener('input', renderMenu);
 document.getElementById('itemImageUrl').addEventListener('input', event => updateImagePreview(event.currentTarget.value.trim()));
-document.getElementById('itemImageFile').addEventListener('change', event => {
-  document.getElementById('imageUploadBtn').disabled = !event.currentTarget.files.length;
-});
-document.getElementById('imageUploadBtn').addEventListener('click', async event => {
-  const file = document.getElementById('itemImageFile').files[0];
-  if(!file) return;
-  if(file.size > 5 * 1024 * 1024){
-    setFormNote('itemNote', adminText('imageTooLarge'), true);
+/* ---------- menu card layers: background image + food PNG (same Imgbb upload as the item image) ---------- */
+// The plain Image URL (menu_items.image_path) is still read by older screens (homepage, admin list). To keep one upload per dish,
+// it follows the Food PNG automatically, unless the admin typed a different plain photo on purpose.
+function syncPlainPhoto(){
+  const photo = document.getElementById('itemImageUrl');
+  const food = document.getElementById('itemFoodUrl').value.trim();
+  const current = photo.value.trim();
+  if(!food){
+    if(plainPhotoSyncedTo && current === plainPhotoSyncedTo) photo.value = '';
+    plainPhotoSyncedTo = '';
     return;
   }
-  const button = event.currentTarget;
-  button.disabled = true;
-  setFormNote('itemNote', adminText('uploadingImage'));
-  try{
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error(adminText('imageUploadFailed')));
-      reader.readAsDataURL(file);
-    });
-    const result = await adminRequest('/images', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: dataUrl,
-    });
-    document.getElementById('itemImageUrl').value = result.url;
-    updateImagePreview(result.url);
-    setFormNote('itemNote', adminText('imageUploaded'));
-  }catch(error){
-    setFormNote('itemNote', error.message || adminText('imageUploadFailed'), true);
-  }finally{
-    button.disabled = !document.getElementById('itemImageFile').files.length;
-  }
-});
+  if(!current || current === plainPhotoSyncedTo){ photo.value = food; plainPhotoSyncedTo = food; }
+}
 
-/* ---------- menu card layers: background image + food PNG (same Imgbb upload as the item image) ---------- */
-function wireCardImageUpload({ urlId, fileId, buttonId, previewId }){
+function wireCardImageUpload({ urlId, fileId, buttonId, previewId, onChange }){
   const urlInput = document.getElementById(urlId);
   const fileInput = document.getElementById(fileId);
   const button = document.getElementById(buttonId);
   const refreshTopPreview = () => updateImagePreview(document.getElementById('itemImageUrl').value);   // the header preview also follows the Food PNG
-  urlInput.addEventListener('input', () => { updateCardPreview(previewId, urlInput.value); refreshTopPreview(); });
+  urlInput.addEventListener('input', () => { updateCardPreview(previewId, urlInput.value); if(onChange) onChange(); refreshTopPreview(); });
   fileInput.addEventListener('change', () => { button.disabled = !fileInput.files.length; });
   button.addEventListener('click', async () => {
     const file = fileInput.files[0];
@@ -1445,6 +1428,7 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId }){
       });
       urlInput.value = result.url;
       updateCardPreview(previewId, result.url);
+      if(onChange) onChange();
       refreshTopPreview();
       setFormNote('itemNote', adminText('imageUploaded'));
     }catch(error){
@@ -1455,7 +1439,7 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId }){
   });
 }
 wireCardImageUpload({ urlId:'itemBgUrl', fileId:'itemBgFile', buttonId:'itemBgUploadBtn', previewId:'itemBgPreview' });
-wireCardImageUpload({ urlId:'itemFoodUrl', fileId:'itemFoodFile', buttonId:'itemFoodUploadBtn', previewId:'itemFoodPreview' });
+wireCardImageUpload({ urlId:'itemFoodUrl', fileId:'itemFoodFile', buttonId:'itemFoodUploadBtn', previewId:'itemFoodPreview', onChange: syncPlainPhoto });
 
 /* ---------- public-bucket homepage and Special videos ---------- */
 let currentBannerData = null;

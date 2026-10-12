@@ -992,7 +992,7 @@ function safeImgUrl(raw){
 }
 function itemImgPath(item){
   if(!hasImageUrl(item)) return dishImgPath(item.cat, item.name.en);
-  return safeImgUrl(item.imagePath) || safeImgUrl(item.foodPng);   // Image URL first, then the Food PNG used on the menu card
+  return safeImgUrl(item.foodPng) || safeImgUrl(item.imagePath);   // Food PNG first (same as the menu card), then the plain Image URL
 }
 const FALLBACK_ICON = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
   '<circle cx="50" cy="50" r="30" fill="none" stroke="#3a3630" stroke-width="3"/>' +
@@ -1660,7 +1660,7 @@ function openItemModal(id){
   if(imageUrl){
     modalImg.style.display = '';
     // a transparent food PNG should be shown whole (not cropped to the hero) and lifted off the background with a soft shadow
-    const pngMode = !safeImgUrl(modalItem.imagePath) && Boolean(safeImgUrl(modalItem.foodPng));
+    const pngMode = Boolean(safeImgUrl(modalItem.foodPng));
     modalImg.style.objectFit = pngMode ? 'contain' : '';
     modalImg.style.filter = pngMode ? 'drop-shadow(0 6px 10px rgba(0,0,0,.45))' : '';
     modalImg.src = imageUrl;
