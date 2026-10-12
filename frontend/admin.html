@@ -133,6 +133,9 @@
   .card-image-preview:empty{display:none;}
   .card-image-preview img{width:132px; height:74px; object-fit:cover; border:1px solid var(--line); border-radius:6px; background:var(--bg);}
   .card-image-preview.is-png img{object-fit:contain; background:#fff repeating-conic-gradient(#d9d9d9 0 25%, #fff 0 50%) 0 0/14px 14px;}
+  /* Saudi Riyal sign (Unicode U+20C1, glyph outline from the MIT-licensed `riyal` package). Drawn as an SVG because most device fonts do not have the character yet. */
+  .money{white-space:nowrap; direction:ltr; unicode-bidi:isolate;}
+  .money .riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
   .field-hint{margin:4px 0 0; color:var(--muted); font-size:11px;}
   .image-advanced{margin-top:14px;}
   .image-advanced summary{cursor:pointer; color:var(--muted); font-size:12px;}
@@ -169,6 +172,7 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="riyal-sign" viewBox="0 0 1124.14 1256.39"><path d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></symbol></defs></svg>
 
 <header>
   <h1>Red House Catering — <span data-ui="adminTitle">Admin</span></h1>
@@ -806,7 +810,7 @@ document.getElementById('adminLanguageSelect').addEventListener('change', event 
 });
 
 function authHeaders(){ return token ? { Authorization: `Bearer ${token}` } : {}; }
-function money(n){ return `$${Number(n).toFixed(2)}`; }
+function money(n){ return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${Number(n).toFixed(2)}</span>`; }   // Saudi Riyal sign + amount (page markup only)
 async function readApiJson(response){
   const body = await response.text();
   if(!body.trim()) throw new Error(`Server returned an empty response (HTTP ${response.status}).`);

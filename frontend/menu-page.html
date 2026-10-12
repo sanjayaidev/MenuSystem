@@ -209,6 +209,9 @@
     letter-spacing:.06em; text-transform:uppercase; font-size:max(12px, calc(3.2 * var(--u))); line-height:1.2;
     color:var(--ink); overflow-wrap:anywhere;
   }
+  /* Saudi Riyal sign (Unicode U+20C1, glyph outline from the MIT-licensed `riyal` package). Drawn as an SVG because most device fonts do not have the character yet. */
+  .money{white-space:nowrap; direction:ltr; unicode-bidi:isolate;}
+  .money .riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
   .row .price{
     margin:0; font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:700;
     font-size:max(16px, calc(4.6 * var(--u))); line-height:1; letter-spacing:.02em; color:#5b4a2c;
@@ -574,6 +577,7 @@
 
   <!-- ornaments for the menu cards, defined once and reused with <use> -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <symbol id="riyal-sign" viewBox="0 0 1124.14 1256.39"><path d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></symbol>
     <symbol id="rh-corner" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 45V14C3 7 8 3 15 3h30"/><path d="M9 45V18c0-6 3-9 9-9h27" opacity=".6"/><path d="M15 15c4-5 9-5 11-1-4 0-6 2-6 6-4 0-6-2-5-5z"/></g></symbol>
     <symbol id="rh-flourish" viewBox="0 0 120 24"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 17h38c6 0 8-6 12-6"/><path d="M118 17H80c-6 0-8-6-12-6"/><path d="M52 11c3-9 13-9 16 0-3-4-5-5-8-5s-5 1-8 5z" fill="currentColor" stroke="none"/><circle cx="60" cy="19" r="2" fill="currentColor" stroke="none"/></g></symbol>
   </defs></svg>
@@ -1168,7 +1172,7 @@ function render(){
   // No food PNG? the item's normal image is used, so existing items keep working.
   listEl.innerHTML = items.map(i=>{
     const name = i.name[lang];
-    const price = money(i.price);
+    const price = moneyHtml(i.price);
     const bgUrl = safeImgUrl(i.bgImage);
     const pngUrl = safeImgUrl(i.foodPng);
     const foodUrl = pngUrl || itemImgPath(i);
@@ -1180,14 +1184,14 @@ function render(){
         ${corner('tl')}${corner('tr')}${corner('bl')}${corner('br')}
         <svg class="flourish" viewBox="0 0 120 24" aria-hidden="true"><use href="#rh-flourish"/></svg>
         <h3 class="name">${escapeHtml(name)}</h3>
-        <p class="price">${escapeHtml(price)}</p>
+        <p class="price">${price}</p>
       </div>
       <div class="food">
         ${foodUrl ? `<img src="${escapeHtml(foodUrl)}" alt="" loading="lazy" decoding="async" data-cat="${escapeHtml(i.cat || '')}" data-has-image-url="${hasUrl}">` : ''}
         ${!hasUrl ? `<div class="thumb-fallback">${FALLBACK_ICON}</div>` : ''}
       </div>
       <button class="open" type="button" aria-label="${escapeHtml(name)}"></button>
-      <button class="add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b>${escapeHtml(price)}</b></button>
+      <button class="add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b>${price}</b></button>
     </article>`;
   }).join('');
 
@@ -1336,7 +1340,7 @@ document.getElementById('posterCue').addEventListener('click', ()=>{
    the server (GET /api/config), which reads them from env vars, so
    there's one source of truth instead of duplicating them here.
    ===================================================================== */
-const CURRENCY = '$';
+const CURRENCY = 'SAR';
 const API_BASE = window.location.origin;
 let DELIVERY_FEE = 20;          // overwritten by loadConfig() below
 let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
@@ -1638,7 +1642,10 @@ function pruneUnavailableCart(){
 function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
 function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
 function cartTotal(){ return cartSubtotal() + cartDeliveryFee(); }
-function money(n){ return `${CURRENCY}${n.toFixed(2)}`; }
+function money(n){ return `${CURRENCY} ${Number(n).toFixed(2)}`; }   // plain text (WhatsApp message): the sign is not in most fonts, so it says SAR
+// Page markup: the Saudi Riyal sign before the amount, in every language (it reads as amount-then-riyal in Arabic too).
+function moneyHtml(n){ return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${Number(n).toFixed(2)}</span>`; }
+function setMoney(el, n){ el.innerHTML = moneyHtml(n); }
 
 /* ---------- ITEM MODAL ---------- */
 const itemModal = document.getElementById('itemModal');
@@ -1694,7 +1701,7 @@ function openItemModal(id){
 function updateModalAddBtn(){
   const price = itemPrice(modalItem) * modalQty;
   document.getElementById('itemModalAdd').innerHTML =
-    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${money(price)} · ${STR[lang].addToCart}`;
+    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${moneyHtml(price)} · ${STR[lang].addToCart}`;
 }
 document.getElementById('itemModalClose').addEventListener('click', ()=> closeOverlay(itemModal));
 document.getElementById('itemModalPlus').addEventListener('click', ()=>{
@@ -1761,7 +1768,7 @@ function renderCart(){
         </div>
       </div>
       <div class="cart-thumb">${itemImgPath(l.item) ? `<img src="${escapeHtml(itemImgPath(l.item))}" alt="" data-cat="${escapeHtml(l.item.cat || '')}" data-has-image-url="${hasImageUrl(l.item)}">` : ''}</div>
-      <div class="price">${money(l.lineTotal)}</div>
+      <div class="price">${moneyHtml(l.lineTotal)}</div>
     </div>`).join('');
 
   listEl2.querySelectorAll('.cart-thumb img').forEach(wireImgFallback);
@@ -1772,10 +1779,10 @@ function renderCart(){
     row.querySelector('[data-action="remove"]').addEventListener('click', ()=>{ cartSet(id, 0); renderCart(); });
   });
 
-  document.getElementById('cartSubtotalVal').textContent = money(cartSubtotal());
+  setMoney(document.getElementById('cartSubtotalVal'), cartSubtotal());
   document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
-  document.getElementById('cartDeliveryVal').textContent = money(cartDeliveryFee());
-  document.getElementById('cartTotalVal').textContent = money(cartTotal());
+  setMoney(document.getElementById('cartDeliveryVal'), cartDeliveryFee());
+  setMoney(document.getElementById('cartTotalVal'), cartTotal());
 }
 document.getElementById('cartCheckoutBtn').addEventListener('click', ()=>{
   closeOverlay(cartOverlay);
@@ -1860,7 +1867,7 @@ async function loadProfileOrders(){
   if(!orders.length){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].noOrders)}</p>`; return; }
   ordersEl.innerHTML = orders.map(order => {
     const items = order.order_items.map(item => `${item.quantity} × ${escapeHtml(item.name_snapshot)}`).join(', ');
-    return `<div class="profile-order"><div class="profile-order-head"><span>${escapeHtml(order.order_number || '#'+order.id)}</span><span>${escapeHtml(money(Number(order.total)))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
+    return `<div class="profile-order"><div class="profile-order-head"><span>${escapeHtml(order.order_number || '#'+order.id)}</span><span>${moneyHtml(Number(order.total))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
   }).join('');
 }
 function openProfile(){
@@ -1956,7 +1963,7 @@ function refreshCheckoutStaticText(){
   document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
   document.getElementById('checkoutTotalLabel').textContent = STR[lang].finalTotal;
   if(!checkoutOverlay.dataset.submitting){
-    document.getElementById('checkoutPayBtn').textContent = `${STR[lang].payBtn} · ${money(cartTotal())}`;
+    document.getElementById('checkoutPayBtn').innerHTML = `${escapeHtml(STR[lang].payBtn)} · ${moneyHtml(cartTotal())}`;
   }
 }
 function openCheckout(){
@@ -1968,10 +1975,10 @@ function openCheckout(){
   }
   document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
   document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
-  document.getElementById('checkoutSubVal').textContent = money(cartSubtotal());
+  setMoney(document.getElementById('checkoutSubVal'), cartSubtotal());
   document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
-  document.getElementById('checkoutDeliveryVal').textContent = money(cartDeliveryFee());
-  document.getElementById('checkoutTotalVal').textContent = money(cartTotal());
+  setMoney(document.getElementById('checkoutDeliveryVal'), cartDeliveryFee());
+  setMoney(document.getElementById('checkoutTotalVal'), cartTotal());
   document.getElementById('checkoutStatusNote').textContent = '';
   openOverlay(checkoutOverlay);
 }
