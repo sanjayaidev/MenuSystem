@@ -165,9 +165,10 @@
   .app.menu-mode .controls{order:2; padding-top:6px;}
 
     /* ===== MENU CARD: three layers inside one 2.5:1 box =====
-     1  .bg    background picture (admin: "Card background image"), fills the strip left of the card (best: 3:4 portrait)
+     1  .bg    background picture (admin: "Card background image"), fills the strip left of the card (shown at 33.3% x 100% of the box = 5:6 portrait; upload 1080x1296, the item pop-up shows it full width)
       2  .card  parchment card covering the right two thirds: name, price, Add to cart
      3  .food  transparent food PNG (admin: "Food PNG"), right-aligned and drawn over the background AND the card
+               (card shows it ~240x161 px max, the item pop-up ~340 px tall: upload a tightly cropped 1200x1200 cutout)
      Tune the look with --card-w and --food-overlap. Both are a share of the box width. */
   .row{
     --u:calc(min(100vw - 32px, 448px) / 100);   /* 1% of the card width (app is 480px wide with 16px side padding) */
@@ -1077,7 +1078,7 @@ const listEl = document.getElementById('list');
    POPULAR_KEY is the virtual "Most Popular" box: the POPULAR_COUNT best-selling dishes, whatever their category. */
 const POPULAR_KEY = '__popular';
 const POPULAR_COUNT = 8;
-const POPULAR_SORT_ORDER = 7;   // position of the Most Popular box among the category sort_order values
+const POPULAR_SORT_ORDER = 8;   // position of the Most Popular box among the category sort_order values (after Side Orders = 7, before Dine In = 9; see db/11_menu_update_oct2026.sql)
 let currentCat = 'all';
 
 function renderCategoryRow(){
@@ -1437,7 +1438,7 @@ async function loadMenuData(){
     }));
 
     // "Most Popular" is not a database category: it is a box that lists the best-selling dishes.
-    // It sits 7th, between the six food categories and Dine In / Outside Catering (see db/10_nine_categories.sql).
+    // It sits 8th, after the seven food categories (incl. Side Orders) and before Dine In / Outside Catering (see db/11_menu_update_oct2026.sql).
     CATS.push({
       key: POPULAR_KEY,
       sort_order: POPULAR_SORT_ORDER,
@@ -1457,7 +1458,7 @@ async function loadMenuData(){
       bgImage: i.bg_image_url || '',      // menu card layer 1
       foodPng: i.food_png_url || '',      // menu card layer 3
       name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
-      desc: { en:i.description_en || null },
+      desc: { en:i.description_en || null, ar:i.description_ar || null, ur:i.description_ur || null, zh:i.description_zh || null },
     }));
   }catch(err){
     console.error('Failed to load menu from server:', err);
@@ -1557,7 +1558,8 @@ async function loadCartFromServer(){
     if(!res.ok) throw new Error(`GET /api/cart failed (${res.status})`);
     const { items } = await res.json();
     cart = {};
-    items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+    items.forEach(row => { if(row.menu_items && row.menu_items.is_available !== false) cart[row.menu_item_id] = row.quantity; });
+    pruneUnavailableCart();
     updateCartBadge();
   }catch(err){
     console.error('Failed to load cart from server:', err);
@@ -1579,7 +1581,8 @@ async function mergeGuestCartIntoServer(){
       if(!res.ok) throw new Error(`POST /api/cart/merge failed (${res.status})`);
       const { items } = await res.json();
       cart = {};
-      items.forEach(row => { if(row.menu_items) cart[row.menu_item_id] = row.quantity; });
+      items.forEach(row => { if(row.menu_items && row.menu_items.is_available !== false) cart[row.menu_item_id] = row.quantity; });
+      pruneUnavailableCart();
     }else{
       await loadCartFromServer();
     }
@@ -1615,6 +1618,20 @@ function cartLines(){
     const item = itemById(Number(id));
     return { item, qty, lineTotal: itemPrice(item)*qty };
   }).filter(l=>l.item);
+}
+// A saved cart (guest localStorage or the signed-in user's server cart) can still hold dishes that were
+// later removed from the menu. cartLines() already hides them, but cartCount() (the basket badge) would
+// still count them. Drop them here, once the menu has loaded, so badge, basket and order always agree.
+function pruneUnavailableCart(){
+  if(!ITEMS.length) return;   // menu failed to load: don't wipe a good cart because of a network error
+  const stale = Object.keys(cart).map(Number).filter(id => !itemById(id));
+  if(!stale.length) return;
+  stale.forEach(id => { delete cart[id]; });
+  if(authToken){
+    stale.forEach(id => fetch(`${API_BASE}/api/cart/${id}`, { method:'DELETE', headers:authHeaders() }).catch(()=>{}));
+  }else{
+    saveGuestCart();
+  }
 }
 function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
 function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
@@ -1660,10 +1677,10 @@ function openItemModal(id){
   document.getElementById('itemModalName').textContent = modalItem.name[lang];
   document.getElementById('itemModalEnName').textContent = lang==='en' ? '' : modalItem.name.en;
   document.getElementById('itemModalEnName').style.display = lang==='en' ? 'none' : 'block';
-  // Prefer the real ingredient description from the DB (English only, for
-  // now — no ar/ur/zh descriptions have been entered yet); otherwise fall
-  // back to the generic template so every language still shows something.
-  const realDesc = lang==='en' && modalItem.desc && modalItem.desc.en;
+  // Prefer the real ingredient description from the DB in the visitor's own
+  // language (description_en / _ar / _ur / _zh); only when that one is empty
+  // fall back to the generic template so every language still shows something.
+  const realDesc = modalItem.desc && modalItem.desc[lang];
   document.getElementById('itemModalDesc').textContent = realDesc || STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
   document.getElementById('itemModalIncludesTitle').textContent = STR[lang].includesTitle;
   document.getElementById('itemModalIncludesText').textContent = STR[lang].includesText;
@@ -2045,6 +2062,7 @@ Payment: confirmed (simulated)`;
     await loadCartFromServer();
   }else{
     cart = loadGuestCart();
+    pruneUnavailableCart();
   }
   updateCartBadge();
   setLang(initialLang());

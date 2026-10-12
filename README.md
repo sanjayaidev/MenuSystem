@@ -30,7 +30,10 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
 9. `db/09_menu_card_images.sql` — adds `bg_image_url` and `food_png_url` to `menu_items` for the menu card layers (run it before saving these images from the admin).
 10. `db/10_nine_categories.sql` — the nine category boxes on the menu page: renames the six food categories (Beef Meal, Chicken Meal, Shrimp Meal, Tofu Noodle, Soup Rice, Salad Appetizer) and adds **Dine In** and **Outside Catering**. *Most Popular* is added by the page itself. Safe to re-run.
 
+11. `db/11_menu_update_oct2026.sql` — the 12/10/2026 menu update: renames the categories (Tofu, Dumpling, Rice Noodles), adds **Side Orders**, shows exactly 17 dishes with the English + Arabic descriptions from the client's final menu, and hides (does not delete) the dishes that left the menu. Safe to re-run. **Do not re-run `03` or `10` afterwards** (they would restore the old names and dishes). Prices of the 4 new dishes in that file are placeholders.
+
 ### Category boxes (menu page)
+*(Current order after `db/11`: Beef Meal, Chicken Meal, Shrimp Meal, Tofu, Dumpling, Rice Noodles, Side Orders, **Most Popular**, Dine In, Outside Catering. The paragraph below describes the earlier nine-box version.)*
 The category dropdown is now one horizontally scrolling row of nine boxes, in this order: Beef Meal, Chicken Meal, Shrimp Meal, Tofu Noodle, Soup Rice, Salad Appetizer, **Most Popular**, Dine In, Outside Catering. Nothing selected shows every dish; tap a box to filter and tap it again to clear. *Most Popular* is not a database category: it lists the 8 best-selling dishes (`POPULAR_COUNT` in `menu-page.html`). *Dine In* and *Outside Catering* are normal categories and start empty — give dishes to them in Admin → Menu items (a dish belongs to one category). The Arabic / Urdu / Chinese names of those two are drafts to be confirmed by a native speaker.
 
 ### Menu page poster (editable in admin)
@@ -47,6 +50,15 @@ Each menu item on `/menu` is a short 2.5:1 card built from three layers:
 3. **Food PNG** — `food_png_url`, a transparent PNG right-aligned against the card edge and drawn over both the background and the card.
 
 Both images are set per item in Admin → Menu items. If an item has no food PNG, its normal image (`image_path`) is used in layer 3, so existing items keep working. Tapping the card opens the item; *Add to cart* adds one. The look is tuned by `--card-w` (default `66.6667%`) and `--food-overlap` (default `20%`) on `.row` in `frontend/menu-page.html`.
+
+### Food image sizes (what to upload)
+Measured from the card layout at its widest (448 px card, so 2.5:1 = 448 x 179 px):
+| Image | Shown on the card | Upload | Format / weight |
+|---|---|---|---|
+| **Food PNG** (layer 3) | up to 239 x 161 px; the item pop-up shows it ~340 px tall | **1200 x 1200 px**, tightly cropped cutout, transparent background | PNG or lossless WebP, ideally under 500 KB (max 5 MB) |
+| **Card background** (layer 1) | 149 x 179 px strip (5:6 portrait); the pop-up shows it full width | **1080 x 1296 px** (5:6) | JPG or WebP, quality ~80, under 250 KB |
+Sharp on 3x phone screens needs about 3x the displayed size, which is what these numbers give. More pixels than this only makes the page slower.
+Uploads now keep the original file: the server stores ImgBB's `url`, not `display_url` (the resized viewer copy).
 
 ### Homepage video storage
 Create a **public** Supabase Storage bucket named `videos` with a **5 MB maximum file size**.

@@ -227,7 +227,9 @@ router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), async
     console.error('Imgbb upload failed:', result?.error?.message || response.statusText);
     return res.status(502).json({ error: 'Image upload failed. Check the Imgbb API key and try again.' });
   }
-  res.status(201).json({ url: result.data.display_url || result.data.url });
+  // `url` is the original file exactly as uploaded. `display_url` is ImgBB's viewer copy, which can be
+  // resized/recompressed, so it was making sharp food photos look soft. Always store the original.
+  res.status(201).json({ url: result.data.url || result.data.image?.url || result.data.display_url });
 }));
 
 // GET /api/admin/orders?status=pending&q=RH-2609&date=2026-09-28

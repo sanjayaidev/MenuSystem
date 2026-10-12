@@ -50,10 +50,17 @@ router.post('/orders', orderLimiter, async (req, res) => {
     return res.status(400).json({ error: 'delivery_address is required for home delivery' });
   }
 
+  // Every line must be an object with a whole-number menu_item_id. Without this check a body like
+  // {"items":[null]} throws inside this async handler (an unhandled rejection that can take the
+  // whole server down on current Node versions).
+  const ids = items.map((i) => Number(i && i.menu_item_id));
+  if (ids.some((id) => !Number.isInteger(id) || id < 1)) {
+    return res.status(400).json({ error: 'Every item needs a valid menu_item_id' });
+  }
+
   const authUser = await getAuthUser(req);
 
   // Fetch real prices/names from the DB — never trust prices sent by the client.
-  const ids = items.map((i) => i.menu_item_id);
   const { data: dbItems, error: fetchErr } = await supabase
     .from('menu_items')
     .select('id, name_en, price, is_available')
@@ -65,17 +72,21 @@ router.post('/orders', orderLimiter, async (req, res) => {
   const orderItems = [];
   let subtotal = 0;
 
+  // money in whole cents, so 3 x 10.99 is 32.97 and not 32.970000000000006
+  const toMoney = (n) => Math.round(n * 100) / 100;
+
   for (const line of items) {
-    const dbItem = dbItemsById.get(line.menu_item_id);
+    const itemId = Number(line.menu_item_id);
+    const dbItem = dbItemsById.get(itemId);
     const qty = Number(line.quantity);
     if (!dbItem || !dbItem.is_available) {
-      return res.status(400).json({ error: `Menu item ${line.menu_item_id} is not available` });
+      return res.status(400).json({ error: `Menu item ${itemId} is not available` });
     }
     if (!Number.isInteger(qty) || qty <= 0 || qty > 50) {
-      return res.status(400).json({ error: `Invalid quantity for item ${line.menu_item_id}` });
+      return res.status(400).json({ error: `Invalid quantity for item ${itemId}` });
     }
-    const lineTotal = dbItem.price * qty;
-    subtotal += lineTotal;
+    const lineTotal = toMoney(Number(dbItem.price) * qty);
+    subtotal = toMoney(subtotal + lineTotal);
     orderItems.push({
       menu_item_id: dbItem.id,
       name_snapshot: dbItem.name_en,
@@ -86,7 +97,7 @@ router.post('/orders', orderLimiter, async (req, res) => {
   }
 
   const deliveryFee = delivery_type === 'delivery' ? DELIVERY_FEE : 0;
-  const total = subtotal + deliveryFee;
+  const total = toMoney(subtotal + deliveryFee);
 
   // Payment is simulated for now: mark it paid immediately on order creation.
   // Swap this for a real gateway webhook/confirmation later without
