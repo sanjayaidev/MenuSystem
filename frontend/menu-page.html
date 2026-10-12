@@ -308,6 +308,8 @@
   /* item modal */
   .item-hero{position:relative; width:100%; aspect-ratio:1/1; max-height:340px; flex:0 0 auto; overflow:hidden; background:#000 center bottom / cover no-repeat;}   /* the item's card background image is set inline by openItemModal; black until/unless there is one */
   .item-hero img{width:100%; height:100%; object-fit:cover;}
+  /* Food PNG only (not the background, not a plain photo): rests on a small gap above the bottom edge. Padding on the img shrinks its content box, which object-fit:contain then fits into. */
+  .item-hero img.is-food-png{box-sizing:border-box; padding-bottom:6%; object-position:center bottom;}
   /* z-index: the image (and its drop-shadow filter) is a later sibling and would otherwise paint over, and block taps on, the close button and tag */
   .item-hero .icon-btn{position:absolute; z-index:2; top:12px; inset-inline-start:12px;}
   html[data-theme] .item-hero .icon-btn{background:rgba(0,0,0,.55); color:#fff;}   /* readable over any background picture, in both themes */
@@ -1661,6 +1663,7 @@ function openItemModal(id){
     modalImg.style.display = '';
     // a transparent food PNG should be shown whole (not cropped to the hero) and lifted off the background with a soft shadow
     const pngMode = Boolean(safeImgUrl(modalItem.foodPng));
+    modalImg.classList.toggle('is-food-png', pngMode);
     modalImg.style.objectFit = pngMode ? 'contain' : '';
     modalImg.style.filter = pngMode ? 'drop-shadow(0 6px 10px rgba(0,0,0,.45))' : '';
     modalImg.src = imageUrl;
