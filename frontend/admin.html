@@ -1475,7 +1475,8 @@ function updateLiveMenuPreview(){
   nameElement.textContent = name;
   nameElement.lang = activeLanguage;
   nameElement.dir = ['ar', 'ur'].includes(activeLanguage) ? 'rtl' : 'ltr';
-  document.getElementById('liveMenuPrice').textContent = money(Number(field('price')?.value) || 0);
+  const price = Number(field('price')?.value);
+  document.getElementById('liveMenuPrice').innerHTML = money(Number.isFinite(price) ? price : 0);
 
   const card = document.getElementById('liveMenuCard');
   const cardColor = /^#[0-9a-f]{6}$/i.test(field('card_color')?.value || '') ? field('card_color').value : '#f6f1e6';
