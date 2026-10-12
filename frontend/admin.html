@@ -105,6 +105,22 @@
   .special-food-fields{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px;}
   .item-form-heading{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;}
   .item-form-heading h3{margin:0;}
+  #itemForm{display:grid; grid-template-columns:minmax(0,1.35fr) minmax(230px,.8fr); align-items:start; gap:20px;}
+  .item-form-fields{grid-column:1; min-width:0;}
+  #itemForm .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #itemForm .language-fields{grid-template-columns:1fr;}
+  .item-live-preview{grid-column:2; grid-row:1; position:sticky; top:16px; min-width:0;}
+  .item-live-preview h3{margin:0 0 10px; color:var(--muted); font-size:12px; font-weight:650;}
+  .live-preview-card{--preview-paper:#f6f1e6;--preview-edge:#e9e0cd;position:relative; width:100%; aspect-ratio:2.5 / 1; overflow:hidden; background:radial-gradient(120% 120% at 25% 30%,#3a2d24 0%,#2a211b 60%,#1d1612 100%); color:#2b2622;}
+  .live-preview-bg{position:absolute; inset:0 auto 0 0; z-index:0; width:calc(100% - 66.6667% + 1px); height:100%; object-fit:cover; object-position:var(--preview-bg-x,50%) var(--preview-bg-y,50%); transform:scale(var(--preview-bg-scale,1));}
+  .live-preview-paper{position:absolute; inset:0 0 0 auto; z-index:1; display:flex; width:66.6667%; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:8px 8px 18px 22%; text-align:center; background:radial-gradient(120% 90% at 50% 40%,#fbf8f0 0%,var(--preview-paper) 55%,var(--preview-edge) 100%);}
+  .live-preview-paper small{color:#b8975a; font-size:7px; font-weight:700;}
+  .live-preview-paper strong{max-width:100%; overflow-wrap:anywhere; font-family:Georgia,'Times New Roman',serif; font-size:calc(clamp(9px,4.2cqw,15px) + 2pt); line-height:1.2;}
+  .live-preview-paper span{font-family:Georgia,'Times New Roman',serif; font-size:calc(clamp(10px,5cqw,17px) + 2pt); font-weight:700; line-height:1;}
+  .live-preview-food{position:absolute; inset:5% auto 5% 0; z-index:2; display:flex; width:53.3333%; align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
+  .live-preview-food img{display:block; width:auto; height:100%; max-width:100%; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));}
+  .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; background:var(--gold); color:#1a1408; font-size:calc(8px + 2pt); font-weight:700;}
+  .live-preview-paper,.live-preview-food{container-type:inline-size;}
   .form-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
   .form-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));}
   .manager-form label{display:block; min-width:0; color:var(--muted); font-size:11px; font-weight:650;}
@@ -168,11 +184,13 @@
     .admin-tab.active{border-bottom-color:var(--gold);}
     .form-grid,.form-grid.compact{grid-template-columns:repeat(2,minmax(0,1fr));}
     .language-fields{grid-template-columns:1fr;}
+    #itemForm{grid-template-columns:minmax(0,1fr);}
+    .item-live-preview{grid-column:1; grid-row:auto; position:static;}
     .item-form-heading{align-items:flex-start;}
     .record{align-items:flex-start;}
     .record-actions{flex-direction:column;}
   }
-  @media(max-width:420px){.form-grid,.form-grid.compact,.special-food-fields{grid-template-columns:1fr;}.image-tools{grid-template-columns:1fr;}}
+  @media(max-width:420px){.form-grid,.form-grid.compact,.special-food-fields,#itemForm .form-grid,#itemForm .form-grid.compact{grid-template-columns:1fr;}.image-tools{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -328,6 +346,7 @@
     <section class="admin-panel" id="menuPanel" hidden>
       <div class="panel-title"><h2 data-ui="menuItems">Menu items</h2><span class="count" id="menuCount"></span></div>
       <form class="manager-form" id="itemForm" novalidate>
+        <div class="item-form-fields">
         <div class="item-form-heading">
           <h3 id="itemFormTitle" data-ui="newMenuItem">New menu item</h3>
           <div class="image-preview" id="itemImagePreview"><img src="images/food.png" alt="Fallback food image"><span data-ui="fallbackFoodImage">Fallback food image</span></div>
@@ -382,6 +401,16 @@
           <div class="image-tools"><label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label></div>
         </details>
         <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit" data-ui="createMenuItem">Create menu item</button><button class="action-btn" id="itemCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
+        </div>
+        <aside class="item-live-preview" aria-label="Live menu card preview">
+          <h3>Live menu preview</h3>
+          <article class="live-preview-card" id="liveMenuCard">
+            <img class="live-preview-bg" id="liveMenuBg" alt="" hidden>
+            <div class="live-preview-paper"><small>RED HOUSE</small><strong id="liveMenuName">Menu item</strong><span id="liveMenuPrice">SAR 0.00</span></div>
+            <div class="live-preview-food"><img id="liveMenuFood" alt="" hidden></div>
+            <span class="live-preview-add">ADD TO CART</span>
+          </article>
+        </aside>
       </form>
       <div class="toolbar"><span class="count" id="menuResultCount"></span><input class="search-input" id="menuSearch" type="search" placeholder="Search menu items" data-ui-placeholder="searchMenuItems"></div>
       <div class="records" id="menuRecords"></div>
@@ -720,8 +749,11 @@ Object.keys(MUSIC_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[
 
 // Strings for the Menu poster tab (image at the top of the menu page).
 const POSTER_ADMIN_STRINGS = {
-  en: { posterTab:'Menu poster', posterTitle:'Menu page poster',
+    en: { posterTab:'Menu poster', posterTitle:'Menu page poster',
         posterHint:'The image at the top of the menu page, under the logo. Use it for your current offer. If none is uploaded, the default poster is shown.',
+      foodBgTitle:'Shared food card background', foodBgHint:'Set one background image for every food card. It overrides individual backgrounds; clear it to restore them.',
+      foodBgUrl:'Background image URL', foodBgSave:'Apply to all food cards', foodBgClear:'Clear shared background',
+      foodBgSaved:'Shared background saved. Refresh the menu page to see it.', foodBgCleared:'Shared background cleared.', foodBgChooseFile:'Choose an image first.',
         posterCurrent:'Current poster: {name}', posterNone:'No custom poster. The default poster is shown on the menu page.',
         posterFile:'Poster image (PNG, JPG or WEBP, source max 25 MB)', posterPreviewAlt:'Current menu poster',
         posterUploadBtn:'Upload poster', posterReplaceBtn:'Replace poster', posterRemoveBtn:'Use default poster',
@@ -733,8 +765,11 @@ const POSTER_ADMIN_STRINGS = {
         posterUnsupported:'Unsupported image type. Allowed: PNG, JPG, WEBP.', posterBusy:'An image is already being processed. Please wait.',
         posterProcessFailed:'Could not process this image. Try a PNG or JPG.',
         posterTableMissing:'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' },
-  ar: { posterTab:'ملصق المنيو', posterTitle:'ملصق صفحة المنيو',
+    ar: { posterTab:'ملصق المنيو', posterTitle:'ملصق صفحة المنيو',
         posterHint:'الصورة التي تظهر أعلى صفحة المنيو أسفل الشعار. استخدمها لعرضك الحالي. إذا لم ترفع صورة تُعرض الصورة الافتراضية.',
+      foodBgTitle:'خلفية موحدة لبطاقات الأطعمة', foodBgHint:'استخدم خلفية واحدة لجميع بطاقات الأطعمة. ستتجاوز الخلفيات الفردية؛ امسحها لاستعادتها.',
+      foodBgUrl:'رابط صورة الخلفية', foodBgSave:'تطبيق على جميع الأطعمة', foodBgClear:'مسح الخلفية الموحدة',
+      foodBgSaved:'تم حفظ الخلفية الموحدة. حدّث صفحة المنيو لرؤيتها.', foodBgCleared:'تم مسح الخلفية الموحدة.', foodBgChooseFile:'اختر صورة أولاً.',
         posterCurrent:'الملصق الحالي: {name}', posterNone:'لا يوجد ملصق مخصص. تُعرض الصورة الافتراضية في صفحة المنيو.',
         posterFile:'صورة الملصق (PNG أو JPG أو WEBP، بحد أقصى 25 ميغابايت)', posterPreviewAlt:'ملصق المنيو الحالي',
         posterUploadBtn:'رفع الملصق', posterReplaceBtn:'استبدال الملصق', posterRemoveBtn:'استخدام الملصق الافتراضي',
@@ -746,8 +781,11 @@ const POSTER_ADMIN_STRINGS = {
         posterUnsupported:'نوع الصورة غير مدعوم. الأنواع المسموحة: PNG وJPG وWEBP.', posterBusy:'تتم معالجة صورة أخرى حالياً. يرجى الانتظار.',
         posterProcessFailed:'تعذّرت معالجة هذه الصورة. جرّب PNG أو JPG.',
         posterTableMissing:'جدول site_settings غير موجود. شغّل db/06_site_settings.sql في Supabase.' },
-  ur: { posterTab:'مینو پوسٹر', posterTitle:'مینو پیج کا پوسٹر',
+    ur: { posterTab:'مینو پوسٹر', posterTitle:'مینو پیج کا پوسٹر',
         posterHint:'مینو پیج پر لوگو کے نیچے سب سے اوپر نظر آنے والی تصویر۔ اسے اپنے موجودہ آفر کے لیے استعمال کریں۔ اگر کوئی تصویر اپ لوڈ نہ ہو تو ڈیفالٹ پوسٹر دکھایا جاتا ہے۔',
+      foodBgTitle:'تمام کھانوں کے کارڈ کا پس منظر', foodBgHint:'تمام فوڈ کارڈز کے لیے ایک پس منظر رکھیں۔ یہ انفرادی پس منظر کی جگہ لے گا؛ انفرادی پس منظر واپس لانے کے لیے اسے صاف کریں۔',
+      foodBgUrl:'پس منظر کی تصویر کا URL', foodBgSave:'تمام کھانوں پر لاگو کریں', foodBgClear:'مشترکہ پس منظر صاف کریں',
+      foodBgSaved:'مشترکہ پس منظر محفوظ ہو گیا۔ دیکھنے کے لیے مینو پیج ری فریش کریں۔', foodBgCleared:'مشترکہ پس منظر صاف ہو گیا۔', foodBgChooseFile:'پہلے تصویر منتخب کریں۔',
         posterCurrent:'موجودہ پوسٹر: {name}', posterNone:'کوئی حسبِ ضرورت پوسٹر نہیں۔ مینو پیج پر ڈیفالٹ پوسٹر دکھایا جا رہا ہے۔',
         posterFile:'پوسٹر کی تصویر (PNG، JPG یا WEBP، زیادہ سے زیادہ 25 MB)', posterPreviewAlt:'موجودہ مینو پوسٹر',
         posterUploadBtn:'پوسٹر اپ لوڈ کریں', posterReplaceBtn:'پوسٹر تبدیل کریں', posterRemoveBtn:'ڈیفالٹ پوسٹر استعمال کریں',
@@ -759,8 +797,11 @@ const POSTER_ADMIN_STRINGS = {
         posterUnsupported:'تصویر کی یہ قسم معاون نہیں۔ اجازت شدہ اقسام: PNG، JPG، WEBP۔', posterBusy:'ایک اور تصویر پر کام جاری ہے۔ براہِ کرم انتظار کریں۔',
         posterProcessFailed:'یہ تصویر پروسیس نہیں ہو سکی۔ PNG یا JPG آزمائیں۔',
         posterTableMissing:'site_settings ٹیبل موجود نہیں۔ Supabase میں db/06_site_settings.sql چلائیں۔' },
-  zh: { posterTab:'菜单海报', posterTitle:'菜单页海报',
+    zh: { posterTab:'菜单海报', posterTitle:'菜单页海报',
         posterHint:'显示在菜单页顶部、标志下方的图片，可用于当前优惠。未上传时显示默认海报。',
+      foodBgTitle:'所有菜品卡片的统一背景', foodBgHint:'为所有菜品卡片设置同一背景。它会覆盖单独设置；清除后恢复单独背景。',
+      foodBgUrl:'背景图片网址', foodBgSave:'应用到所有菜品', foodBgClear:'清除统一背景',
+      foodBgSaved:'统一背景已保存。刷新菜单页即可查看。', foodBgCleared:'统一背景已清除。', foodBgChooseFile:'请先选择图片。',
         posterCurrent:'当前海报：{name}', posterNone:'没有自定义海报，菜单页显示默认海报。',
         posterFile:'海报图片（PNG、JPG 或 WEBP，最大 25 MB）', posterPreviewAlt:'当前菜单海报',
         posterUploadBtn:'上传海报', posterReplaceBtn:'更换海报', posterRemoveBtn:'使用默认海报',
@@ -1215,7 +1256,11 @@ function validateAdminForm(form){
 document.querySelectorAll('.language-switcher').forEach(switcher => {
   switcher.addEventListener('click', event => {
     const button = event.target.closest('[data-language]');
-    if(button) setActiveLanguage(switcher.closest('form'), button.dataset.language);
+    if(button){
+      const form = switcher.closest('form');
+      setActiveLanguage(form, button.dataset.language);
+      if(form.id === 'itemForm') updateLiveMenuPreview();
+    }
   });
 });
 
@@ -1404,6 +1449,53 @@ function updateCardPreview(previewId, url){
   preview.innerHTML = imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(adminText('imagePreview'))}">` : '';
 }
 
+function setLivePreviewImage(image, value){
+  const url = String(value || '').trim();
+  if(!url){ image.hidden = true; image.removeAttribute('src'); return; }
+  try{
+    const parsed = new URL(url, window.location.href);
+    if(!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid image URL');
+    image.hidden = false;
+    image.src = parsed.href;
+    image.onerror = () => { image.hidden = true; };
+  }catch{
+    image.hidden = true;
+    image.removeAttribute('src');
+  }
+}
+
+function updateLiveMenuPreview(){
+  const form = document.getElementById('itemForm');
+  if(!form) return;
+  const field = name => form.elements.namedItem(name);
+  const activeLanguage = form.querySelector('.language-card:not([hidden])')?.dataset.languagePanel || 'en';
+  const localizedName = field(`name_${activeLanguage}`)?.value.trim();
+  const name = localizedName || field('name_en')?.value.trim() || 'Menu item';
+  const nameElement = document.getElementById('liveMenuName');
+  nameElement.textContent = name;
+  nameElement.lang = activeLanguage;
+  nameElement.dir = ['ar', 'ur'].includes(activeLanguage) ? 'rtl' : 'ltr';
+  document.getElementById('liveMenuPrice').textContent = money(Number(field('price')?.value) || 0);
+
+  const card = document.getElementById('liveMenuCard');
+  const cardColor = /^#[0-9a-f]{6}$/i.test(field('card_color')?.value || '') ? field('card_color').value : '#f6f1e6';
+  const percent = (name, fallback, min, max) => {
+    const raw = field(name)?.value;
+    const value = raw === '' || raw == null ? fallback : Number(raw);
+    return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+  };
+  card.style.setProperty('--preview-paper', cardColor);
+  card.style.setProperty('--preview-edge', `color-mix(in srgb, ${cardColor}, #000 8%)`);
+  card.style.setProperty('--preview-food-scale', String(percent('food_scale', 100, 50, 150) / 100));
+  card.style.setProperty('--preview-food-x', `${percent('food_x', 0, -50, 50)}%`);
+  card.style.setProperty('--preview-food-y', `${percent('food_y', 0, -50, 50)}%`);
+  card.style.setProperty('--preview-bg-x', `${percent('bg_x', 50, 0, 100)}%`);
+  card.style.setProperty('--preview-bg-y', `${percent('bg_y', 50, 0, 100)}%`);
+  card.style.setProperty('--preview-bg-scale', String(percent('bg_scale', 100, 100, 200) / 100));
+  setLivePreviewImage(document.getElementById('liveMenuBg'), field('bg_image_url')?.value);
+  setLivePreviewImage(document.getElementById('liveMenuFood'), field('food_png_url')?.value || field('image_path')?.value || 'images/food.png');
+}
+
 function resetItemForm(){
   const form = document.getElementById('itemForm');
   form.reset();
@@ -1419,6 +1511,7 @@ function resetItemForm(){
   updateCardPreview('itemBgPreview', '');
   updateCardPreview('itemFoodPreview', '');
   updateImagePreview('');
+  updateLiveMenuPreview();
   setFormNote('itemNote', '');
 }
 
@@ -1472,6 +1565,7 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
     updateImagePreview(item.image_path || '');
     updateCardPreview('itemBgPreview', item.bg_image_url || '');
     updateCardPreview('itemFoodPreview', item.food_png_url || '');
+    updateLiveMenuPreview();
     setFormNote('itemNote', '');
     document.getElementById('itemForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
@@ -1490,6 +1584,8 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
 });
 
 document.getElementById('menuSearch').addEventListener('input', renderMenu);
+document.getElementById('itemForm').addEventListener('input', updateLiveMenuPreview);
+document.getElementById('itemForm').addEventListener('change', updateLiveMenuPreview);
 document.getElementById('itemImageUrl').addEventListener('input', event => updateImagePreview(event.currentTarget.value.trim()));
 /* ---------- menu card layers: background image + food PNG (same Imgbb upload as the item image) ---------- */
 // The plain Image URL (menu_items.image_path) is still read by older screens (homepage, admin list). To keep one upload per dish,
@@ -1536,6 +1632,7 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId, onChange }){
       });
       urlInput.value = result.url;
       updateCardPreview(previewId, result.url);
+      updateLiveMenuPreview();
       if(onChange) onChange();
       refreshTopPreview();
       setFormNote('itemNote', adminText('imageUploaded'));
@@ -1668,6 +1765,7 @@ document.getElementById('bannerReset').addEventListener('click',async event=>{
 
 /* ---------- menu page poster ---------- */
 let currentPosterData;   // undefined = not loaded yet, null = no custom poster, object = { url, name }
+let currentFoodBackgroundUrl = '';
 
 function posterErrorText(message){
   const known = [
@@ -1681,16 +1779,20 @@ function posterErrorText(message){
 }
 async function loadPoster(){
   try{
-    const response = await fetch(`${API_BASE}/api/poster`, { cache:'no-store' });
+    const [response, designResult] = await Promise.all([
+      fetch(`${API_BASE}/api/poster`, { cache:'no-store' }),
+      adminRequest('/design'),
+    ]);
     if(!response.ok) throw new Error();
     const data = await response.json();
-    renderPoster(data.poster || null);
+    renderPoster(data.poster || null, designResult.design?.food_bg_url || '');
   }catch{
     document.getElementById('posterCard').innerHTML = `<p class="form-note error">${escapeHtml(adminText('posterLoadFailed'))}</p>`;
   }
 }
-function renderPoster(poster){
+function renderPoster(poster, foodBackgroundUrl = currentFoodBackgroundUrl){
   currentPosterData = poster;
+  currentFoodBackgroundUrl = foodBackgroundUrl;
   const preview = poster
     ? `<img src="${escapeHtml(poster.url)}" alt="${escapeHtml(adminText('posterPreviewAlt'))}" style="display:block; width:100%; max-width:240px; aspect-ratio:2/3; object-fit:cover; border-radius:8px; margin:0 0 10px;">
        <p class="form-note" style="margin:0 0 12px;">${escapeHtml(adminText('posterCurrent', { name: poster.name || '?' }))}</p>`
@@ -1706,8 +1808,43 @@ function renderPoster(poster){
       <span class="form-note" id="posterNote" role="status"></span>
     </div>
   </form>`;
+  document.getElementById('posterCard').insertAdjacentHTML('beforeend', `<form class="manager-form" id="foodBackgroundForm" novalidate>
+    <h3>${escapeHtml(adminText('foodBgTitle'))}</h3>
+    <p class="form-note">${escapeHtml(adminText('foodBgHint'))}</p>
+    <label>${escapeHtml(adminText('foodBgUrl'))}<input id="foodBackgroundUrl" type="url" maxlength="2000" value="${escapeHtml(currentFoodBackgroundUrl)}" placeholder="https://..."></label>
+    <div class="image-tools">
+      <label>${escapeHtml(adminText('uploadImage'))}<input id="foodBackgroundFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+      <button class="action-btn" id="foodBackgroundUpload" type="button" disabled>${escapeHtml(adminText('uploadToImgbb'))}</button>
+    </div>
+    <div class="form-actions">
+      <button class="action-btn primary" type="submit">${escapeHtml(adminText('foodBgSave'))}</button>
+      ${currentFoodBackgroundUrl ? `<button class="action-btn" id="foodBackgroundClear" type="button">${escapeHtml(adminText('foodBgClear'))}</button>` : ''}
+      <span class="form-note" id="foodBackgroundNote" role="status"></span>
+    </div>
+  </form>`);
 }
 document.getElementById('posterCard').addEventListener('submit', async event => {
+  const foodForm = event.target.closest('#foodBackgroundForm');
+  if(foodForm){
+    event.preventDefault();
+    const button = foodForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    setFormNote('foodBackgroundNote', adminText('posterUploading'));
+    try{
+      const result = await adminRequest('/design/food-background', {
+        method:'PUT',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ food_bg_url:document.getElementById('foodBackgroundUrl').value.trim() }),
+      });
+      currentFoodBackgroundUrl = result.design.food_bg_url || '';
+      renderPoster(currentPosterData, currentFoodBackgroundUrl);
+      setFormNote('foodBackgroundNote', currentFoodBackgroundUrl ? adminText('foodBgSaved') : adminText('foodBgCleared'));
+    }catch(error){
+      setFormNote('foodBackgroundNote', error.message || adminText('posterUploadFailed'), true);
+      button.disabled = false;
+    }
+    return;
+  }
   const form = event.target.closest('#posterForm');
   if(!form) return;
   event.preventDefault();
@@ -1725,6 +1862,43 @@ document.getElementById('posterCard').addEventListener('submit', async event => 
     setFormNote('posterNote', error.message || adminText('posterUploadFailed'), true);
   }finally{
     button.disabled = false;
+  }
+});
+document.getElementById('posterCard').addEventListener('change', event => {
+  if(event.target.id === 'foodBackgroundFile') document.getElementById('foodBackgroundUpload').disabled = !event.target.files.length;
+});
+document.getElementById('posterCard').addEventListener('click', async event => {
+  if(event.target.closest('#foodBackgroundClear')){
+    document.getElementById('foodBackgroundUrl').value = '';
+    document.getElementById('foodBackgroundForm').requestSubmit();
+    return;
+  }
+  const button = event.target.closest('#foodBackgroundUpload');
+  if(!button) return;
+  const input = document.getElementById('foodBackgroundFile');
+  const file = input.files[0];
+  if(!file){ setFormNote('foodBackgroundNote', adminText('foodBgChooseFile'), true); return; }
+  if(file.size > 5 * 1024 * 1024){ setFormNote('foodBackgroundNote', adminText('imageTooLarge'), true); return; }
+  button.disabled = true;
+  setFormNote('foodBackgroundNote', adminText('uploadingImage'));
+  try{
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error(adminText('imageUploadFailed')));
+      reader.readAsDataURL(file);
+    });
+    const result = await adminRequest('/images', {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain' },
+      body:dataUrl,
+    });
+    document.getElementById('foodBackgroundUrl').value = result.url;
+    setFormNote('foodBackgroundNote', adminText('imageUploaded'));
+  }catch(error){
+    setFormNote('foodBackgroundNote', error.message || adminText('imageUploadFailed'), true);
+  }finally{
+    button.disabled = !input.files.length;
   }
 });
 document.getElementById('posterCard').addEventListener('click', async event => {

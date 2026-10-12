@@ -66,6 +66,22 @@ router.put('/admin/design', requireAdmin, async (req, res) => {
   }
 });
 
+router.put('/admin/design/food-background', requireAdmin, async (req, res) => {
+  const foodBgUrl = typeof req.body?.food_bg_url === 'string' ? req.body.food_bg_url.trim() : '';
+  if (foodBgUrl && (foodBgUrl.length > 2000 || !/^https?:\/\//i.test(foodBgUrl))) {
+    return res.status(400).json({ error: 'Food background must be a valid http:// or https:// image URL.' });
+  }
+  try {
+    const design = await readDesign();
+    design.food_bg_url = foodBgUrl;
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not save shared food background:', error.message);
+    res.status(500).json({ error: 'Could not save the shared food background.' });
+  }
+});
+
 router.post('/admin/design/font', requireAdmin, (req, res, next) => {
   upload.single('font')(req, res, error => {
     if (error) return res.status(400).json({ error: 'Font files must be smaller than 4.5 MB.' });
