@@ -16,6 +16,7 @@ const bannerRoutes = require('./routes/banner');
 const contactRoutes = require('./routes/contact');
 const musicRoutes = require('./routes/music');
 const posterRoutes = require('./routes/poster');
+const designRoutes = require('./routes/design');
 
 const app = express();
 
@@ -115,6 +116,7 @@ app.use('/api', bannerRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', musicRoutes);
 app.use('/api', posterRoutes);
+app.use('/api', designRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 

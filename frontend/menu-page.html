@@ -182,7 +182,7 @@
 
   /* layer 1: only the strip not covered by the card is ever visible (left third; right third in RTL), so the picture is sized to that
      strip, not the whole box. A 3:4 portrait image fills it by width and loses only ~10% of its height. The 1px tucks under the card edge. */
-  .row .bg{position:absolute; inset-block:0; inset-inline-start:0; z-index:0; width:calc(100% - var(--card-w) + 1px); height:100%; object-fit:cover; object-position:center center; display:block;}
+  .row .bg{position:absolute; inset-block:0; inset-inline-start:0; z-index:0; width:calc(100% - var(--card-w) + 1px); height:100%; object-fit:cover; object-position:var(--bg-x,50%) var(--bg-y,50%); transform:scale(var(--bg-scale,1)); display:block;}
 
   /* layer 2 */
   .row .card{
@@ -205,16 +205,16 @@
   .row .corner.br{bottom:calc(1.1 * var(--u)); right:calc(1.1 * var(--u)); transform:scale(-1,-1);}
   .row .flourish{width:calc(11 * var(--u)); height:auto; color:var(--ornament);}
   .row .name{
-    margin:0; font-family:'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:700;
-    letter-spacing:.06em; text-transform:uppercase; font-size:max(12px, calc(3.2 * var(--u))); line-height:1.2;
-    color:var(--ink); overflow-wrap:anywhere;
+    margin:0; font-family:var(--menu-font-family,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif); font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; font-size:max(12px, calc(var(--menu-font-scale,3.2) * var(--u))); line-height:1.2;
+    color:var(--menu-font-color,var(--ink)); overflow-wrap:anywhere;
   }
   /* Saudi Riyal sign (Unicode U+20C1, glyph outline from the MIT-licensed `riyal` package). Drawn as an SVG because most device fonts do not have the character yet. */
   .money{white-space:nowrap; direction:ltr; unicode-bidi:isolate;}
   .money .riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
   .row .price{
-    margin:0; font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif; font-weight:700;
-    font-size:max(16px, calc(4.6 * var(--u))); line-height:1; letter-spacing:.02em; color:#5b4a2c;
+    margin:0; font-family:var(--menu-font-family,'Cormorant Garamond',Georgia,'Times New Roman',serif); font-weight:700;
+    font-size:max(16px, calc(4.6 * var(--u))); line-height:1; letter-spacing:.02em; color:var(--menu-font-color,#5b4a2c);
   }
   /* scripts where uppercase / letter-spacing / Cinzel would break the text */
   html[lang="ar"] .row .name{font-family:'Noto Naskh Arabic',serif; letter-spacing:0; text-transform:none; line-height:1.5;}
@@ -226,7 +226,9 @@
     position:absolute; z-index:2; pointer-events:none;
     inset-block:5%; inset-inline-start:0; width:calc(100% - var(--card-w) + var(--food-overlap));
     display:flex; align-items:flex-end; justify-content:flex-end;
+    transform:translate(var(--food-x,0%),var(--food-y,0%)) scale(var(--food-scale,1)); transform-origin:bottom right;
   }
+  html[dir="rtl"] .row .food{transform-origin:bottom left;}
   .row .food img{
     display:block; height:100%; width:auto; max-width:100%; object-fit:contain; object-position:right bottom;
     filter:drop-shadow(0 calc(1 * var(--u)) calc(1.4 * var(--u)) rgba(0,0,0,.45));
@@ -920,6 +922,33 @@ const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,z
 let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
 //~ let SPECIAL_SECTIONS = [];
 
+async function loadMenuDesign(){
+  try{
+    const response = await fetch(`${API_BASE}/api/design`, { cache:'no-store' });
+    if(!response.ok) return;
+    const { design = {} } = await response.json();
+    const families = {
+      cinzel: "'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif",
+      cormorant: "'Cormorant Garamond',Georgia,'Times New Roman',serif",
+      georgia: "Georgia,'Times New Roman',serif",
+      arial: "Arial,Helvetica,sans-serif",
+    };
+    let family = families[design.font_style] || families.cinzel;
+    if(design.font_style === 'custom' && design.font_url){
+      try{
+        const customFont = new FontFace('MenuCustom', `url("${design.font_url.replace(/["\\]/g, '')}")`);
+        await customFont.load();
+        document.fonts.add(customFont);
+        family = "'MenuCustom',serif";
+      }catch(error){ console.warn('Could not load custom menu font:', error); }
+    }
+    const root = document.documentElement.style;
+    root.setProperty('--menu-font-family', family);
+    root.setProperty('--menu-font-scale', String((Number(design.font_size) || 14) / 4.375));
+    if(/^#[0-9a-f]{6}$/i.test(design.font_color || '')) root.setProperty('--menu-font-color', design.font_color);
+  }catch(error){ console.warn('Could not load menu design settings:', error); }
+}
+
 //~ /* The scrolling Special section (category cards with drag-to-scrub video, between the poster and the menu list).
 //~    Set this to false to pause it again: it is hidden and neither its data nor its videos are loaded.
 //~    A card with no video set in Admin -> Special section videos falls back to demo/food-360p.mp4. */
@@ -1178,7 +1207,14 @@ function render(){
     const foodUrl = pngUrl || itemImgPath(i);
     const hasUrl = Boolean(pngUrl) || hasImageUrl(i);
     const corner = pos => `<svg class="corner ${pos}" viewBox="0 0 48 48" aria-hidden="true"><use href="#rh-corner"/></svg>`;
-    return `<article class="row" data-id="${i.id}">
+    const cardColor = /^#[0-9a-f]{6}$/i.test(i.cardColor) ? i.cardColor : '#f6f1e6';
+    const foodScale = Number.isFinite(i.foodScale) ? Math.min(150, Math.max(50, i.foodScale)) / 100 : 1;
+    const foodX = Number.isFinite(i.foodX) ? Math.min(50, Math.max(-50, i.foodX)) : 0;
+    const foodY = Number.isFinite(i.foodY) ? Math.min(50, Math.max(-50, i.foodY)) : 0;
+    const bgX = Number.isFinite(i.bgX) ? Math.min(100, Math.max(0, i.bgX)) : 50;
+    const bgY = Number.isFinite(i.bgY) ? Math.min(100, Math.max(0, i.bgY)) : 50;
+    const bgScale = Number.isFinite(i.bgScale) ? Math.min(200, Math.max(100, i.bgScale)) / 100 : 1;
+    return `<article class="row" data-id="${i.id}" style="--paper:${cardColor};--paper-edge:color-mix(in srgb, ${cardColor}, #000 8%);--food-scale:${foodScale};--food-x:${foodX}%;--food-y:${foodY}%;--bg-x:${bgX}%;--bg-y:${bgY}%;--bg-scale:${bgScale}">
       ${bgUrl ? `<img class="bg" src="${escapeHtml(bgUrl)}" alt="" loading="lazy" decoding="async">` : ''}
       <div class="card">
         ${corner('tl')}${corner('tr')}${corner('bl')}${corner('br')}
@@ -1463,6 +1499,13 @@ async function loadMenuData(){
       imagePath: i.image_path || '',
       bgImage: i.bg_image_url || '',      // menu card layer 1
       foodPng: i.food_png_url || '',      // menu card layer 3
+      foodScale: i.food_scale == null ? null : Number(i.food_scale),
+      foodX: i.food_x == null ? null : Number(i.food_x),
+      foodY: i.food_y == null ? null : Number(i.food_y),
+      bgX: i.bg_x == null ? null : Number(i.bg_x),
+      bgY: i.bg_y == null ? null : Number(i.bg_y),
+      bgScale: i.bg_scale == null ? null : Number(i.bg_scale),
+      cardColor: i.card_color || '',
       name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
       desc: { en:i.description_en || null, ar:i.description_ar || null, ur:i.description_ur || null, zh:i.description_zh || null },
     }));
@@ -2065,9 +2108,9 @@ Payment: confirmed (simulated)`;
   window.open(url, '_blank');
 }
 
-(async function init(){
+ (async function init(){
 //~   await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
-  await Promise.all([loadMenuData(), loadConfig(), loadContact()]);   // SPECIAL-PAUSED: loadSpecialData() left out
+  await Promise.all([loadMenuData(), loadMenuDesign(), loadConfig(), loadContact()]);   // SPECIAL-PAUSED: loadSpecialData() left out
   if(authToken){
     await loadCartFromServer();
   }else{

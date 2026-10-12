@@ -1,29 +1,3 @@
--- Red House Catering: category update requested 12/10/2026 (Emenu_SM.pdf).
--- Run in Supabase -> SQL Editor. Safe to re-run.
---
--- ONLY categories, and which category each dish sits in, are changed.
--- Dish names, descriptions, prices, photos, popularity and orders are NOT touched.
---
--- Result (10 boxes):  1 Beef Meal  2 Chicken Meal  3 Shrimp Meal  4 Tofu  5 Dumpling
---   6 Rice Noodles  7 Side Orders (new)  8 Most Popular (virtual, added by the page)
---   9 Dine In  10 Outside Catering
---
---   renamed in place (same ids, so dishes stay attached):
---     'tofu'  "Tofu Noodle"      -> "Tofu"
---     'soup'  "Soup Rice"        -> "Dumpling"       (key becomes 'dumpling')
---     'salad' "Salad Appetizer"  -> "Rice Noodles"   (key becomes 'rice-noodles')
---   new: 'side-orders'
---
---   dishes moved:
---     Dumpling       3 steamed dumplings (chicken, beef, shrimp)
---     Rice Noodles   Egg Fried Rice, Vegetable Fried Noodle
---     Side Orders    Spring Roll, Mantou and Mandarin Rolls, Mix Vegetable Salad
---     (Beef 3, Chicken 3, Shrimp 1, Tofu 2 already match)
---
--- !! Do NOT re-run db/03_insert_menu.sql or db/10_nine_categories.sql afterwards: they would
--- !! re-create the old category names. The page must also move "Most Popular" to slot 8
--- !! (POPULAR_SORT_ORDER in frontend/menu-page.html, included in the same patch).
-
 begin;
 
 -- 1. categories ------------------------------------------------------------------------------

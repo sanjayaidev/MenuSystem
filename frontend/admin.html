@@ -50,7 +50,7 @@
   .status-msg.ok{color:var(--green);}
 
   /* ---------- dashboard ---------- */
-  #dashboardView{display:none;}
+  #dashboardView{display:none; grid-template-columns:190px minmax(0,1fr); gap:24px; align-items:start;}
   .filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
   .filters button{
     background:var(--surface); border:1px solid var(--line); color:var(--muted); border-radius:999px;
@@ -91,9 +91,9 @@
   }
   .status-row .save-note{font-size:12px; color:var(--muted);}
   .empty{text-align:center; color:var(--muted); padding:50px 10px; font-size:14px;}
-  .admin-nav{display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 20px; overflow-x:auto;}
-  .admin-tab{flex:0 0 auto; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--muted); padding:12px 16px; font:inherit; font-weight:650; cursor:pointer;}
-  .admin-tab.active{color:var(--gold); border-bottom-color:var(--gold);}
+  .admin-nav{display:flex; flex-direction:column; gap:3px; border-right:1px solid var(--line); padding-right:12px; position:sticky; top:14px;}
+  .admin-tab{width:100%; border:0; border-left:3px solid transparent; border-radius:0 5px 5px 0; background:transparent; color:var(--muted); padding:11px 12px; text-align:left; font:inherit; font-weight:650; cursor:pointer;}
+  .admin-tab.active{color:var(--gold); background:var(--surface); border-left-color:var(--gold);}
   .admin-panel[hidden]{display:none;}
   .panel-title{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px;}
   .panel-title h2{font-size:18px; margin:0;}
@@ -162,6 +162,10 @@
   .search-input{width:min(100%,320px); padding:9px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); font:inherit; font-size:13px;}
   @media(max-width:700px){
     .wrap{padding:14px;}
+    #dashboardView{grid-template-columns:minmax(0,1fr); gap:12px;}
+    .admin-nav{position:sticky; top:0; z-index:5; flex-direction:row; overflow-x:auto; border-right:0; border-bottom:1px solid var(--line); padding:0 0 5px; background:var(--bg);}
+    .admin-tab{width:auto; flex:0 0 auto; border-left:0; border-bottom:2px solid transparent; border-radius:0; white-space:nowrap;}
+    .admin-tab.active{border-bottom-color:var(--gold);}
     .form-grid,.form-grid.compact{grid-template-columns:repeat(2,minmax(0,1fr));}
     .language-fields{grid-template-columns:1fr;}
     .item-form-heading{align-items:flex-start;}
@@ -208,6 +212,7 @@
       <button class="admin-tab active" data-panel="ordersPanel" type="button" data-ui="orders">Orders</button>
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
+      <button class="admin-tab" data-panel="designPanel" type="button">Menu design</button>
       <button class="admin-tab" data-panel="bannerPanel" type="button" data-ui="banner">Banner</button>
       <button class="admin-tab" data-panel="posterPanel" type="button" data-ui="posterTab">Menu poster</button>
       <button class="admin-tab" data-panel="musicPanel" type="button" data-ui="musicTab">Music</button>
@@ -274,6 +279,23 @@
       <div class="panel-title"><h2 data-ui="posterTitle">Menu page poster</h2></div>
       <p class="form-note" style="margin:0 0 12px;" data-ui="posterHint">The image at the top of the menu page, under the logo. Use it for your current offer. If none is uploaded, the default poster is shown.</p>
       <div id="posterCard"></div>
+    </section>
+
+    <section class="admin-panel" id="designPanel" hidden>
+      <div class="panel-title"><h2>Menu design</h2></div>
+      <form class="manager-form" id="designForm" novalidate>
+        <div class="form-grid compact">
+          <label>Font style<select id="designFontStyle" name="font_style"><option value="cinzel">Cinzel</option><option value="cormorant">Cormorant Garamond</option><option value="georgia">Georgia</option><option value="arial">Arial</option><option value="custom">Uploaded font</option></select></label>
+          <label>Font size <output id="designFontSizeValue">14 px</output><input id="designFontSize" name="font_size" type="range" min="10" max="30" step="1" value="14"></label>
+          <label>Font color<input id="designFontColor" name="font_color" type="color" value="#2b2622"></label>
+        </div>
+        <div class="image-tools">
+          <label>Custom font file (TTF or OTF, max 4.5 MB)<input id="designFontFile" type="file" accept=".ttf,.otf,font/ttf,font/otf"></label>
+          <button class="action-btn" id="designFontUpload" type="button">Upload font</button>
+        </div>
+        <p class="form-note" id="designFontStatus" role="status"></p>
+        <div class="form-actions"><button class="action-btn primary" id="designSave" type="submit">Save design</button><span class="form-note" id="designNote" role="status"></span></div>
+      </form>
     </section>
 
     <section class="admin-panel" id="musicPanel" hidden>
@@ -346,6 +368,15 @@
         </div>
         <p class="field-hint" data-ui="foodPngHint">Leave the food PNG empty to use the item image above on the menu card.</p>
         <div class="image-preview card-image-preview is-png" id="itemFoodPreview"></div>
+        <div class="form-grid compact" style="margin-top:14px;">
+          <label>Food size (%)<input name="food_scale" type="number" min="50" max="150" step="1" value="100"></label>
+          <label>Food position X (%)<input name="food_x" type="number" min="-50" max="50" step="1" value="0"></label>
+          <label>Food position Y (%)<input name="food_y" type="number" min="-50" max="50" step="1" value="0"></label>
+          <label>Background position X (%)<input name="bg_x" type="number" min="0" max="100" step="1" value="50"></label>
+          <label>Background position Y (%)<input name="bg_y" type="number" min="0" max="100" step="1" value="50"></label>
+          <label>Background scale (%)<input name="bg_scale" type="number" min="100" max="200" step="1" value="100"></label>
+          <label>Vector card color<input name="card_color" type="color" value="#f6f1e6"></label>
+        </div>
         <details class="image-advanced">
           <summary data-ui="plainPhotoSummary">Plain product photo URL (optional, fills itself from the Food PNG)</summary>
           <div class="image-tools"><label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label></div>
@@ -835,7 +866,7 @@ function showLogin(message = '', isError = false, messageKey = ''){
 function showDashboard(email){
   loginStatusKey = '';
   document.getElementById('loginView').style.display = 'none';
-  document.getElementById('dashboardView').style.display = 'block';
+  document.getElementById('dashboardView').style.display = 'grid';
   document.getElementById('whoRow').style.display = 'flex';
   document.getElementById('whoEmail').textContent = email || '';
   renderFilters();
@@ -1037,6 +1068,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'menuPanel') loadMenu();
     if(tab.dataset.panel === 'bannerPanel') loadBanner();
     if(tab.dataset.panel === 'posterPanel') loadPoster();
+    if(tab.dataset.panel === 'designPanel') loadDesign();
     if(tab.dataset.panel === 'musicPanel') loadMusic();
     if(tab.dataset.panel === 'contactPanel') loadContact();
   });
@@ -1088,6 +1120,78 @@ function setFormNote(id, message, isError = false){
   note.textContent = message;
   note.classList.toggle('error', isError);
 }
+
+function showDesignSettings(design){
+  document.getElementById('designFontStyle').value = design.font_style || 'cinzel';
+  document.getElementById('designFontSize').value = design.font_size || 14;
+  document.getElementById('designFontSizeValue').textContent = `${design.font_size || 14} px`;
+  document.getElementById('designFontColor').value = design.font_color || '#2b2622';
+  document.getElementById('designFontStatus').textContent = design.font_url ? 'Custom font uploaded.' : 'No custom font uploaded.';
+}
+
+async function loadDesign(){
+  setFormNote('designNote', 'Loading...');
+  try{
+    const result = await adminRequest('/design');
+    showDesignSettings(result.design || {});
+    setFormNote('designNote', '');
+  }catch(error){
+    setFormNote('designNote', error.message || 'Could not load design settings.', true);
+  }
+}
+
+document.getElementById('designFontSize').addEventListener('input', event => {
+  document.getElementById('designFontSizeValue').textContent = `${event.currentTarget.value} px`;
+});
+
+document.getElementById('designForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('designSave');
+  button.disabled = true;
+  setFormNote('designNote', 'Saving...');
+  try{
+    const payload = {
+      font_style: document.getElementById('designFontStyle').value,
+      font_size: Number(document.getElementById('designFontSize').value),
+      font_color: document.getElementById('designFontColor').value,
+    };
+    const result = await adminRequest('/design', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    showDesignSettings(result.design);
+    setFormNote('designNote', 'Design saved. Refresh the menu page to see it.');
+  }catch(error){
+    setFormNote('designNote', error.message || 'Could not save design settings.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+document.getElementById('designFontUpload').addEventListener('click', async event => {
+  const input = document.getElementById('designFontFile');
+  const file = input.files[0];
+  if(!file){
+    setFormNote('designNote', 'Choose a TTF or OTF file first.', true);
+    return;
+  }
+  const button = event.currentTarget;
+  button.disabled = true;
+  setFormNote('designNote', 'Uploading font...');
+  try{
+    const body = new FormData();
+    body.append('font', file);
+    const result = await adminRequest('/design/font', { method: 'POST', body });
+    showDesignSettings(result.design);
+    input.value = '';
+    setFormNote('designNote', 'Font uploaded and applied. Refresh the menu page to see it.');
+  }catch(error){
+    setFormNote('designNote', error.message || 'Could not upload the font.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
 
 function setActiveLanguage(form, language){
   form.querySelectorAll('.language-switcher [data-language]').forEach(button => {
@@ -1355,9 +1459,9 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
   if(button.dataset.menuAction === 'edit'){
     document.getElementById('itemId').value = item.id;
     renderCategoryOptions(item.category_id);
-    for(const field of ['price', 'calories', 'rating', 'popularity', 'image_path', 'bg_image_url', 'food_png_url', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
+    for(const field of ['price', 'calories', 'rating', 'popularity', 'image_path', 'bg_image_url', 'food_png_url', 'food_scale', 'food_x', 'food_y', 'bg_x', 'bg_y', 'bg_scale', 'card_color', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
       const input = document.querySelector(`#itemForm [name="${field}"]`);
-      input.value = item[field] ?? '';
+      input.value = item[field] ?? (field === 'card_color' ? '#f6f1e6' : '');
     }
     document.getElementById('itemAvailable').checked = item.is_available;
     document.getElementById('itemOffer').checked = item.is_offer;

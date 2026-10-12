@@ -77,6 +77,23 @@ function menuItemValues(body = {}) {
     if (value && !/^https?:\/\//i.test(value)) return { error: 'Image links must start with http:// or https://.' };
     values[field] = value || null;
   }
+  const layoutFields = {
+    food_scale: [50, 150], food_x: [-50, 50], food_y: [-50, 50],
+    bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200],
+  };
+  for (const [field, [min, max]] of Object.entries(layoutFields)) {
+    if (!(field in body)) continue;
+    const value = body[field] === '' || body[field] == null ? null : Number(body[field]);
+    if (value !== null && (!Number.isInteger(value) || value < min || value > max)) {
+      return { error: `${field} must be a whole number between ${min} and ${max}.` };
+    }
+    values[field] = value;
+  }
+  if ('card_color' in body) {
+    const color = typeof body.card_color === 'string' ? body.card_color.trim() : '';
+    if (color && !/^#[0-9a-f]{6}$/i.test(color)) return { error: 'Card color must be a six-digit hex color.' };
+    values.card_color = color || null;
+  }
   for (const language of LANGUAGES) {
     let name = body[`name_${language}`];
     const description = body[`description_${language}`];
