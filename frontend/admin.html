@@ -1065,7 +1065,11 @@ async function adminRequest(path, options = {}){
     else if(message.includes('IMGBB_API_KEY is not configured')) key = 'imageServiceMissing';
     else if(message.includes('Choose a JPEG, PNG, WebP, or GIF image')) key = 'unsupportedImageType';
     else if(message.includes('Image must be smaller than 5 MB')) key = 'imageTooLarge';
-    else if(message.includes('Image upload failed')) key = 'imageUploadFailed';
+    else if(message.includes('Image upload failed')){
+      // keep imgbb's own reason ("Imgbb said: ...") so the admin can tell a bad key from a block or a size limit
+      const reason = message.replace(/^Image upload failed\.?\s*/, '').trim();
+      throw new Error(`${adminText('imageUploadFailed')}${reason ? ' ' + reason : ''}`);
+    }
     throw new Error(adminText(key, { status: response.status }));
   }
   return result;
@@ -1274,7 +1278,9 @@ function renderMenu(){
 
 function updateImagePreview(url){
   const preview = document.getElementById('itemImagePreview');
-  const imageUrl = typeof url === 'string' ? url.trim() : '';
+  // Same order as the customer menu: the Image URL, otherwise the Food PNG. Only when both are empty is it the fallback.
+  const foodUrl = (document.getElementById('itemFoodUrl')?.value || '').trim();
+  const imageUrl = (typeof url === 'string' ? url.trim() : '') || foodUrl;
   const label = adminText(imageUrl ? 'imagePreview' : 'fallbackFoodImage');
   preview.innerHTML = `<img src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(label)}"><span>${label}</span>`;
 }
@@ -1413,7 +1419,8 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId }){
   const urlInput = document.getElementById(urlId);
   const fileInput = document.getElementById(fileId);
   const button = document.getElementById(buttonId);
-  urlInput.addEventListener('input', () => updateCardPreview(previewId, urlInput.value));
+  const refreshTopPreview = () => updateImagePreview(document.getElementById('itemImageUrl').value);   // the header preview also follows the Food PNG
+  urlInput.addEventListener('input', () => { updateCardPreview(previewId, urlInput.value); refreshTopPreview(); });
   fileInput.addEventListener('change', () => { button.disabled = !fileInput.files.length; });
   button.addEventListener('click', async () => {
     const file = fileInput.files[0];
@@ -1438,6 +1445,7 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId }){
       });
       urlInput.value = result.url;
       updateCardPreview(previewId, result.url);
+      refreshTopPreview();
       setFormNote('itemNote', adminText('imageUploaded'));
     }catch(error){
       setFormNote('itemNote', error.message || adminText('imageUploadFailed'), true);

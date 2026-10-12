@@ -216,16 +216,24 @@ router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), async
     return res.status(413).json({ error: 'Image must be smaller than 5 MB.' });
   }
 
-  const uploadBody = new URLSearchParams({ image: imageMatch[2], name: `menu-${Date.now()}` });
-  const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(process.env.IMGBB_API_KEY)}`, {
+  // Same request shape as the upload-imgbb.js script (multipart form with the file as a Blob), which is known to work
+  // with this key. The old version sent the whole base64 string url-encoded, which imgbb can reject differently.
+  const extension = imageMatch[1].split('/')[1].replace('jpeg', 'jpg');
+  const uploadBody = new FormData();
+  uploadBody.append('image', new Blob([imageBuffer], { type: imageMatch[1] }), `menu-${Date.now()}.${extension}`);
+  uploadBody.append('name', `menu-${Date.now()}`);
+  const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(process.env.IMGBB_API_KEY.trim())}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: uploadBody,
   });
-  const result = await response.json().catch(() => null);
+  const text = await response.text();
+  let result = null;
+  try { result = JSON.parse(text); } catch { /* not JSON, e.g. a block page */ }
   if (!response.ok || !result?.success) {
-    console.error('Imgbb upload failed:', result?.error?.message || response.statusText);
-    return res.status(502).json({ error: 'Image upload failed. Check the Imgbb API key and try again.' });
+    const reason = result?.error?.message || result?.status_txt || `HTTP ${response.status}`;
+    console.error(`Imgbb upload failed (HTTP ${response.status}):`, reason);
+    // imgbb's own reason is safe to show to the (logged-in) admin and tells them whether it is the key, the size or a block.
+    return res.status(502).json({ error: `Image upload failed. Imgbb said: ${reason}` });
   }
   // `url` is the original file exactly as uploaded. `display_url` is ImgBB's viewer copy, which can be
   // resized/recompressed, so it was making sharp food photos look soft. Always store the original.
