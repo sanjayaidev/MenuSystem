@@ -16,16 +16,14 @@ Images to replace with the high-resolution originals (same file names): `fronten
 Run these four files in Supabase → **SQL Editor** → New query, **in this order** (all are safe to re-run; a database that is already set up does not need them again):
 1. `db/01_tables.sql` — **tables**: categories, menu items (with the card image, layout, display order columns), profiles, orders, order items, carts, site settings and the Special section tables.
 2. `db/02_relations.sql` — **relations**: foreign keys between the tables, indexes and uniqueness (including the unique dish display order), the public order number (`RH-YYMMDD-NNNN`, e.g. `RH-260928-0042`, built by a database trigger; admin can search by it with `GET /api/admin/orders?q=RH-2609` for a month or `?date=2026-09-28` for a day), and row-level security.
-3. `db/03_menu_and_categories.sql` — **menu**: the nine category boxes and the 17 dishes (every price 39, display order 1–17, images). Re-running it resets those 17 dishes (matched by English name) to this data; dishes added in the admin and picture position settings are left alone.
+3. `db/03_menu_and_categories.sql` — **menu**: the nine category boxes and the 17 dishes (actual prices, display order 1–17, images). Re-running it resets those 17 dishes (matched by English name) to this data; dishes added in the admin and picture position settings are left alone.
 4. `db/04_site_data.sql` — **site data**: contact phone numbers, address and map link, and the menu texts / language font settings ("This meal automatically includes" text in four languages, Arabic +2 px). Values already saved from the admin are never overwritten.
 
 The old numbered scripts (`01`–`14`) were merged into these four on 13/10/2026.
 
-**Only the price?** To set every dish to 39 on an existing database run: `update public.menu_items set price = 39;`
-
 ### 13/10/2026 menu update
 - **Dish order** — the menu page default sort is now *Menu order* (new first option of the sort box), following `display_order`. Set it per dish in Admin → Menu items → *Display order (unique)*; a number already used by another dish is refused and names that dish. Empty on a new dish = added at the end; dishes without a number are listed last. The *Most Popular* box keeps its best-sellers-first order.
-- **Prices** — shown without trailing zeros (39, not 39.00) on the menu, cart and WhatsApp message. A price with real cents keeps two decimals (39.50). The stored prices are set to 39 by `db/03_menu_and_categories.sql` (or, on an existing database, `update public.menu_items set price = 39;`; a single dish can be changed in Admin → Menu items).
+- **Prices** — shown without trailing zeros (39, not 39.00) on the menu, cart and WhatsApp message. A price with real cents keeps two decimals (39.50). The stored prices are not changed by the page code: they come from `db/03_menu_and_categories.sql` (the actual prices) or from Admin → Menu items.
 - **"This meal automatically includes" text** — now *Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water* in English, Arabic, Urdu and Chinese (the Arabic, Urdu and Chinese texts are drafts to be confirmed by a native speaker). Each language can be edited in Admin → Menu design → *"This meal automatically includes" text*; an empty box falls back to the built-in text. The title line is unchanged.
 - **Font size per language** — every text size on the menu page gets a per-language extra size (`--lang-add`, in px). Arabic starts at +2 px; change it, and pick a font per language, in Admin → Menu design → *Language font and size*. Both are stored in `site_settings` (key `menu_design`, no new SQL).
 
