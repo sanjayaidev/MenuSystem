@@ -38,7 +38,7 @@ Run these in Supabase → **SQL Editor** → New query, **in this order**:
 
 ### 13/10/2026 menu update
 - **Dish order** — the menu page default sort is now *Menu order* (new first option of the sort box), following `display_order`. Set it per dish in Admin → Menu items → *Display order (unique)*; a number already used by another dish is refused and names that dish. Empty on a new dish = added at the end; dishes without a number are listed last. The *Most Popular* box keeps its best-sellers-first order.
-- **Prices** — shown without trailing zeros (39, not 39.00) on the menu, cart and WhatsApp message. A price with real cents keeps two decimals (39.50). The stored prices are not changed: set each dish to 39 in Admin → Menu items if that is the new price.
+- **Prices** — shown without trailing zeros (39, not 39.00) on the menu, cart and WhatsApp message. A price with real cents keeps two decimals (39.50). The stored prices are changed by `db/14_all_prices_39.sql`, which sets every dish to 39 (run it in Supabase; or edit a dish's price in Admin → Menu items).
 - **"This meal automatically includes" text** — now *Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water* in English, Arabic, Urdu and Chinese (the Arabic, Urdu and Chinese texts are drafts to be confirmed by a native speaker). Each language can be edited in Admin → Menu design → *"This meal automatically includes" text*; an empty box falls back to the built-in text. The title line is unchanged.
 - **Font size per language** — every text size on the menu page gets a per-language extra size (`--lang-add`, in px). Arabic starts at +2 px; change it, and pick a font per language, in Admin → Menu design → *Language font and size*. Both are stored in `site_settings` (key `menu_design`, no new SQL).
 
