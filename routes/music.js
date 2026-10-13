@@ -113,7 +113,7 @@ function pageParam(req, res) {
 }
 
 function tableMissingResponse(res) {
-  return res.status(500).json({ error: 'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' });
+  return res.status(500).json({ error: 'The site_settings table is missing. Run db/01_tables.sql in Supabase.' });
 }
 
 // GET /api/music (public) - { index: {url,name,enabled}|null, menu: {...}|null }

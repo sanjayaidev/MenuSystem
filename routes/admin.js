@@ -62,7 +62,7 @@ function menuItemValues(body = {}) {
   }
   if (!Number.isInteger(popularity) || popularity < 0) return { error: 'Popularity must be a non-negative whole number.' };
 
-  // Display order (db/13_display_order.sql): a unique whole number, blank = no fixed position.
+  // Display order (db/01_tables.sql): a unique whole number, blank = no fixed position.
   // Only written when the request carries the field, so older clients and un-migrated databases keep working.
   let displayOrder;
   if ('display_order' in body) {
@@ -82,7 +82,7 @@ function menuItemValues(body = {}) {
     is_available: body.is_available !== false,
     image_path: typeof body.image_path === 'string' && body.image_path.trim() ? body.image_path.trim() : null,
   };
-  // 3-layer menu card images (db/09_menu_card_images.sql). Only written when the
+  // 3-layer menu card images (db/01_tables.sql). Only written when the
   // request carries them, so older clients and un-migrated databases keep working.
   if (displayOrder !== undefined) values.display_order = displayOrder;
   for (const field of ['bg_image_url', 'food_png_url']) {

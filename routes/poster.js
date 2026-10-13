@@ -134,7 +134,7 @@ async function prepareImage(sourcePath, outputPath) {
 }
 
 function tableMissingResponse(res) {
-  return res.status(500).json({ error: 'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' });
+  return res.status(500).json({ error: 'The site_settings table is missing. Run db/01_tables.sql in Supabase.' });
 }
 
 // GET /api/poster (public) - { url, name } or null

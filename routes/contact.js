@@ -83,7 +83,7 @@ router.put('/admin/contact', requireAdmin, async (req, res) => {
 
   if (error) {
     if (isMissingTable(error)) {
-      return res.status(500).json({ error: 'The site_settings table is missing. Run db/06_site_settings.sql in Supabase.' });
+      return res.status(500).json({ error: 'The site_settings table is missing. Run db/01_tables.sql in Supabase.' });
     }
     return res.status(500).json({ error: error.message || 'Could not save contact details.' });
   }

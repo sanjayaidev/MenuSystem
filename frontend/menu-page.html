@@ -1146,7 +1146,7 @@ const listEl = document.getElementById('list');
    POPULAR_KEY is the virtual "Most Popular" box: the POPULAR_COUNT best-selling dishes, whatever their category. */
 const POPULAR_KEY = '__popular';
 const POPULAR_COUNT = 8;
-const POPULAR_SORT_ORDER = 8;   // position of the Most Popular box among the category sort_order values (after Side Orders = 7, before Dine In = 9; see db/11_menu_update_oct2026.sql)
+const POPULAR_SORT_ORDER = 8;   // position of the Most Popular box among the category sort_order values (after Side Orders = 7, before Dine In = 9; see db/03_menu_and_categories.sql)
 let currentCat = 'all';
 
 function renderCategoryRow(){
@@ -1516,7 +1516,7 @@ async function loadMenuData(){
     }));
 
     // "Most Popular" is not a database category: it is a box that lists the best-selling dishes.
-    // It sits 8th, after the seven food categories (incl. Side Orders) and before Dine In / Outside Catering (see db/11_menu_update_oct2026.sql).
+    // It sits 8th, after the seven food categories (incl. Side Orders) and before Dine In / Outside Catering (see db/03_menu_and_categories.sql).
     CATS.push({
       key: POPULAR_KEY,
       sort_order: POPULAR_SORT_ORDER,
