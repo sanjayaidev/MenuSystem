@@ -314,6 +314,31 @@
         <p class="form-note" id="designFontStatus" role="status"></p>
         <div class="form-actions"><button class="action-btn primary" id="designSave" type="submit">Save design</button><span class="form-note" id="designNote" role="status"></span></div>
       </form>
+
+      <form class="manager-form" id="langForm" novalidate style="margin-top:22px;">
+        <h3 style="margin:0 0 6px;">Language font and size (menu page)</h3>
+        <p class="form-note" style="margin:0 0 12px;">Size change is added to every text size on the menu page for that language (in px, for example 2 = 2 px bigger, 0 = unchanged). Font "Default" keeps the built-in font for the language. Arabic starts at +2 px.</p>
+        <div class="form-grid compact">
+          <label>English font<select id="langFont_en"></select></label>
+          <label>English size change (px)<input id="langSize_en" type="number" min="-6" max="12" step="1" value="0"></label>
+          <label>العربية font<select id="langFont_ar"></select></label>
+          <label>العربية size change (px)<input id="langSize_ar" type="number" min="-6" max="12" step="1" value="2"></label>
+          <label>اردو font<select id="langFont_ur"></select></label>
+          <label>اردو size change (px)<input id="langSize_ur" type="number" min="-6" max="12" step="1" value="0"></label>
+          <label>中文 font<select id="langFont_zh"></select></label>
+          <label>中文 size change (px)<input id="langSize_zh" type="number" min="-6" max="12" step="1" value="0"></label>
+        </div>
+
+        <h3 style="margin:22px 0 6px;">"This meal automatically includes" text</h3>
+        <p class="form-note" style="margin:0 0 12px;">Shown under the title on every dish. Leave a language empty to use the built-in text: "Seaweed Soup, Fried Egg Rice, Noodles, Salad &amp; Water".</p>
+        <div class="language-fields">
+          <label>English<textarea id="includes_en" maxlength="300" lang="en" placeholder="Seaweed Soup, Fried Egg Rice, Noodles, Salad &amp; Water"></textarea></label>
+          <label>العربية<textarea id="includes_ar" maxlength="300" lang="ar" dir="rtl" placeholder="شوربة أعشاب البحر، أرز مقلي بالبيض، نودلز، سلطة وماء"></textarea></label>
+          <label>اردو<textarea id="includes_ur" maxlength="300" lang="ur" dir="rtl" placeholder="سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی"></textarea></label>
+          <label>中文<textarea id="includes_zh" maxlength="300" lang="zh" placeholder="紫菜汤、蛋炒饭、面条、沙拉和水"></textarea></label>
+        </div>
+        <div class="form-actions"><button class="action-btn primary" id="langSave" type="submit">Save language settings</button><span class="form-note" id="langNote" role="status"></span></div>
+      </form>
     </section>
 
     <section class="admin-panel" id="musicPanel" hidden>
@@ -358,7 +383,9 @@
           <label><span data-ui="calories">Calories</span><input name="calories" id="itemCalories" type="number" min="0" step="1"></label>
           <label><span data-ui="rating">Rating</span><input name="rating" id="itemRating" type="number" min="0" max="5" step="0.1"></label>
           <label><span data-ui="popularity">Popularity</span><input name="popularity" id="itemPopularity" type="number" min="0" step="1" value="0"></label>
+          <label><span data-ui="displayOrder">Display order (unique)</span><input name="display_order" id="itemDisplayOrder" type="number" min="1" max="9999" step="1" placeholder="1, 2, 3..."></label>
         </div>
+        <p class="field-hint" data-ui="displayOrderHint">Dishes are listed on the menu page in this order (1 first). Each number can be used by one dish only. Empty on a new dish = added at the end.</p>
         <div class="language-switcher" role="group" aria-label="Menu item translation language" data-ui-aria-label="itemTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
@@ -435,7 +462,7 @@ const ADMIN_UI_STRINGS = {
     categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'Sort order', categoryTranslationLanguage:'Category translation language',
     createCategory:'Create category', saveCategory:'Save category', cancelEdit:'Cancel edit',
     newMenuItem:'New menu item', editMenuItem:'Edit menu item', fallbackFoodImage:'Fallback food image',
-    category:'Category', chooseCategory:'Choose a category', price:'Price', calories:'Calories', rating:'Rating', popularity:'Popularity',
+    category:'Category', chooseCategory:'Choose a category', price:'Price', calories:'Calories', rating:'Rating', popularity:'Popularity', displayOrder:'Display order (unique)', displayOrderHint:'Dishes are listed on the menu page in this order (1 first). Each number can be used by one dish only. Empty on a new dish = added at the end.',
     itemTranslationLanguage:'Menu item translation language', availableToOrder:'Available to order', featuredOffer:'Featured offer',
     imageUrl:'Image URL', uploadImage:'Upload image', uploadToImgbb:'Upload', createMenuItem:'Create menu item',
     cardBgImage:'Card background image (layer 1)', foodPngImage:'Food PNG, transparent (layer 3)',
@@ -480,7 +507,7 @@ const ADMIN_UI_STRINGS = {
     categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'ترتيب العرض', categoryTranslationLanguage:'لغة ترجمة الفئة',
     createCategory:'إنشاء فئة', saveCategory:'حفظ الفئة', cancelEdit:'إلغاء التعديل',
     newMenuItem:'صنف جديد', editMenuItem:'تعديل الصنف', fallbackFoodImage:'صورة الطعام الافتراضية',
-    category:'الفئة', chooseCategory:'اختر فئة', price:'السعر', calories:'السعرات الحرارية', rating:'التقييم', popularity:'الشعبية',
+    category:'الفئة', chooseCategory:'اختر فئة', price:'السعر', calories:'السعرات الحرارية', rating:'التقييم', popularity:'الشعبية', displayOrder:'ترتيب العرض (رقم فريد)', displayOrderHint:'تُعرض الأصناف في صفحة القائمة بهذا الترتيب (1 أولاً). لا يمكن استخدام الرقم لأكثر من صنف. إذا تُرك فارغاً لصنف جديد يُضاف في النهاية.',
     itemTranslationLanguage:'لغة ترجمة الصنف', availableToOrder:'متاح للطلب', featuredOffer:'عرض مميز',
     imageUrl:'رابط الصورة', uploadImage:'رفع صورة', uploadToImgbb:'رفع', createMenuItem:'إنشاء صنف',
     cardBgImage:'صورة خلفية البطاقة (الطبقة 1)', foodPngImage:'صورة الطعام PNG شفافة (الطبقة 3)',
@@ -525,7 +552,7 @@ const ADMIN_UI_STRINGS = {
     categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'ترتیب', categoryTranslationLanguage:'زمرے کی ترجمہ زبان',
     createCategory:'زمرہ بنائیں', saveCategory:'زمرہ محفوظ کریں', cancelEdit:'ترمیم منسوخ کریں',
     newMenuItem:'نیا مینو آئٹم', editMenuItem:'مینو آئٹم تبدیل کریں', fallbackFoodImage:'متبادل کھانے کی تصویر',
-    category:'زمرہ', chooseCategory:'زمرہ منتخب کریں', price:'قیمت', calories:'کیلوریز', rating:'ریٹنگ', popularity:'مقبولیت',
+    category:'زمرہ', chooseCategory:'زمرہ منتخب کریں', price:'قیمت', calories:'کیلوریز', rating:'ریٹنگ', popularity:'مقبولیت', displayOrder:'ڈسپلے ترتیب (منفرد نمبر)', displayOrderHint:'ڈشز مینو صفحے پر اسی ترتیب سے دکھائی جاتی ہیں (1 سب سے پہلے)۔ ہر نمبر صرف ایک ڈش کے لیے ہو سکتا ہے۔ نئی ڈش میں خالی چھوڑنے پر آخر میں شامل ہوگی۔',
     itemTranslationLanguage:'مینو آئٹم کی ترجمہ زبان', availableToOrder:'آرڈر کے لیے دستیاب', featuredOffer:'نمایاں آفر',
     imageUrl:'تصویر کا URL', uploadImage:'تصویر اپ لوڈ کریں', uploadToImgbb:'اپ لوڈ', createMenuItem:'مینو آئٹم بنائیں',
     cardBgImage:'کارڈ کی پس منظر تصویر (پرت 1)', foodPngImage:'کھانے کی شفاف PNG تصویر (پرت 3)',
@@ -570,7 +597,7 @@ const ADMIN_UI_STRINGS = {
     categoryKeyPlaceholder:'e.g. side-dishes', sortOrder:'排序', categoryTranslationLanguage:'分类翻译语言',
     createCategory:'创建分类', saveCategory:'保存分类', cancelEdit:'取消编辑',
     newMenuItem:'新建菜单商品', editMenuItem:'编辑菜单商品', fallbackFoodImage:'默认食物图片',
-    category:'分类', chooseCategory:'选择分类', price:'价格', calories:'卡路里', rating:'评分', popularity:'人气',
+    category:'分类', chooseCategory:'选择分类', price:'价格', calories:'卡路里', rating:'评分', popularity:'人气', displayOrder:'显示顺序（唯一）', displayOrderHint:'菜单页面按此顺序显示菜品（1 排最前）。每个数字只能用于一道菜。新菜品留空则排在最后。',
     itemTranslationLanguage:'商品翻译语言', availableToOrder:'可供下单', featuredOffer:'精选优惠',
     imageUrl:'图片网址', uploadImage:'上传图片', uploadToImgbb:'上传', createMenuItem:'创建商品',
     cardBgImage:'卡片背景图（第 1 层）', foodPngImage:'食物透明 PNG（第 3 层）',
@@ -1168,7 +1195,55 @@ function showDesignSettings(design){
   document.getElementById('designFontSizeValue').textContent = `${design.font_size || 14} px`;
   document.getElementById('designFontColor').value = design.font_color || '#2b2622';
   document.getElementById('designFontStatus').textContent = design.font_url ? 'Custom font uploaded.' : 'No custom font uploaded.';
+  showLanguageSettings(design);
 }
+
+/* ---------- language font / size and the "includes" text ---------- */
+const LANG_CODES = ['en', 'ar', 'ur', 'zh'];
+const LANG_FONT_OPTIONS = [
+  ['', 'Default (built-in)'], ['poppins', 'Poppins'], ['naskh', 'Noto Naskh Arabic'], ['nastaliq', 'Noto Nastaliq Urdu'],
+  ['sans-sc', 'Noto Sans SC'], ['cinzel', 'Cinzel'], ['cormorant', 'Cormorant Garamond'], ['georgia', 'Georgia'],
+  ['arial', 'Arial'], ['custom', 'Uploaded font'],
+];
+const LANG_STYLE_DEFAULTS = { en:{ size_add:0, font:'' }, ar:{ size_add:2, font:'' }, ur:{ size_add:0, font:'' }, zh:{ size_add:0, font:'' } };
+
+function showLanguageSettings(design){
+  for(const code of LANG_CODES){
+    const style = { ...LANG_STYLE_DEFAULTS[code], ...((design.lang_style || {})[code] || {}) };
+    const select = document.getElementById(`langFont_${code}`);
+    select.innerHTML = LANG_FONT_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+    select.value = style.font || '';
+    document.getElementById(`langSize_${code}`).value = Number.isFinite(Number(style.size_add)) ? Number(style.size_add) : 0;
+    document.getElementById(`includes_${code}`).value = (design.includes_text || {})[code] || '';
+  }
+}
+
+document.getElementById('langForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('langSave');
+  button.disabled = true;
+  setFormNote('langNote', 'Saving...');
+  try{
+    const payload = { lang_style: {}, includes_text: {} };
+    for(const code of LANG_CODES){
+      const size = Number(document.getElementById(`langSize_${code}`).value);
+      if(!Number.isInteger(size) || size < -6 || size > 12) throw new Error('Size change must be a whole number from -6 to 12.');
+      payload.lang_style[code] = { size_add: size, font: document.getElementById(`langFont_${code}`).value };
+      payload.includes_text[code] = document.getElementById(`includes_${code}`).value;
+    }
+    const result = await adminRequest('/design/languages', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    showLanguageSettings(result.design);
+    setFormNote('langNote', 'Saved. Refresh the menu page to see it.');
+  }catch(error){
+    setFormNote('langNote', error.message || 'Could not save language settings.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
 
 async function loadDesign(){
   setFormNote('designNote', 'Loading...');
@@ -1410,6 +1485,12 @@ function renderMenu(){
     records.innerHTML = `<div class="empty">${adminText(menuItems.length ? 'noMatchingMenuItems' : 'noMenuItems')}</div>`;
     return;
   }
+  // numbered dishes first (display order), then the rest by name
+  filtered.sort((a, b) => {
+    const ao = a.display_order == null ? Infinity : Number(a.display_order);
+    const bo = b.display_order == null ? Infinity : Number(b.display_order);
+    return ao === bo ? String(a.name_en || '').localeCompare(String(b.name_en || '')) : ao - bo;
+  });
   records.innerHTML = filtered.map(item => {
     const imageUrl = (typeof item.food_png_url === 'string' && item.food_png_url.trim()) || (typeof item.image_path === 'string' ? item.image_path.trim() : '');
     return `
@@ -1417,7 +1498,7 @@ function renderMenu(){
         <div class="record-main">
           <img class="record-thumb" src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en || adminText('menuItemAlt'))}">
           <div class="record-copy">
-            <strong>${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en)}</strong>
+            <strong>${item.display_order != null ? `<span class="record-badge">#${escapeHtml(item.display_order)}</span> ` : ''}${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en)}</strong>
             <small>${escapeHtml(item.categories?.[`label_${adminUiLanguage}`] || item.categories?.label_en || adminText('uncategorized'))} · ${money(item.price)}</small>
             <div class="record-meta">
               <span class="record-badge${item.is_available ? '' : ' unavailable'}">${adminText(item.is_available ? 'available' : 'unavailable')}</span>
@@ -1476,7 +1557,8 @@ function updateLiveMenuPreview(){
   nameElement.lang = activeLanguage;
   nameElement.dir = ['ar', 'ur'].includes(activeLanguage) ? 'rtl' : 'ltr';
   const price = Number(field('price')?.value);
-  document.getElementById('liveMenuPrice').innerHTML = money(Number.isFinite(price) ? price : 0);
+  // same as the menu page: 39.00 shows as 39
+  document.getElementById('liveMenuPrice').innerHTML = money(Number.isFinite(price) ? price : 0).replace(/\.00(?=<\/span>)/, '');
 
   const card = document.getElementById('liveMenuCard');
   const cardColor = /^#[0-9a-f]{6}$/i.test(field('card_color')?.value || '') ? field('card_color').value : '#f6f1e6';
@@ -1553,7 +1635,7 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
   if(button.dataset.menuAction === 'edit'){
     document.getElementById('itemId').value = item.id;
     renderCategoryOptions(item.category_id);
-    for(const field of ['price', 'calories', 'rating', 'popularity', 'image_path', 'bg_image_url', 'food_png_url', 'food_scale', 'food_x', 'food_y', 'bg_x', 'bg_y', 'bg_scale', 'card_color', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
+    for(const field of ['price', 'calories', 'rating', 'popularity', 'display_order', 'image_path', 'bg_image_url', 'food_png_url', 'food_scale', 'food_x', 'food_y', 'bg_x', 'bg_y', 'bg_scale', 'card_color', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
       const input = document.querySelector(`#itemForm [name="${field}"]`);
       input.value = item[field] ?? (field === 'card_color' ? '#f6f1e6' : '');
     }

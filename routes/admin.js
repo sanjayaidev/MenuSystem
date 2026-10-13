@@ -14,6 +14,9 @@ function asyncHandler(handler) {
 }
 
 function databaseError(res, error, fallback) {
+  if (error.code === '23505' && /display_order/.test(`${error.message || ''} ${error.details || ''}`)) {
+    return res.status(409).json({ error: 'That display order number is already used by another dish.' });
+  }
   if (error.code === '23505') return res.status(409).json({ error: 'That key is already in use.' });
   if (error.code === '23503') return res.status(409).json({ error: 'This record is still in use.' });
   return res.status(500).json({ error: error.message || fallback });
@@ -59,6 +62,16 @@ function menuItemValues(body = {}) {
   }
   if (!Number.isInteger(popularity) || popularity < 0) return { error: 'Popularity must be a non-negative whole number.' };
 
+  // Display order (db/13_display_order.sql): a unique whole number, blank = no fixed position.
+  // Only written when the request carries the field, so older clients and un-migrated databases keep working.
+  let displayOrder;
+  if ('display_order' in body) {
+    displayOrder = body.display_order === '' || body.display_order == null ? null : Number(body.display_order);
+    if (displayOrder !== null && (!Number.isInteger(displayOrder) || displayOrder < 1 || displayOrder > 9999)) {
+      return { error: 'Display order must be a whole number from 1 to 9999 (or empty).' };
+    }
+  }
+
   const values = {
     category_id: categoryId,
     price,
@@ -71,6 +84,7 @@ function menuItemValues(body = {}) {
   };
   // 3-layer menu card images (db/09_menu_card_images.sql). Only written when the
   // request carries them, so older clients and un-migrated databases keep working.
+  if (displayOrder !== undefined) values.display_order = displayOrder;
   for (const field of ['bg_image_url', 'food_png_url']) {
     if (!(field in body)) continue;
     const value = typeof body[field] === 'string' ? body[field].trim() : '';
@@ -182,10 +196,33 @@ router.get('/menu', asyncHandler(async (req, res) => {
   res.json({ items: data });
 }));
 
+// Display order must be unique: tell the admin which dish already holds the number.
+async function displayOrderConflict(value, excludeId) {
+  if (value == null) return null;
+  let query = supabase.from('menu_items').select('id, name_en').eq('display_order', value).limit(1);
+  if (excludeId != null) query = query.neq('id', excludeId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data && data.length ? `Display order ${value} is already used by "${data[0].name_en}". Choose a different number.` : null;
+}
+
 // POST /api/admin/menu
 router.post('/menu', asyncHandler(async (req, res) => {
   const result = menuItemValues(req.body);
   if (result.error) return res.status(400).json({ error: result.error });
+  if ('display_order' in result.values) {
+    if (result.values.display_order === null) {
+      // new dish with no number: put it at the end of the list
+      const { data: last, error: lastError } = await supabase
+        .from('menu_items').select('display_order').not('display_order', 'is', null)
+        .order('display_order', { ascending: false }).limit(1);
+      if (lastError) return databaseError(res, lastError, 'Failed to create menu item.');
+      result.values.display_order = (last && last.length ? last[0].display_order : 0) + 1;
+    } else {
+      const conflict = await displayOrderConflict(result.values.display_order, null);
+      if (conflict) return res.status(409).json({ error: conflict });
+    }
+  }
   const { data, error } = await supabase
     .from('menu_items')
     .insert(result.values)
@@ -199,6 +236,10 @@ router.post('/menu', asyncHandler(async (req, res) => {
 router.patch('/menu/:id', asyncHandler(async (req, res) => {
   const result = menuItemValues(req.body);
   if (result.error) return res.status(400).json({ error: result.error });
+  if (result.values.display_order != null) {
+    const conflict = await displayOrderConflict(result.values.display_order, req.params.id);
+    if (conflict) return res.status(409).json({ error: conflict });
+  }
   const { data, error } = await supabase
     .from('menu_items')
     .update(result.values)

@@ -39,14 +39,14 @@
   html,body{height:100%;}
   body{
     margin:0; background:var(--bg); color:var(--text);
-    font-family:'Poppins',sans-serif;
+    font-family:var(--lang-font,'Poppins',sans-serif);
     padding-top:env(safe-area-inset-top,0px);
     padding-bottom:env(safe-area-inset-bottom,0px);
     transition:background .2s ease, color .2s ease;
   }
-  html[lang="ar"] body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
-  html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Poppins',sans-serif;}
-  html[lang="zh"] body{font-family:'Noto Sans SC','Poppins',sans-serif;}
+  html[lang="ar"] body{font-family:var(--lang-font,'Noto Naskh Arabic','Poppins',sans-serif);}
+  html[lang="ur"] body{font-family:var(--lang-font,'Noto Nastaliq Urdu','Poppins',sans-serif);}
+  html[lang="zh"] body{font-family:var(--lang-font,'Noto Sans SC','Poppins',sans-serif);}
   .app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));}
 
   /* ===== BRAND ===== */
@@ -56,7 +56,7 @@
   }
   .topbar .logo-wrap{width:100%; display:flex; align-items:center; justify-content:center;}
   .topbar .logo-wrap img{width:100%; height:auto; max-height:var(--brand-h); object-fit:contain; display:block;}
-  .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:14px; display:none;}
+  .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:calc(14px + var(--lang-add,0px)); display:none;}
   .language-row{display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px; background:#000;}
   .lang-pills{
     display:flex; justify-content:center; gap:6px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;
@@ -65,7 +65,7 @@
   .lang-pills::-webkit-scrollbar{display:none;}
   .lang-pill{
     flex-shrink:0; background:#000; color:var(--muted); border:1px solid var(--line);
-    border-radius:999px; padding:6px 14px; font-family:inherit; font-size:12px; font-weight:600;
+    border-radius:999px; padding:6px 14px; font-family:inherit; font-size:calc(12px + var(--lang-add,0px)); font-weight:600;
     cursor:pointer; transition:background .15s ease, color .15s ease;
   }
   .lang-pill.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
@@ -88,7 +88,7 @@
   }
   .hero-cue{
     position:absolute; left:20px; bottom:22px; display:flex; align-items:center; gap:8px;
-    font-size:12px; color:var(--muted); text-decoration:none;
+    font-size:calc(12px + var(--lang-add,0px)); color:var(--muted); text-decoration:none;
   }
   .hero-cue svg{width:14px; height:14px; animation:bob 1.6s ease-in-out infinite;}
   @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(4px);}}
@@ -98,10 +98,10 @@
   /* ===== SPECIAL CATEGORY VIDEOS ===== */
   .section{padding:22px 16px 10px;}
   .sec-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px;}
-  .sec-head h2{margin:0; font-size:22px;}
+  .sec-head h2{margin:0; font-size:calc(22px + var(--lang-add,0px));}
   .special-controls{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}
   .special-hint{margin:0; color:var(--muted); font-size:11px;}
-  .speed-control{display:flex; align-items:center; gap:8px; white-space:nowrap; color:var(--muted); font-size:11px;}
+  .speed-control{display:flex; align-items:center; gap:8px; white-space:nowrap; color:var(--muted); font-size:calc(11px + var(--lang-add,0px));}
   .speed-control input{width:94px; accent-color:var(--gold); touch-action:pan-x;}
   .speed-control output{min-width:1.2em; text-align:center; color:var(--text); font-weight:700;}
   .special-row{display:grid; grid-template-columns:1fr; gap:20px;}
@@ -127,11 +127,11 @@
 
   /* ===== MENU ===== */
   #menu{display:flex; flex-direction:column; scroll-margin-top:var(--brand-h);}
-  #menuTitle{margin:8px 16px 0; font-size:22px;}
+  #menuTitle{margin:8px 16px 0; font-size:calc(22px + var(--lang-add,0px));}
   .controls{display:flex; flex-direction:column; gap:10px; padding:14px 0 8px; order:1;}
   .controls select{
     flex:none; width:calc(100% - 32px); margin:0 16px; background:var(--surface); color:var(--text); border:1px solid var(--line);
-    border-radius:10px; padding:10px 10px; font-family:inherit; font-size:13px; appearance:none;
+    border-radius:10px; padding:10px 10px; font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); appearance:none;
   }
   /* category boxes: one horizontally scrolling row (replaces the old category dropdown) */
   .cat-row{
@@ -148,15 +148,15 @@
   .cat-chip{
     flex:0 0 auto; scroll-snap-align:start; white-space:nowrap; cursor:pointer;
     background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:10px;
-    padding:10px 14px; font-family:inherit; font-size:13px; font-weight:600; -webkit-tap-highlight-color:transparent;
+    padding:10px 14px; font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); font-weight:600; -webkit-tap-highlight-color:transparent;
     transition:background .15s ease, color .15s ease, border-color .15s ease;
   }
   .cat-chip.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
   .cat-chip:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
   .offer-banner{order:2; display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:8px 16px 10px; padding:0; overflow:hidden; background:var(--gold); color:#1a1408;}
   .offer-banner-copy{grid-row:2; min-width:0; padding:14px 16px;}
-  .offer-banner h3{margin:0 0 4px; font-size:14px; line-height:1.25;}
-  .offer-banner p{margin:0; font-size:11px; line-height:1.4;}
+  .offer-banner h3{margin:0 0 4px; font-size:calc(14px + var(--lang-add,0px)); line-height:1.25;}
+  .offer-banner p{margin:0; font-size:calc(11px + var(--lang-add,0px)); line-height:1.4;}
   .offer-banner img{grid-row:1; display:block; width:100%; aspect-ratio:1/1; height:auto; max-width:none; object-fit:cover;}
   main{flex:1; padding:6px 16px 20px; order:3;}
   .app.menu-mode .hero,.app.menu-mode #special{display:none;}
@@ -205,8 +205,8 @@
   .row .corner.br{bottom:calc(1.1 * var(--u)); right:calc(1.1 * var(--u)); transform:scale(-1,-1);}
   .row .flourish{width:calc(11 * var(--u)); height:auto; color:var(--ornament);}
   .row .name{
-    margin:0; font-family:var(--menu-font-family,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif); font-weight:700;
-    letter-spacing:.06em; text-transform:uppercase; font-size:max(12px, calc(var(--menu-font-scale,3.2) * var(--u) + 2pt)); line-height:1.2;
+    margin:0; font-family:var(--lang-font,var(--menu-font-family,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif)); font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; font-size:calc(max(12px, calc(var(--menu-font-scale,3.2) * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1.2;
     color:var(--menu-font-color,var(--ink)); overflow-wrap:anywhere;
   }
   /* Saudi Riyal sign (Unicode U+20C1, glyph outline from the MIT-licensed `riyal` package). Drawn as an SVG because most device fonts do not have the character yet. */
@@ -214,12 +214,12 @@
   .money .riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
   .row .price{
     margin:0; font-family:var(--menu-font-family,'Cormorant Garamond',Georgia,'Times New Roman',serif); font-weight:700;
-    font-size:max(16px, calc(4.6 * var(--u) + 2pt)); line-height:1; letter-spacing:.02em; color:var(--menu-font-color,#5b4a2c);
+    font-size:calc(max(16px, calc(4.6 * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1; letter-spacing:.02em; color:var(--menu-font-color,#5b4a2c);
   }
   /* scripts where uppercase / letter-spacing / Cinzel would break the text */
-  html[lang="ar"] .row .name{font-family:'Noto Naskh Arabic',serif; letter-spacing:0; text-transform:none; line-height:1.5;}
-  html[lang="ur"] .row .name{font-family:'Noto Nastaliq Urdu',serif; letter-spacing:0; text-transform:none; line-height:1.9;}
-  html[lang="zh"] .row .name{font-family:'Noto Sans SC',sans-serif; letter-spacing:.04em; text-transform:none;}
+  html[lang="ar"] .row .name{font-family:var(--lang-font,'Noto Naskh Arabic',serif); letter-spacing:0; text-transform:none; line-height:1.5;}
+  html[lang="ur"] .row .name{font-family:var(--lang-font,'Noto Nastaliq Urdu',serif); letter-spacing:0; text-transform:none; line-height:1.9;}
+  html[lang="zh"] .row .name{font-family:var(--lang-font,'Noto Sans SC',sans-serif); letter-spacing:.04em; text-transform:none;}
 
   /* layer 3: the box is card-edge + overlap wide, the PNG sits against its card-side edge, taps pass through to .open */
   .row .food{
@@ -250,7 +250,7 @@
     display:flex; align-items:center; gap:calc(1.4 * var(--u)); border:0; cursor:pointer;
     background:var(--gold); color:#1a1408;
     padding:max(9px, calc(1.3 * var(--u))) max(10px, calc(2.2 * var(--u)));
-    font-family:inherit; font-weight:600; font-size:max(11px, calc(1.9 * var(--u) + 2pt)); line-height:1;
+    font-family:inherit; font-weight:600; font-size:calc(max(11px, calc(1.9 * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1;
     box-shadow:0 calc(.3 * var(--u)) calc(1 * var(--u)) rgba(0,0,0,.3);
     transition:filter .15s, transform .1s;
   }
@@ -268,7 +268,7 @@
     .row .add{padding:max(9px, calc(1.3 * var(--u))) max(9px, calc(2 * var(--u)));}
   }
 
-  .empty{padding:40px 10px; text-align:center; color:var(--muted); font-size:14px;}
+  .empty{padding:40px 10px; text-align:center; color:var(--muted); font-size:calc(14px + var(--lang-add,0px));}
 
   /* ===== OVERLAYS (item modal / cart / checkout) ===== */
   .overlay{
@@ -304,9 +304,9 @@
     color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
   }
   .icon-btn svg{width:18px; height:18px;}
-  .overlay-title{font-size:16px; font-weight:700; flex:1; text-align:center;}
+  .overlay-title{font-size:calc(16px + var(--lang-add,0px)); font-weight:700; flex:1; text-align:center;}
   .count-pill{
-    background:var(--red); color:#fff; font-size:12px; font-weight:700; border-radius:999px;
+    background:var(--red); color:#fff; font-size:calc(12px + var(--lang-add,0px)); font-weight:700; border-radius:999px;
     padding:4px 12px; flex-shrink:0;
   }
 
@@ -320,30 +320,30 @@
   html[data-theme] .item-hero .icon-btn{background:rgba(0,0,0,.55); color:#fff;}   /* readable over any background picture, in both themes */
   .item-tag{
     z-index:2; position:absolute; top:12px; inset-inline-end:12px; background:var(--gold); color:#1a1408;
-    font-size:calc(12px + 2pt); font-weight:700; border-radius:999px; padding:5px 12px;
+    font-size:calc(12px + 2pt + var(--lang-add,0px)); font-weight:700; border-radius:999px; padding:5px 12px;
   }
   .item-body{padding:16px; flex:1 1 auto; min-height:0; overflow-y:auto;}
   .badge-row{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
   .badge{
-    border:1px solid var(--line); border-radius:8px; padding:5px 10px; font-size:12px;
+    border:1px solid var(--line); border-radius:8px; padding:5px 10px; font-size:calc(12px + var(--lang-add,0px));
     color:var(--gold); font-weight:600; background:var(--surface);
   }
-  .item-body h2{font-size:calc(21px + 2pt); margin:4px 0 2px;}
-  .item-subtitle{color:var(--gold); font-size:calc(13px + 2pt); font-weight:600; margin:0 0 12px;}
-  .item-desc{color:var(--muted); font-size:calc(14px + 2pt); line-height:1.6; margin:0 0 16px;}
+  .item-body h2{font-size:calc(21px + 2pt + var(--lang-add,0px)); margin:4px 0 2px;}
+  .item-subtitle{color:var(--gold); font-size:calc(13px + 2pt + var(--lang-add,0px)); font-weight:600; margin:0 0 12px;}
+  .item-desc{color:var(--muted); font-size:calc(14px + 2pt + var(--lang-add,0px)); line-height:1.6; margin:0 0 16px;}
   .includes-box{
     border:1px solid var(--gold); background:rgba(227,178,60,.08); border-radius:12px;
     padding:12px 14px; margin-bottom:16px;
   }
-  .includes-box .includes-title{color:var(--gold); font-weight:700; font-size:calc(13px + 2pt); margin:0 0 6px;}
-  .includes-box p{margin:0; font-size:calc(13px + 2pt); color:var(--text); line-height:1.5;}
+  .includes-box .includes-title{color:var(--gold); font-weight:700; font-size:calc(13px + 2pt + var(--lang-add,0px)); margin:0 0 6px;}
+  .includes-box p{margin:0; font-size:calc(13px + 2pt + var(--lang-add,0px)); color:var(--text); line-height:1.5;}
   .item-actionbar{
     display:flex; align-items:center; gap:10px; padding:12px 16px 16px; position:sticky; bottom:0; flex-shrink:0;
     background:var(--bg); border-top:1px solid var(--line);
   }
   .add-cart-btn{
     flex:1; background:var(--gold); color:#1a1408; border:none; border-radius:12px;
-    padding:14px 16px; font-family:inherit; font-size:calc(15px + 2pt); font-weight:700; cursor:pointer;
+    padding:14px 16px; font-family:inherit; font-size:calc(15px + 2pt + var(--lang-add,0px)); font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; gap:8px;
   }
   .qty-stepper{
@@ -351,7 +351,7 @@
     border-radius:12px; padding:10px 12px; flex-shrink:0;
   }
   .qty-stepper button{
-    width:26px; height:26px; border-radius:50%; border:none; font-size:16px; font-weight:700;
+    width:26px; height:26px; border-radius:50%; border:none; font-size:calc(16px + var(--lang-add,0px)); font-weight:700;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
   }
   .qty-stepper .step-minus{background:rgba(255,255,255,.08); color:var(--text);}
@@ -362,7 +362,7 @@
   .order-type{display:flex; gap:10px; padding:0 16px 14px;}
   .order-type button{
     flex:1; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--text);
-    font-family:inherit; font-size:13px; font-weight:600; padding:12px 8px; cursor:pointer;
+    font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); font-weight:600; padding:12px 8px; cursor:pointer;
   }
   .order-type button.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
   .order-type button .free-tag{color:#5fbf7a; font-weight:700; margin-inline-end:4px;}
@@ -375,17 +375,17 @@
   .cart-row .trash-btn{background:none; border:none; color:var(--muted); cursor:pointer; flex-shrink:0;}
   .cart-row .trash-btn svg{width:18px; height:18px;}
   .cart-row .cart-info{flex:1; min-width:0;}
-  .cart-row .cart-info .name{font-weight:600; font-size:14px; margin:0 0 8px;}
+  .cart-row .cart-info .name{font-weight:600; font-size:calc(14px + var(--lang-add,0px)); margin:0 0 8px;}
   .cart-row .cart-thumb{width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#000;}
   .cart-row .cart-thumb img{width:100%; height:100%; object-fit:cover;}
-  .cart-row .price{color:var(--gold); font-weight:700; font-size:14px; white-space:nowrap;}
+  .cart-row .price{color:var(--gold); font-weight:700; font-size:calc(14px + var(--lang-add,0px)); white-space:nowrap;}
 
   .cart-summary{padding:14px 16px; border-top:1px solid var(--line); position:sticky; bottom:0; flex-shrink:0; background:var(--bg);}
-  .summary-line{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); padding:3px 0;}
-  .summary-line.final{color:var(--gold); font-weight:700; font-size:16px; padding-top:8px;}
+  .summary-line{display:flex; justify-content:space-between; font-size:calc(13px + var(--lang-add,0px)); color:var(--muted); padding:3px 0;}
+  .summary-line.final{color:var(--gold); font-weight:700; font-size:calc(16px + var(--lang-add,0px)); padding-top:8px;}
   .primary-btn{
     width:100%; margin-top:12px; background:var(--gold); color:#1a1408; border:none; border-radius:12px;
-    padding:15px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    padding:15px; font-family:inherit; font-size:calc(15px + var(--lang-add,0px)); font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; gap:8px;
   }
   .wa-btn{background:#25d366; color:#06210f;}
@@ -395,39 +395,39 @@
     align-items:center; justify-content:center; margin-bottom:20px; color:var(--gold);
   }
   .empty-cart .empty-icon svg{width:38px; height:38px;}
-  .empty-cart h3{font-size:17px; margin:0 0 8px;}
-  .empty-cart p{color:var(--muted); font-size:13px; margin:0 0 22px; line-height:1.5;}
+  .empty-cart h3{font-size:calc(17px + var(--lang-add,0px)); margin:0 0 8px;}
+  .empty-cart p{color:var(--muted); font-size:calc(13px + var(--lang-add,0px)); margin:0 0 22px; line-height:1.5;}
 
   /* checkout form */
   .checkout-body{padding:16px; flex:1;}
   .profile-body{padding:16px; overflow-y:auto; max-height:calc(100svh - 130px);}
-  .profile-subtitle{color:var(--muted); font-size:13px; line-height:1.5; margin:0 0 18px;}
+  .profile-subtitle{color:var(--muted); font-size:calc(13px + var(--lang-add,0px)); line-height:1.5; margin:0 0 18px;}
   .profile-identity{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:16px;}
   .profile-identity strong{display:block; margin-bottom:4px;}
   .profile-identity small{display:block; color:var(--muted); overflow-wrap:anywhere;}
   .profile-actions{display:flex; gap:10px; margin-top:16px;}
   .profile-actions .primary-btn{margin-top:0;}
   .profile-secondary-btn{flex:1; border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--surface); color:var(--text); font:inherit; font-weight:700; cursor:pointer;}
-  .profile-status{min-height:18px; color:var(--muted); font-size:12px; margin:12px 0 0;}
-  .profile-orders-title{font-size:16px; margin:26px 0 10px;}
+  .profile-status{min-height:18px; color:var(--muted); font-size:calc(12px + var(--lang-add,0px)); margin:12px 0 0;}
+  .profile-orders-title{font-size:calc(16px + var(--lang-add,0px)); margin:26px 0 10px;}
   .profile-order{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:8px;}
-  .profile-order-head{display:flex; justify-content:space-between; gap:10px; font-size:13px; font-weight:700;}
+  .profile-order-head{display:flex; justify-content:space-between; gap:10px; font-size:calc(13px + var(--lang-add,0px)); font-weight:700;}
   .profile-order small{display:block; color:var(--muted); margin-top:6px; line-height:1.45;}
-  .profile-empty{color:var(--muted); font-size:13px;}
-  .checkout-branch{color:var(--gold); font-weight:700; font-size:14px; margin-bottom:2px;}
-  .checkout-subrow{display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:18px;}
-  .field-label{font-size:12px; color:var(--gold); font-weight:600; margin:14px 0 6px;}
+  .profile-empty{color:var(--muted); font-size:calc(13px + var(--lang-add,0px));}
+  .checkout-branch{color:var(--gold); font-weight:700; font-size:calc(14px + var(--lang-add,0px)); margin-bottom:2px;}
+  .checkout-subrow{display:flex; justify-content:space-between; color:var(--muted); font-size:calc(12px + var(--lang-add,0px)); margin-bottom:18px;}
+  .field-label{font-size:calc(12px + var(--lang-add,0px)); color:var(--gold); font-weight:600; margin:14px 0 6px;}
   .field-input, .field-textarea{
     width:100%; background:var(--surface); border:1px solid var(--line); border-radius:10px;
-    padding:12px 12px; color:var(--text); font-family:inherit; font-size:14px;
+    padding:12px 12px; color:var(--text); font-family:inherit; font-size:calc(14px + var(--lang-add,0px));
   }
   .field-textarea{resize:vertical; min-height:64px;}
   .pay-method{
     display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--gold);
-    border-radius:12px; padding:14px; margin-top:18px; color:var(--gold); font-weight:700; font-size:14px;
+    border-radius:12px; padding:14px; margin-top:18px; color:var(--gold); font-weight:700; font-size:calc(14px + var(--lang-add,0px));
     background:rgba(227,178,60,.08);
   }
-  .status-note{font-size:12px; text-align:center; color:var(--muted); margin-top:8px;}
+  .status-note{font-size:calc(12px + var(--lang-add,0px)); text-align:center; color:var(--muted); margin-top:8px;}
   .primary-btn:disabled{opacity:.6; cursor:default;}
 
   /* ===== FLOATING chat/call ===== */
@@ -449,11 +449,11 @@
     border:1px solid var(--line); border-radius:12px; padding:14px;
   }
   .contact-row .ico{width:20px; height:20px; color:var(--gold); flex-shrink:0; margin-top:2px;}
-  .contact-label{font-size:12px; color:var(--muted); margin:0 0 3px;}
-  .contact-value{font-size:15px; font-weight:600; margin:0; line-height:1.5; overflow-wrap:anywhere;}
+  .contact-label{font-size:calc(12px + var(--lang-add,0px)); color:var(--muted); margin:0 0 3px;}
+  .contact-value{font-size:calc(15px + var(--lang-add,0px)); font-weight:600; margin:0; line-height:1.5; overflow-wrap:anywhere;}
   .contact-actions{display:flex; gap:10px;}
   .contact-btn{
-    flex:1; text-align:center; text-decoration:none; font-family:inherit; font-size:14px; font-weight:700;
+    flex:1; text-align:center; text-decoration:none; font-family:inherit; font-size:calc(14px + var(--lang-add,0px)); font-weight:700;
     border-radius:12px; padding:13px 10px; border:1px solid var(--gold); color:var(--gold); background:transparent;
   }
   .contact-btn.primary{background:var(--gold); color:#1a1408;}
@@ -466,7 +466,7 @@
   footer.tabs{transition:transform .25s ease, opacity .25s ease;}
   footer.tabs:not(.show){transform:translate(-50%,110%); opacity:0; pointer-events:none; visibility:hidden;}
   footer.tabs.show{transform:translateX(-50%); opacity:1; visibility:visible;}
-  footer.tabs button{flex:1; background:none; border:none; color:var(--muted); font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; padding:6px 0; cursor:pointer;}
+  footer.tabs button{flex:1; background:none; border:none; color:var(--muted); font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:calc(11px + var(--lang-add,0px)); padding:6px 0; cursor:pointer;}
   footer.tabs button.active{color:var(--gold);}
   footer.tabs .icon{width:22px; height:22px;}
   footer.tabs .icon svg{width:100%; height:100%;}
@@ -474,7 +474,7 @@
   /* cart count badge on the Basket tab icon */
   .cart-badge{
     position:absolute; top:-7px; inset-inline-end:-10px; min-width:20px; height:20px; padding:0 4px; box-sizing:border-box;
-    border-radius:999px; background:var(--red); color:#fff; font-size:11px; font-weight:700; line-height:16px;
+    border-radius:999px; background:var(--red); color:#fff; font-size:calc(11px + var(--lang-add,0px)); font-weight:700; line-height:16px;
     text-align:center; border:2px solid var(--surface); pointer-events:none;
     transform:scale(1); transition:transform .15s ease;
   }
@@ -721,7 +721,7 @@
         <input class="field-input" id="profileEmail" type="email" autocomplete="email">
         <p class="field-label" id="profilePasswordLabel"></p>
         <input class="field-input" id="profilePassword" type="password" autocomplete="current-password">
-        <button type="button" id="profileForgotBtn" style="background:none; border:none; color:var(--gold); font-size:12px; padding:8px 0 0; cursor:pointer; text-decoration:underline;"></button>
+        <button type="button" id="profileForgotBtn" style="background:none; border:none; color:var(--gold); font-size:calc(12px + var(--lang-add,0px)); padding:8px 0 0; cursor:pointer; text-decoration:underline;"></button>
         <div id="profileNameWrap" style="display:none;">
           <p class="field-label" id="profileNameLabel"></p>
           <input class="field-input" id="profileName" type="text" autocomplete="name">
@@ -809,7 +809,7 @@ const STR = {
       specialTitle:'Special', specialHint:'Drag left / right · Tap a category', videoSpeed:'Speed', menuTitle:'Menu', scrollMenu:'Scroll for menu',
       offerTitle:'All meals served with', offerText:'Chinese fried egg rice, egg seaweed soup, vegetable salad with sauce, and bottled water.',
        sortName:'Name (A–Z)', sortTime:'Newest', sortOffer:'Offers first',
-       sortPrice:'Price: low to high', sortPopular:'Most popular',
+       sortPrice:'Price: low to high', sortPopular:'Most popular', sortOrder:'Menu order',
        empty:'No dishes in this category yet.', offer:'Offer',
       navHome:'Home', navMenu:'Menu', navBasket:'Basket', navProfile:'Profile',
       profileTitle:'My profile', signInTitle:'Sign in to your account', accountHint:'Save your details and see previous orders.',
@@ -827,13 +827,13 @@ const STR = {
        paymentMethod:'Payment method:', paymentSimulated:'Simulated payment (test mode)',
        payBtn:'Pay & send order', processingPayment:'Processing payment…', paymentDone:'Payment confirmed — opening WhatsApp…',
        orderFailed:'Something went wrong. Please try again.',
-       includesTitle:'This meal automatically includes:', includesText:'Steamed rice, soup, salad and bottled water.',
+       includesTitle:'This meal automatically includes:', includesText:'Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water',
        descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
     ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
       specialTitle:'المميز', specialHint:'اسحب يميناً أو يساراً · اضغط على الصنف', videoSpeed:'السرعة', menuTitle:'القائمة', scrollMenu:'مرر لأسفل لعرض القائمة',
       offerTitle:'تُقدَّم جميع الوجبات مع', offerText:'أرز مقلي بالبيض الصيني، شوربة البيض والأعشاب البحرية، سلطة خضار مع الصلصة وماء معبأ.',
        sortName:'الاسم (أ-ي)', sortTime:'الأحدث', sortOffer:'العروض أولاً',
-       sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً',
+       sortPrice:'السعر: من الأقل', sortPopular:'الأكثر طلباً', sortOrder:'ترتيب القائمة',
        empty:'لا توجد أطباق في هذا الصنف بعد.', offer:'عرض',
       navHome:'الرئيسية', navMenu:'القائمة', navBasket:'السلة', navProfile:'حسابي',
       profileTitle:'حسابي', signInTitle:'تسجيل الدخول', accountHint:'احفظ بياناتك وشاهد طلباتك السابقة.',
@@ -851,13 +851,13 @@ const STR = {
        paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع تجريبي (وضع الاختبار)',
        payBtn:'ادفع وأرسل الطلب', processingPayment:'جارٍ معالجة الدفع…', paymentDone:'تم تأكيد الدفع — جارٍ فتح واتساب…',
        orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
-       includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'أرز مطهو على البخار، شوربة، سلطة وماء معبأ.',
+       includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'شوربة أعشاب البحر، أرز مقلي بالبيض، نودلز، سلطة وماء',
        descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
     ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
       specialTitle:'خاص', specialHint:'دائیں یا بائیں سوائپ کریں · زمرہ منتخب کریں', videoSpeed:'رفتار', menuTitle:'مینو', scrollMenu:'مینو کے لیے نیچے سکرول کریں',
       offerTitle:'تمام کھانوں کے ساتھ', offerText:'چائنیز ایگ فرائیڈ رائس، انڈے اور سی ویڈ کا سوپ، ساس کے ساتھ سبزیوں کا سلاد اور بوتل بند پانی۔',
        sortName:'نام (اے-زیڈ)', sortTime:'تازہ ترین', sortOffer:'پہلے آفرز',
-       sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین',
+       sortPrice:'قیمت: کم سے زیادہ', sortPopular:'مقبول ترین', sortOrder:'مینو کی ترتیب',
        empty:'اس زمرے میں ابھی کوئی ڈش نہیں۔', offer:'آفر',
       navHome:'ہوم', navMenu:'مینو', navBasket:'باسکٹ', navProfile:'پروفائل',
       profileTitle:'میرا پروفائل', signInTitle:'اپنے اکاؤنٹ میں سائن ان کریں', accountHint:'اپنی معلومات محفوظ کریں اور پچھلے آرڈرز دیکھیں۔',
@@ -875,13 +875,13 @@ const STR = {
        paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'ٹیسٹ ادائیگی (آزمائشی موڈ)',
        payBtn:'ادائیگی کریں اور آرڈر بھیجیں', processingPayment:'ادائیگی جاری ہے…', paymentDone:'ادائیگی کی تصدیق — واٹس ایپ کھل رہا ہے…',
        orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
-       includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'ابلے چاول، سوپ، سلاد اور بوتل بند پانی۔',
+       includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی',
        descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
     zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
       specialTitle:'精选', specialHint:'左右拖动 · 点击分类', videoSpeed:'速度', menuTitle:'菜单', scrollMenu:'向下滑动查看菜单',
       offerTitle:'所有餐点均配有', offerText:'中式鸡蛋炒饭、鸡蛋海藻汤、配酱汁的蔬菜沙拉和瓶装水。',
        sortName:'名称（A-Z）', sortTime:'最新', sortOffer:'优惠优先',
-       sortPrice:'价格：从低到高', sortPopular:'最受欢迎',
+       sortPrice:'价格：从低到高', sortPopular:'最受欢迎', sortOrder:'菜单顺序',
        empty:'该分类暂无菜品。', offer:'优惠',
       navHome:'首页', navMenu:'菜单', navBasket:'购物车', navProfile:'我的',
       profileTitle:'我的资料', signInTitle:'登录您的账户', accountHint:'保存您的信息并查看历史订单。',
@@ -899,7 +899,7 @@ const STR = {
        paymentMethod:'付款方式：', paymentSimulated:'模拟付款（测试模式）',
        payBtn:'付款并发送订单', processingPayment:'正在处理付款…', paymentDone:'付款已确认——正在打开WhatsApp…',
        orderFailed:'出错了，请重试。',
-       includesTitle:'此套餐自动包含：', includesText:'米饭、汤、沙拉和瓶装水。',
+       includesTitle:'此套餐自动包含：', includesText:'紫菜汤、蛋炒饭、面条、沙拉和水',
        descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
 };
 
@@ -919,6 +919,7 @@ Object.keys(CONTACT_STR).forEach(code => Object.assign(STR[code], CONTACT_STR[co
 let CATS = [];
 let ITEMS = [];
 let MENU_FOOD_BG_URL = '';
+let DESIGN_LANG = { lang_style:{}, includes_text:{} };   // from /api/design: per-language font and size, editable includes text
 const catInfo = k => CATS.find(c=>c.key===k) || { key:k, label:{en:k,ar:k,ur:k,zh:k} };
 let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
 //~ let SPECIAL_SECTIONS = [];
@@ -935,20 +936,48 @@ async function loadMenuDesign(){
       georgia: "Georgia,'Times New Roman',serif",
       arial: "Arial,Helvetica,sans-serif",
     };
+    DESIGN_LANG = { lang_style: design.lang_style || {}, includes_text: design.includes_text || {} };
     let family = families[design.font_style] || families.cinzel;
-    if(design.font_style === 'custom' && design.font_url){
+    const langUsesCustom = Object.values(DESIGN_LANG.lang_style).some(style => style && style.font === 'custom');
+    if(design.font_url && (design.font_style === 'custom' || langUsesCustom)){
       try{
         const customFont = new FontFace('MenuCustom', `url("${design.font_url.replace(/["\\]/g, '')}")`);
         await customFont.load();
         document.fonts.add(customFont);
-        family = "'MenuCustom',serif";
+        if(design.font_style === 'custom') family = "'MenuCustom',serif";
       }catch(error){ console.warn('Could not load custom menu font:', error); }
     }
     const root = document.documentElement.style;
     root.setProperty('--menu-font-family', family);
     root.setProperty('--menu-font-scale', String((Number(design.font_size) || 14) / 4.375));
     if(/^#[0-9a-f]{6}$/i.test(design.font_color || '')) root.setProperty('--menu-font-color', design.font_color);
+    applyLangTypography();
   }catch(error){ console.warn('Could not load menu design settings:', error); }
+}
+
+/* Per-language font and size (Admin > Menu design > Language font and size).
+   --lang-add is added to every font size on this page; Arabic is 2 px bigger unless the admin changes it. */
+const DEFAULT_LANG_ADD = { en:0, ar:2, ur:0, zh:0 };
+const LANG_FONT_FAMILIES = {
+  poppins: "'Poppins',sans-serif",
+  naskh: "'Noto Naskh Arabic','Poppins',sans-serif",
+  nastaliq: "'Noto Nastaliq Urdu','Poppins',sans-serif",
+  'sans-sc': "'Noto Sans SC','Poppins',sans-serif",
+  cinzel: "'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif",
+  cormorant: "'Cormorant Garamond',Georgia,'Times New Roman',serif",
+  georgia: "Georgia,'Times New Roman',serif",
+  arial: "Arial,Helvetica,sans-serif",
+  custom: "'MenuCustom',serif",
+};
+function applyLangTypography(){
+  const code = LANGS[lang] ? lang : 'en';
+  const style = (DESIGN_LANG.lang_style && DESIGN_LANG.lang_style[code]) || {};
+  const raw = style.size_add;
+  const add = (raw === '' || raw == null || !Number.isFinite(Number(raw))) ? DEFAULT_LANG_ADD[code] : Number(raw);
+  const root = document.documentElement.style;
+  root.setProperty('--lang-add', `${add}px`);
+  const family = LANG_FONT_FAMILIES[style.font];
+  if(family) root.setProperty('--lang-font', family); else root.removeProperty('--lang-font');
 }
 
 //~ /* The scrolling Special section (category cards with drag-to-scrub video, between the poster and the menu list).
@@ -1079,6 +1108,7 @@ function setLang(code){
   try{ localStorage.setItem('redhouse_lang', code); }catch(_){}
   document.documentElement.lang = code;
   document.documentElement.dir = LANGS[code].dir;
+  applyLangTypography();
   langPills.querySelectorAll('.lang-pill').forEach(p=>{
     p.classList.toggle('active', p.dataset.lang === code);
   });
@@ -1091,6 +1121,7 @@ function setLang(code){
   renderCategoryRow();
 
   sortSelect.innerHTML = `
+    <option value="order">${STR[lang].sortOrder}</option>
     <option value="popular">${STR[lang].sortPopular}</option>
     <option value="name">${STR[lang].sortName}</option>
     <option value="time">${STR[lang].sortTime}</option>
@@ -1188,7 +1219,10 @@ function render(){
   if(cat === POPULAR_KEY) items = ITEMS.slice().sort((a,b)=>b.pop-a.pop).slice(0, POPULAR_COUNT);
   else items = ITEMS.filter(i => cat==='all' || i.cat===cat);
 
-  if(sort==='name') items.sort((a,b)=>a.name[lang].localeCompare(b.name[lang]));
+  // Menu order = the display order numbers from Admin > Menu items (dishes without a number go last).
+  // The Most Popular box keeps its best-sellers-first order.
+  if(sort==='order'){ if(cat !== POPULAR_KEY) items.sort((a,b)=>(a.order ?? Infinity)===(b.order ?? Infinity) ? a.id-b.id : (a.order ?? Infinity)-(b.order ?? Infinity)); }
+  else if(sort==='name') items.sort((a,b)=>a.name[lang].localeCompare(b.name[lang]));
   else if(sort==='time') items.sort((a,b)=>b.id-a.id);
   else if(sort==='offer') items.sort((a,b)=>(b.offer-a.offer) || (b.pop-a.pop));
   else if(sort==='price') items.sort((a,b)=>a.price - b.price);
@@ -1494,6 +1528,7 @@ async function loadMenuData(){
       id: i.id,
       cat: i.categories ? i.categories.key : null,
       pop: i.popularity ?? 0,
+      order: i.display_order == null ? null : Number(i.display_order),
       offer: Boolean(i.is_offer),
       cal: i.calories ?? null,
       rating: i.rating != null ? Number(i.rating) : null,
@@ -1687,9 +1722,14 @@ function pruneUnavailableCart(){
 function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
 function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
 function cartTotal(){ return cartSubtotal() + cartDeliveryFee(); }
-function money(n){ return `${CURRENCY} ${Number(n).toFixed(2)}`; }   // plain text (WhatsApp message): the sign is not in most fonts, so it says SAR
+// Amount text without trailing zeros: 39.00 -> "39"; a price with real cents keeps two decimals (39.50).
+function amountText(n){
+  const v = Number(n);
+  return Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)) : v.toFixed(2);
+}
+function money(n){ return `${CURRENCY} ${amountText(n)}`; }   // plain text (WhatsApp message): the sign is not in most fonts, so it says SAR
 // Page markup: the Saudi Riyal sign before the amount, in every language (it reads as amount-then-riyal in Arabic too).
-function moneyHtml(n){ return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${Number(n).toFixed(2)}</span>`; }
+function moneyHtml(n){ return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${amountText(n)}</span>`; }
 function setMoney(el, n){ el.innerHTML = moneyHtml(n); }
 
 /* ---------- ITEM MODAL ---------- */
@@ -1738,7 +1778,7 @@ function openItemModal(id){
   const realDesc = modalItem.desc && modalItem.desc[lang];
   document.getElementById('itemModalDesc').textContent = realDesc || STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
   document.getElementById('itemModalIncludesTitle').textContent = STR[lang].includesTitle;
-  document.getElementById('itemModalIncludesText').textContent = STR[lang].includesText;
+  document.getElementById('itemModalIncludesText').textContent = (DESIGN_LANG.includes_text && DESIGN_LANG.includes_text[lang]) || STR[lang].includesText;   // admin text first, built-in text otherwise
   document.getElementById('itemModalQty').textContent = modalQty;
   updateModalAddBtn();
   openOverlay(itemModal);

@@ -10,7 +10,23 @@ const BUCKET = 'videos';
 const MAX_FONT_BYTES = 4_500_000;
 const FONT_TYPES = { '.ttf': 'font/ttf', '.otf': 'font/otf' };
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_FONT_BYTES } });
-const DEFAULTS = { font_style: 'cinzel', font_size: 14, font_color: '#2b2622', font_path: '', font_url: '' };
+const LANGUAGES = ['en', 'ar', 'ur', 'zh'];
+const LANG_FONTS = ['', 'poppins', 'naskh', 'nastaliq', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
+const MAX_INCLUDES_LENGTH = 300;
+// size_add = extra px added to every font size on the menu page for that language; font '' = the built-in font for the language.
+// Arabic starts 2 px bigger (13/10/2026 request).
+const DEFAULT_LANG_STYLE = {
+  en: { size_add: 0, font: '' },
+  ar: { size_add: 2, font: '' },
+  ur: { size_add: 0, font: '' },
+  zh: { size_add: 0, font: '' },
+};
+const DEFAULTS = {
+  font_style: 'cinzel', font_size: 14, font_color: '#2b2622', font_path: '', font_url: '',
+  lang_style: DEFAULT_LANG_STYLE,
+  // empty = the translated text built into the menu page ("Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water")
+  includes_text: { en: '', ar: '', ur: '', zh: '' },
+};
 
 async function readDesign() {
   const { data, error } = await supabase.from('site_settings').select('value').eq('key', SETTINGS_KEY).maybeSingle();
@@ -63,6 +79,46 @@ router.put('/admin/design', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Could not save menu design settings:', error.message);
     res.status(500).json({ error: 'Could not save menu design settings.' });
+  }
+});
+
+// Language settings: per-language font + size for the menu page, and the editable "This meal automatically includes" text.
+router.put('/admin/design/languages', requireAdmin, async (req, res) => {
+  const langStyle = {};
+  const includes = {};
+  for (const language of LANGUAGES) {
+    const style = req.body?.lang_style?.[language] || {};
+    const sizeAdd = Number(style.size_add);
+    const font = typeof style.font === 'string' ? style.font : '';
+    if (!Number.isInteger(sizeAdd) || sizeAdd < -6 || sizeAdd > 12) {
+      return res.status(400).json({ error: `Font size change for ${language.toUpperCase()} must be a whole number from -6 to 12 px.` });
+    }
+    if (!LANG_FONTS.includes(font)) {
+      return res.status(400).json({ error: `Choose a valid font for ${language.toUpperCase()}.` });
+    }
+    langStyle[language] = { size_add: sizeAdd, font };
+
+    const text = req.body?.includes_text?.[language];
+    if (text != null && typeof text !== 'string') {
+      return res.status(400).json({ error: `Includes text for ${language.toUpperCase()} must be text.` });
+    }
+    const trimmed = (text || '').trim();
+    if (trimmed.length > MAX_INCLUDES_LENGTH) {
+      return res.status(400).json({ error: `Includes text for ${language.toUpperCase()} is too long (max ${MAX_INCLUDES_LENGTH} characters).` });
+    }
+    includes[language] = trimmed;
+  }
+  try {
+    const design = await readDesign();
+    if (langStyle.en.font === 'custom' || langStyle.ar.font === 'custom' || langStyle.ur.font === 'custom' || langStyle.zh.font === 'custom') {
+      if (!design.font_url) return res.status(400).json({ error: 'Upload a custom font first (Menu design > Custom font file).' });
+    }
+    Object.assign(design, { lang_style: langStyle, includes_text: includes });
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not save language settings:', error.message);
+    res.status(500).json({ error: 'Could not save the language settings.' });
   }
 });
 
