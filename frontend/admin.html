@@ -323,8 +323,8 @@
           <label>English size change (px)<input id="langSize_en" type="number" min="-6" max="12" step="1" value="0"></label>
           <label>العربية font<select id="langFont_ar"></select></label>
           <label>العربية size change (px)<input id="langSize_ar" type="number" min="-6" max="12" step="1" value="2"></label>
-          <label>اردو font<select id="langFont_ur"></select></label>
-          <label>اردو size change (px)<input id="langSize_ur" type="number" min="-6" max="12" step="1" value="0"></label>
+          <label style="display:none">اردو font<select id="langFont_ur"></select></label><!-- Urdu hidden: kept in DOM so the save handler and server (which validate all 4 languages) keep working -->
+          <label style="display:none">اردو size change (px)<input id="langSize_ur" type="number" min="-6" max="12" step="1" value="0"></label>
           <label>中文 font<select id="langFont_zh"></select></label>
           <label>中文 size change (px)<input id="langSize_zh" type="number" min="-6" max="12" step="1" value="0"></label>
         </div>
@@ -334,7 +334,7 @@
         <div class="language-fields">
           <label>English<textarea id="includes_en" maxlength="300" lang="en" placeholder="Seaweed Soup, Fried Egg Rice, Noodles, Salad &amp; Water"></textarea></label>
           <label>العربية<textarea id="includes_ar" maxlength="300" lang="ar" dir="rtl" placeholder="شوربة أعشاب البحر، أرز مقلي بالبيض، نودلز، سلطة وماء"></textarea></label>
-          <label>اردو<textarea id="includes_ur" maxlength="300" lang="ur" dir="rtl" placeholder="سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی"></textarea></label>
+          <label style="display:none">اردو<textarea id="includes_ur" maxlength="300" lang="ur" dir="rtl" placeholder="سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی"></textarea></label>
           <label>中文<textarea id="includes_zh" maxlength="300" lang="zh" placeholder="紫菜汤、蛋炒饭、面条、沙拉和水"></textarea></label>
         </div>
         <div class="form-actions"><button class="action-btn primary" id="langSave" type="submit">Save language settings</button><span class="form-note" id="langNote" role="status"></span></div>

@@ -802,7 +802,7 @@
    Note: AR/UR/ZH strings below are a working first pass for layout and
    flow — have a native speaker review the actual wording before launch.
    ===================================================================== */
-const LANGS = { en:{dir:'ltr'}, ar:{dir:'rtl'}, ur:{dir:'rtl'}, zh:{dir:'ltr'} };
+const LANGS = { en:{dir:'ltr'}, ar:{dir:'rtl'}, /* Urdu hidden: ur:{dir:'rtl'}, */ zh:{dir:'ltr'} };  // ?lang=ur now falls back to English
 
 const STR = {
     en:{ loading:'Loading', explore:'Explore menu', allCategories:'All categories',
