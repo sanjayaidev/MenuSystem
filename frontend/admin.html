@@ -214,7 +214,7 @@
 
   <!-- ===== LOGIN ===== -->
   <div id="loginView">
-    <h2 data-ui="staffSignIn">Staff sign in</h2>
+    <h2 data-ui="staffSignIn">Login as admin</h2>
     <p class="hint" data-ui="adminAccessHint">Sign in with a staff account that has admin access.</p>
     <label class="field-label" for="loginEmail" data-ui="email">Email</label>
     <input class="field-input" id="loginEmail" type="email" autocomplete="email">
@@ -405,12 +405,12 @@
         <!-- Menu card layers: 1 = background (this block), 2 = the card (automatic), 3 = food PNG (next block) -->
         <div class="image-tools">
           <label><span data-ui="cardBgImage">Card background image (layer 1)</span><input name="bg_image_url" id="itemBgUrl" type="url" placeholder="https://..."></label>
-          <div><label><span data-ui="uploadImage">Upload image</span><input id="itemBgFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><button class="action-btn" id="itemBgUploadBtn" type="button" disabled data-ui="uploadToImgbb">Upload to Imgbb</button></div>
+          <div><label><span data-ui="uploadImage">Upload image</span><input id="itemBgFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><button class="action-btn" id="itemBgUploadBtn" type="button" disabled data-ui="uploadToImgbb">Upload</button></div>
         </div>
         <div class="image-preview card-image-preview" id="itemBgPreview"></div>
         <div class="image-tools">
           <label><span data-ui="foodPngImage">Food PNG, transparent (layer 3)</span><input name="food_png_url" id="itemFoodUrl" type="url" placeholder="https://..."></label>
-          <div><label><span data-ui="uploadImage">Upload image</span><input id="itemFoodFile" type="file" accept="image/png,image/webp"></label><button class="action-btn" id="itemFoodUploadBtn" type="button" disabled data-ui="uploadToImgbb">Upload to Imgbb</button></div>
+          <div><label><span data-ui="uploadImage">Upload image</span><input id="itemFoodFile" type="file" accept="image/png,image/webp,image/jpeg"></label><button class="action-btn" id="itemFoodUploadBtn" type="button" disabled data-ui="uploadToImgbb">Upload</button></div>
         </div>
         <p class="field-hint" data-ui="foodPngHint">Leave the food PNG empty to use the item image above on the menu card.</p>
         <div class="image-preview card-image-preview is-png" id="itemFoodPreview"></div>
@@ -455,7 +455,7 @@ const AUTO_REFRESH_MS = 25000;
 const ADMIN_UI_STRINGS = {
   en: {
     adminTitle:'Admin', interfaceLanguage:'Interface language', signOut:'Sign out',
-    staffSignIn:'Staff sign in', adminAccessHint:'Sign in with a staff account that has admin access.',
+    staffSignIn:'Login as admin', adminAccessHint:'Sign in with a staff account that has admin access.',
     email:'Email', password:'Password', signIn:'Sign in', adminSections:'Admin sections',
     orders:'Orders', categories:'Categories', menuItems:'Menu items', refresh:'Refresh',
     newCategory:'New category', editCategory:'Edit category', categoryKey:'Category key',
@@ -483,7 +483,7 @@ const ADMIN_UI_STRINGS = {
     couldNotSaveCategory:'Could not save category.', deleteCategoryConfirm:'Delete category “{name}”?', couldNotDeleteCategory:'Could not delete category.',
     creatingMenuItem:'Creating menu item…', menuItemUpdated:'Menu item updated.', menuItemCreated:'Menu item created.',
     couldNotSaveMenuItem:'Could not save menu item.', deleteMenuItemConfirm:'Delete menu item “{name}”?', couldNotDeleteMenuItem:'Could not delete menu item.',
-    imageTooLarge:'Image must be smaller than 5 MB.', uploadingImage:'Uploading image…', imageUploaded:'Image uploaded.', imageUploadFailed:'Image upload failed.',
+    imageTooLarge:'Image must be smaller than 5 MB.', uploadingImage:'Uploading image…', imageUploaded:'Image uploaded.', imageUploadedSave:'Image uploaded. Now press the save button at the bottom of the form, otherwise it will not appear on the menu.', foodPngNotJpeg:'The Food PNG layer needs a PNG or WebP with a transparent background. A JPEG would show a solid box. Use the card background box for JPEG photos.', imageUploadFailed:'Image upload failed.',
     imagePreview:'Image preview', requestFailed:'Request failed (HTTP {status}).', fallbackFoodImageAlt:'Fallback food image', menuItemAlt:'Menu item',
     categoryKeyInUse:'That category key is already in use.', recordInUse:'This record is still in use.', categoryHasItems:'Move or delete this category’s menu items first.',
     imageServiceMissing:'Image upload is not configured on the server.', unsupportedImageType:'Choose a JPEG, PNG, WebP, or GIF image.',
@@ -500,7 +500,7 @@ const ADMIN_UI_STRINGS = {
   },
   ar: {
     adminTitle:'الإدارة', interfaceLanguage:'لغة الواجهة', signOut:'تسجيل الخروج',
-    staffSignIn:'دخول الموظفين', adminAccessHint:'سجّل الدخول بحساب موظف لديه صلاحية الإدارة.',
+    staffSignIn:'تسجيل الدخول كمدير', adminAccessHint:'سجّل الدخول بحساب موظف لديه صلاحية الإدارة.',
     email:'البريد الإلكتروني', password:'كلمة المرور', signIn:'دخول', adminSections:'أقسام الإدارة',
     orders:'الطلبات', categories:'الفئات', menuItems:'أصناف القائمة', refresh:'تحديث',
     newCategory:'فئة جديدة', editCategory:'تعديل الفئة', categoryKey:'مفتاح الفئة',
@@ -528,7 +528,7 @@ const ADMIN_UI_STRINGS = {
     couldNotSaveCategory:'تعذر حفظ الفئة.', deleteCategoryConfirm:'حذف الفئة «{name}»؟', couldNotDeleteCategory:'تعذر حذف الفئة.',
     creatingMenuItem:'جارٍ إنشاء الصنف…', menuItemUpdated:'تم تحديث الصنف.', menuItemCreated:'تم إنشاء الصنف.',
     couldNotSaveMenuItem:'تعذر حفظ الصنف.', deleteMenuItemConfirm:'حذف الصنف «{name}»؟', couldNotDeleteMenuItem:'تعذر حذف الصنف.',
-    imageTooLarge:'يجب أن يكون حجم الصورة أقل من 5 ميغابايت.', uploadingImage:'جارٍ رفع الصورة…', imageUploaded:'تم رفع الصورة.', imageUploadFailed:'تعذر رفع الصورة.',
+    imageTooLarge:'يجب أن يكون حجم الصورة أقل من 5 ميغابايت.', uploadingImage:'جارٍ رفع الصورة…', imageUploaded:'تم رفع الصورة.', imageUploadedSave:'تم رفع الصورة. اضغط الآن على زر الحفظ أسفل النموذج، وإلا فلن تظهر في القائمة.', foodPngNotJpeg:'طبقة صورة الطعام تحتاج إلى PNG أو WebP بخلفية شفافة. صورة JPEG ستظهر داخل مربع صلب. استخدم خانة خلفية البطاقة لصور JPEG.', imageUploadFailed:'تعذر رفع الصورة.',
     imagePreview:'معاينة الصورة', requestFailed:'فشل الطلب (HTTP {status}).', fallbackFoodImageAlt:'صورة الطعام الافتراضية', menuItemAlt:'صنف القائمة',
     categoryKeyInUse:'مفتاح الفئة مستخدم بالفعل.', recordInUse:'لا يزال هذا السجل مستخدماً.', categoryHasItems:'انقل أصناف هذه الفئة أو احذفها أولاً.',
     imageServiceMissing:'رفع الصور غير مهيأ على الخادم.', unsupportedImageType:'اختر صورة JPEG أو PNG أو WebP أو GIF.',
@@ -545,7 +545,7 @@ const ADMIN_UI_STRINGS = {
   },
   ur: {
     adminTitle:'ایڈمن', interfaceLanguage:'انٹرفیس کی زبان', signOut:'سائن آؤٹ',
-    staffSignIn:'اسٹاف سائن اِن', adminAccessHint:'ایڈمن رسائی والے اسٹاف اکاؤنٹ سے سائن اِن کریں۔',
+    staffSignIn:'ایڈمن کے طور پر لاگ اِن کریں', adminAccessHint:'ایڈمن رسائی والے اسٹاف اکاؤنٹ سے سائن اِن کریں۔',
     email:'ای میل', password:'پاس ورڈ', signIn:'سائن اِن', adminSections:'ایڈمن کے حصے',
     orders:'آرڈرز', categories:'زمرے', menuItems:'مینو آئٹمز', refresh:'ریفریش',
     newCategory:'نیا زمرہ', editCategory:'زمرہ تبدیل کریں', categoryKey:'زمرے کی کلید',
@@ -573,7 +573,7 @@ const ADMIN_UI_STRINGS = {
     couldNotSaveCategory:'زمرہ محفوظ نہیں ہو سکا۔', deleteCategoryConfirm:'“{name}” زمرہ حذف کریں؟', couldNotDeleteCategory:'زمرہ حذف نہیں ہو سکا۔',
     creatingMenuItem:'مینو آئٹم بنایا جا رہا ہے…', menuItemUpdated:'مینو آئٹم اپ ڈیٹ ہو گیا۔', menuItemCreated:'مینو آئٹم بن گیا۔',
     couldNotSaveMenuItem:'مینو آئٹم محفوظ نہیں ہو سکا۔', deleteMenuItemConfirm:'“{name}” مینو آئٹم حذف کریں؟', couldNotDeleteMenuItem:'مینو آئٹم حذف نہیں ہو سکا۔',
-    imageTooLarge:'تصویر 5 MB سے چھوٹی ہونی چاہیے۔', uploadingImage:'تصویر اپ لوڈ ہو رہی ہے…', imageUploaded:'تصویر اپ لوڈ ہو گئی۔', imageUploadFailed:'تصویر اپ لوڈ نہیں ہو سکی۔',
+    imageTooLarge:'تصویر 5 MB سے چھوٹی ہونی چاہیے۔', uploadingImage:'تصویر اپ لوڈ ہو رہی ہے…', imageUploaded:'تصویر اپ لوڈ ہو گئی۔', imageUploadedSave:'تصویر اپ لوڈ ہو گئی۔ اب فارم کے نیچے محفوظ کرنے کا بٹن دبائیں، ورنہ یہ مینو میں نظر نہیں آئے گی۔', foodPngNotJpeg:'کھانے کی تہہ کے لیے شفاف پس منظر والی PNG یا WebP تصویر چاہیے۔ JPEG ٹھوس ڈبے کے ساتھ نظر آئے گی۔ JPEG تصویروں کے لیے کارڈ کے پس منظر والا خانہ استعمال کریں۔', imageUploadFailed:'تصویر اپ لوڈ نہیں ہو سکی۔',
     imagePreview:'تصویر کا پیش منظر', requestFailed:'درخواست ناکام ہوئی (HTTP {status})۔', fallbackFoodImageAlt:'متبادل کھانے کی تصویر', menuItemAlt:'مینو آئٹم',
     categoryKeyInUse:'یہ زمرے کی کلید پہلے سے استعمال ہو رہی ہے۔', recordInUse:'یہ ریکارڈ ابھی استعمال میں ہے۔', categoryHasItems:'پہلے اس زمرے کے آئٹمز منتقل یا حذف کریں۔',
     imageServiceMissing:'سرور پر تصویر اپ لوڈ کی سہولت ترتیب نہیں دی گئی۔', unsupportedImageType:'JPEG، PNG، WebP یا GIF تصویر منتخب کریں۔',
@@ -590,7 +590,7 @@ const ADMIN_UI_STRINGS = {
   },
   zh: {
     adminTitle:'管理后台', interfaceLanguage:'界面语言', signOut:'退出登录',
-    staffSignIn:'员工登录', adminAccessHint:'请使用具有管理员权限的员工账户登录。',
+    staffSignIn:'以管理员身份登录', adminAccessHint:'请使用具有管理员权限的员工账户登录。',
     email:'电子邮箱', password:'密码', signIn:'登录', adminSections:'管理栏目',
     orders:'订单', categories:'分类', menuItems:'菜单商品', refresh:'刷新',
     newCategory:'新建分类', editCategory:'编辑分类', categoryKey:'分类键',
@@ -618,7 +618,7 @@ const ADMIN_UI_STRINGS = {
     couldNotSaveCategory:'无法保存分类。', deleteCategoryConfirm:'确定删除分类“{name}”吗？', couldNotDeleteCategory:'无法删除分类。',
     creatingMenuItem:'正在创建菜单商品…', menuItemUpdated:'菜单商品已更新。', menuItemCreated:'菜单商品已创建。',
     couldNotSaveMenuItem:'无法保存菜单商品。', deleteMenuItemConfirm:'确定删除菜单商品“{name}”吗？', couldNotDeleteMenuItem:'无法删除菜单商品。',
-    imageTooLarge:'图片必须小于 5 MB。', uploadingImage:'正在上传图片…', imageUploaded:'图片已上传。', imageUploadFailed:'图片上传失败。',
+    imageTooLarge:'图片必须小于 5 MB。', uploadingImage:'正在上传图片…', imageUploaded:'图片已上传。', imageUploadedSave:'图片已上传。请再点击表单底部的保存按钮，否则它不会显示在菜单中。', foodPngNotJpeg:'食物层需要背景透明的 PNG 或 WebP 图片。JPEG 会显示为实心方块。JPEG 照片请使用卡片背景图一栏。', imageUploadFailed:'图片上传失败。',
     imagePreview:'图片预览', requestFailed:'请求失败（HTTP {status}）。', fallbackFoodImageAlt:'默认食物图片', menuItemAlt:'菜单商品',
     categoryKeyInUse:'该分类键已被使用。', recordInUse:'该记录仍在使用中。', categoryHasItems:'请先移动或删除此分类下的商品。',
     imageServiceMissing:'服务器尚未配置图片上传。', unsupportedImageType:'请选择 JPEG、PNG、WebP 或 GIF 图片。',
@@ -1685,13 +1685,23 @@ function syncPlainPhoto(){
   if(!current || current === plainPhotoSyncedTo){ photo.value = food; plainPhotoSyncedTo = food; }
 }
 
-function wireCardImageUpload({ urlId, fileId, buttonId, previewId, onChange }){
+function wireCardImageUpload({ urlId, fileId, buttonId, previewId, onChange, transparentOnly }){
   const urlInput = document.getElementById(urlId);
   const fileInput = document.getElementById(fileId);
   const button = document.getElementById(buttonId);
   const refreshTopPreview = () => updateImagePreview(document.getElementById('itemImageUrl').value);   // the header preview also follows the Food PNG
   urlInput.addEventListener('input', () => { updateCardPreview(previewId, urlInput.value); if(onChange) onChange(); refreshTopPreview(); });
-  fileInput.addEventListener('change', () => { button.disabled = !fileInput.files.length; });
+  fileInput.addEventListener('change', () => {
+    const picked = fileInput.files[0];
+    // The food layer sits on top of the card, so it needs transparency: explain instead of silently uploading a JPEG.
+    if(transparentOnly && picked && /^image\/jpe?g$/i.test(picked.type)){
+      fileInput.value = '';
+      button.disabled = true;
+      setFormNote('itemNote', adminText('foodPngNotJpeg'), true);
+      return;
+    }
+    button.disabled = !fileInput.files.length;
+  });
   button.addEventListener('click', async () => {
     const file = fileInput.files[0];
     if(!file) return;
@@ -1718,7 +1728,7 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId, onChange }){
       updateLiveMenuPreview();
       if(onChange) onChange();
       refreshTopPreview();
-      setFormNote('itemNote', adminText('imageUploaded'));
+      setFormNote('itemNote', adminText('imageUploadedSave'));   // the upload only fills the link box; the dish is saved with the form's save button
     }catch(error){
       setFormNote('itemNote', error.message || adminText('imageUploadFailed'), true);
     }finally{
@@ -1727,7 +1737,7 @@ function wireCardImageUpload({ urlId, fileId, buttonId, previewId, onChange }){
   });
 }
 wireCardImageUpload({ urlId:'itemBgUrl', fileId:'itemBgFile', buttonId:'itemBgUploadBtn', previewId:'itemBgPreview' });
-wireCardImageUpload({ urlId:'itemFoodUrl', fileId:'itemFoodFile', buttonId:'itemFoodUploadBtn', previewId:'itemFoodPreview', onChange: syncPlainPhoto });
+wireCardImageUpload({ urlId:'itemFoodUrl', fileId:'itemFoodFile', buttonId:'itemFoodUploadBtn', previewId:'itemFoodPreview', onChange: syncPlainPhoto, transparentOnly: true });
 
 /* ---------- public-bucket homepage and Special videos ---------- */
 let currentBannerData = null;
