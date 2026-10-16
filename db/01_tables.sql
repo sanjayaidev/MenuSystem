@@ -50,6 +50,16 @@ create table if not exists menu_items (
   bg_y           integer,
   bg_scale       integer,
   card_color     text,
+  -- 16/10/2026 admin request: more layout controls (all empty = the normal look)
+  food_width     integer,                                -- food picture: wider / narrower only (% , 100 = normal)
+  card_width     integer,                                -- white card: width (% of the menu card, 67 = normal)
+  card_height    integer,                                -- white card: height (% of the menu card, 100 = normal)
+  price_x        integer,                                -- price: move left / right (% of the menu card, 0 = normal place)
+  price_y        integer,                                -- price: move up / down
+  add_scale      integer,                                -- Add to cart button: size (%, 100 = normal)
+  add_x          integer,                                -- Add to cart button: move left / right (0 = normal place)
+  add_y          integer,                                -- Add to cart button: move up / down
+  includes_meal  boolean not null default false,         -- true = the dish pop-up shows "This meal automatically includes ..."
   -- order of the dishes on the menu page (1 first); each number can be used by one dish only
   display_order  integer,
   created_at     timestamptz not null default now()
@@ -149,4 +159,24 @@ alter table menu_items add column if not exists bg_x          integer;
 alter table menu_items add column if not exists bg_y          integer;
 alter table menu_items add column if not exists bg_scale      integer;
 alter table menu_items add column if not exists card_color    text;
+alter table menu_items add column if not exists food_width    integer;
+alter table menu_items add column if not exists card_width    integer;
+alter table menu_items add column if not exists card_height   integer;
+alter table menu_items add column if not exists price_x       integer;
+alter table menu_items add column if not exists price_y       integer;
+alter table menu_items add column if not exists add_scale     integer;
+alter table menu_items add column if not exists add_x         integer;
+alter table menu_items add column if not exists add_y         integer;
+
+-- "This meal automatically includes" is for the meals only. The first time this runs on an existing database the column
+-- is added and the three "... Meal" boxes (Beef, Chicken, Shrimp) are switched on; later runs change nothing.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'public' and table_name = 'menu_items' and column_name = 'includes_meal') then
+    alter table menu_items add column includes_meal boolean not null default false;
+    update menu_items set includes_meal = true
+     where category_id in (select id from categories where key in ('beef', 'chicken', 'shrimp'));
+  end if;
+end $$;
 alter table menu_items add column if not exists display_order integer;

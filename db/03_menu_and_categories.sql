@@ -102,6 +102,13 @@ select c.id, d.name_en, d.name_ar, d.name_ur, d.name_zh,
   join categories c on c.key = d.cat_key
  where not exists (select 1 from menu_items m where m.name_en = d.name_en);
 
+-- "This meal automatically includes" shows on the meals only (the Beef, Chicken and Shrimp Meal boxes)
+update menu_items m
+   set includes_meal = (c.key in ('beef', 'chicken', 'shrimp'))
+  from _dishes d
+  join categories c on c.key = d.cat_key
+ where m.name_en = d.name_en;
+
 commit;
 
 -- Check: dishes per box -> Beef 3, Chicken 3, Shrimp 1, Tofu 2, Dumpling 3, Rice Noodles 2, Side Orders 3, Dine In 0, Outside Catering 0

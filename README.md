@@ -24,8 +24,87 @@ The old numbered scripts (`01`–`14`) were merged into these four on 13/10/2026
 ### 13/10/2026 menu update
 - **Dish order** — the menu page default sort is now *Menu order* (new first option of the sort box), following `display_order`. Set it per dish in Admin → Menu items → *Display order (unique)*; a number already used by another dish is refused and names that dish. Empty on a new dish = added at the end; dishes without a number are listed last. The *Most Popular* box keeps its best-sellers-first order.
 - **Prices** — shown without trailing zeros (39, not 39.00) on the menu, cart and WhatsApp message. A price with real cents keeps two decimals (39.50). The stored prices are not changed by the page code: they come from `db/03_menu_and_categories.sql` (the actual prices) or from Admin → Menu items.
-- **"This meal automatically includes" text** — now *Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water* in English, Arabic, Urdu and Chinese (the Arabic, Urdu and Chinese texts are drafts to be confirmed by a native speaker). Each language can be edited in Admin → Menu design → *"This meal automatically includes" text*; an empty box falls back to the built-in text. The title line is unchanged.
+- **"This meal automatically includes" text** — now *Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water* in English, Arabic, Urdu and Chinese (the Arabic, Urdu and Chinese texts are drafts to be confirmed by a native speaker). Each language can be edited in Admin → Menu design → *"This meal automatically includes" text*; an empty box falls back to the built-in text. The title line is unchanged. From 16/10/2026 it shows only on dishes marked as a meal (see below).
 - **Font size per language** — every text size on the menu page gets a per-language extra size (`--lang-add`, in px). Arabic starts at +2 px; change it, and pick a font per language, in Admin → Menu design → *Language font and size*. Both are stored in `site_settings` (key `menu_design`, no new SQL).
+
+### 16/10/2026 admin update (client points 2 to 8)
+
+**One-time setup (developer).** In Supabase → **SQL Editor** run `db/01_tables.sql` once (safe to run again). It adds the new columns to `menu_items` and, the first time only, ticks "meal" on the Beef, Chicken and Shrimp Meal dishes. Do **not** re-run `db/03_menu_and_categories.sql` on the live database (it resets the 17 dishes); it is only for new installs and now also sets the meal flag. Run the SQL first, then deploy the code.
+
+**How to read the numbers.** Every number box has a normal value, shown in the instructions below. Plus numbers move a thing right or down, minus numbers move it left or up, and 0 means "the normal place". In Arabic and Urdu the card is mirrored, so left and right moves of the price and the button are mirrored too, and the dish looks the same in every language. Always look at **Live menu preview** (top right of the form) while you type. The settings of a dish are saved only when you click **Save menu item** (or **Create menu item** for a new dish).
+
+#### Point 2: Move the price anywhere on the white card
+1. Click **Menu items** in the left menu.
+2. Find the dish and click **Edit**.
+3. Scroll down to the box **Price**.
+4. Type a number in **Move left / right (%)** and in **Move up / down (%)**. Numbers go from -50 to 50. 0 = the normal place under the name.
+5. Look at **Live menu preview**. When it looks right, click **Save menu item**.
+6. Refresh the menu page to see it.
+
+If the price disappears, it is hidden behind the dish picture. Type a smaller number to bring it back.
+
+#### Point 3: Make the Add to cart button bigger or smaller, or move it
+1. **Menu items** → **Edit** next to the dish.
+2. Scroll down to the box **Add to cart button**.
+3. **Size (%)**: 100 = normal, 150 = one and a half times bigger, 50 = half the size.
+4. **Move left / right (%)** and **Move up / down (%)**: numbers from -50 to 50, 0 = the normal place (bottom corner).
+5. Click **Save menu item**.
+
+#### Point 4: Change the dish picture and the white card
+1. **Menu items** → **Edit** next to the dish.
+2. To change the **dish picture**, use the box **Food picture**:
+   - **Size (%)** makes the whole dish bigger or smaller (100 = normal).
+   - **Width only (%)** makes the dish wider or thinner and does not change its height (100 = normal; the dish is stretched, so keep it near 100 for a natural look).
+   - **Move left / right (%)** and **Move up / down (%)** move the dish (0 = normal place).
+3. To change the **white background with the text**, use the box **White card (name and price)**:
+   - **Width (%)**: bigger = wider white card and less room for the picture on the left (67 = normal; from 40 to 85).
+   - **Height (%)**: 100 = the card covers the full height (from 60 to 100).
+   - **Color**: the color of the white card.
+4. Click **Save menu item**.
+
+The box **Background picture** controls the photo behind the dish (size and position). Only the part that is not covered by the white card can be seen.
+
+#### Point 5: Outline around the category boxes (any color)
+1. Click **Menu design** in the left menu.
+2. Scroll down to **Category boxes: outline**.
+3. Tick **Show a colored outline**.
+4. Click **Outline color** and choose any color. Set **Outline thickness (px, 1 to 4)**.
+5. Click **Save style settings**, then refresh the menu page.
+
+The outline is the same for all category boxes (Beef Meal, Chicken Meal ...). To go back to the thin grey line, untick **Show a colored outline** and click **Save style settings**.
+
+#### Point 6: "This meal automatically includes" only on the meals
+The text (soup, salad, rice, noodles and water) now shows only on dishes that are marked as a meal.
+1. **Menu items** → **Edit** next to the dish.
+2. Tick or untick **This dish is a meal (shows "This meal automatically includes")**.
+3. Click **Save menu item**. For a new dish, tick it before you click **Create menu item**.
+
+After the setup above, the dishes in Beef Meal, Chicken Meal and Shrimp Meal are ticked and all other dishes are not. To change the words of the text itself: **Menu design** → "This meal automatically includes" text → **Save language settings**.
+
+#### Point 7: Cancelled orders (delete or keep)
+1. Click **Orders** in the left menu.
+2. On the order, choose **Cancelled** in the status list. It saves by itself.
+3. The button **Delete order** appears next to the status list. Click it and confirm to delete the order for good. It cannot be brought back.
+4. To keep the order for reference, do nothing. Cancelled orders stay in the list. Click the filter button **Cancelled** at the top of the page to see only the cancelled orders.
+
+Only cancelled orders can be deleted. The server refuses to delete any other order.
+
+#### Point 8: Make text bold
+1. Click **Menu design** in the left menu and scroll down to **Bold text**.
+2. Tick a text to make it bold, untick it to make it normal: **Dish name on the card**, **Price on the card**, **Add to cart button**, **Category boxes**, **Dish description (pop-up)**, **"This meal automatically includes" text (pop-up)**.
+3. Click **Save style settings**, then refresh the menu page.
+
+Until you save, the menu page keeps its old look (dish name, price, Add to cart button and category boxes bold, the other two normal).
+
+To make **only some words** bold, type two stars before and after them, for example `**Seaweed Soup**`. This works in the dish description (**Menu items** → **Edit** → Description) and in the "This meal automatically includes" text (**Menu design**).
+
+#### Developer notes (16/10/2026)
+- New `menu_items` columns: `food_width`, `card_width`, `card_height`, `price_x`, `price_y`, `add_scale`, `add_x`, `add_y`, `includes_meal` (all empty = the old look; `includes_meal` defaults to false). Validation ranges are in `routes/admin.js` (`layoutFields`).
+- The menu page sets them as CSS variables on each card (`--food-width`, `--card-w`, `--card-h`, `--price-x/y`, `--add-x/y`, `--add-scale`). X offsets of the price and button are multiplied by `--dir` (-1 in right-to-left languages). `food_x` is not mirrored (unchanged from before).
+- If the API does not return `includes_meal` (database not updated yet), the pop-up behaves as before and shows the text on every dish.
+- Category outline and bold settings are stored in `site_settings` (key `menu_design`: `chip_outline_color`, `chip_outline_width`, `bold`), no new table. Route: `PUT /api/admin/design/style`. The menu page applies them as `--chip-line`, `--chip-line-w` and `--bold-*` variables.
+- `DELETE /api/admin/orders/:ref` deletes a cancelled order (its items are removed by the database).
+- Checked in a headless browser with a mocked API (English and Arabic): moved/resized card, mirrored offsets, meal-only box, bold stars, outline, Delete order only on cancelled orders, edit form values.
 
 ### Category boxes (menu page)
 *(Current order after `db/03_menu_and_categories.sql`: Beef Meal, Chicken Meal, Shrimp Meal, Tofu, Dumpling, Rice Noodles, Side Orders, **Most Popular**, Dine In, Outside Catering. The paragraph below describes the earlier nine-box version.)*

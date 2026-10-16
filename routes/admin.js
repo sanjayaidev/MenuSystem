@@ -94,6 +94,10 @@ function menuItemValues(body = {}) {
   const layoutFields = {
     food_scale: [50, 150], food_x: [-50, 50], food_y: [-50, 50],
     bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200],
+    // 16/10/2026: food width only, white card size, price and Add to cart button position / size
+    food_width: [50, 150], card_width: [40, 85], card_height: [60, 100],
+    price_x: [-50, 50], price_y: [-50, 50],
+    add_scale: [50, 150], add_x: [-50, 50], add_y: [-50, 50],
   };
   for (const [field, [min, max]] of Object.entries(layoutFields)) {
     if (!(field in body)) continue;
@@ -103,6 +107,7 @@ function menuItemValues(body = {}) {
     }
     values[field] = value;
   }
+  if ('includes_meal' in body) values.includes_meal = body.includes_meal === true;
   if ('card_color' in body) {
     const color = typeof body.card_color === 'string' ? body.card_color.trim() : '';
     if (color && !/^#[0-9a-f]{6}$/i.test(color)) return { error: 'Card color must be a six-digit hex color.' };
@@ -396,6 +401,28 @@ router.patch('/orders/:id/status', async (req, res) => {
   if (!order) return res.status(404).json({ error: 'Order not found' });
   res.json({ order });
 });
+
+// DELETE /api/admin/orders/:ref - delete one CANCELLED order for good (its items go with it).
+// Any other status is refused, so a live order can never be deleted by mistake.
+router.delete('/orders/:id', asyncHandler(async (req, res) => {
+  const ref = parseOrderRef(req.params.id);
+  if (!ref) return res.status(404).json({ error: 'Order not found' });
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('id, status')
+    .eq(ref.column, ref.value)
+    .maybeSingle();
+  if (error) return res.status(500).json({ error: error.message });
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.status !== 'cancelled') {
+    return res.status(409).json({ error: 'Only cancelled orders can be deleted. Change the status to Cancelled first.' });
+  }
+
+  const { error: deleteError } = await supabase.from('orders').delete().eq('id', order.id);
+  if (deleteError) return res.status(500).json({ error: deleteError.message });
+  res.json({ ok: true });
+}));
 
 router.use((error, req, res, next) => {
   if (res.headersSent) return next(error);

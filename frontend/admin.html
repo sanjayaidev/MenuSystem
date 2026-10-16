@@ -112,14 +112,15 @@
   .item-live-preview{grid-column:2; grid-row:1; position:sticky; top:16px; min-width:0;}
   .item-live-preview h3{margin:0 0 10px; color:var(--muted); font-size:12px; font-weight:650;}
   .live-preview-card{--preview-paper:#f6f1e6;--preview-edge:#e9e0cd;position:relative; width:100%; aspect-ratio:2.5 / 1; overflow:hidden; background:radial-gradient(120% 120% at 25% 30%,#3a2d24 0%,#2a211b 60%,#1d1612 100%); color:#2b2622;}
-  .live-preview-bg{position:absolute; inset:0 auto 0 0; z-index:0; width:calc(100% - 66.6667% + 1px); height:100%; object-fit:cover; object-position:var(--preview-bg-x,50%) var(--preview-bg-y,50%); transform:scale(var(--preview-bg-scale,1));}
-  .live-preview-paper{position:absolute; inset:0 0 0 auto; z-index:1; display:flex; width:66.6667%; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:8px 8px 18px 22%; text-align:center; background:radial-gradient(120% 90% at 50% 40%,#fbf8f0 0%,var(--preview-paper) 55%,var(--preview-edge) 100%);}
+  .live-preview-bg{position:absolute; inset:0 auto 0 0; z-index:0; width:calc(100% - var(--preview-card-w,66.6667%) + 1px); height:100%; object-fit:cover; object-position:var(--preview-bg-x,50%) var(--preview-bg-y,50%); transform:scale(var(--preview-bg-scale,1));}
+  .live-preview-paper{position:absolute; inset:auto 0 auto auto; top:calc((100% - var(--preview-card-h,100%)) / 2); height:var(--preview-card-h,100%); z-index:1; display:flex; width:var(--preview-card-w,66.6667%); flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:8px 8px 18px 22%; text-align:center; background:radial-gradient(120% 90% at 50% 40%,#fbf8f0 0%,var(--preview-paper) 55%,var(--preview-edge) 100%);}
   .live-preview-paper small{color:#b8975a; font-size:7px; font-weight:700;}
   .live-preview-paper strong{max-width:100%; overflow-wrap:anywhere; font-family:Georgia,'Times New Roman',serif; font-size:calc(clamp(9px,4.2cqw,15px) + 2pt); line-height:1.2;}
+  #liveMenuPrice{transform:translate(calc(var(--preview-price-x,0) * var(--preview-u,4px)), calc(var(--preview-price-y,0) * .4 * var(--preview-u,4px)));}
   .live-preview-paper span{font-family:Georgia,'Times New Roman',serif; font-size:calc(clamp(10px,5cqw,17px) + 2pt); font-weight:700; line-height:1;}
-  .live-preview-food{position:absolute; inset:5% auto 5% 0; z-index:2; display:flex; width:53.3333%; align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
+  .live-preview-food{position:absolute; inset:5% auto 5% 0; z-index:2; display:flex; width:calc(100% - var(--preview-card-w,66.6667%) + 20%); align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(calc(var(--preview-food-scale,1) * var(--preview-food-width,1)), var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
   .live-preview-food img{display:block; width:auto; height:100%; max-width:100%; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));}
-  .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; background:var(--gold); color:#1a1408; font-size:calc(8px + 2pt); font-weight:700;}
+  .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; background:var(--gold); color:#1a1408; font-size:calc(8px + 2pt); font-weight:700; transform:translate(calc(var(--preview-add-x,0) * var(--preview-u,4px)), calc(var(--preview-add-y,0) * .4 * var(--preview-u,4px))) scale(var(--preview-add-scale,1)); transform-origin:right bottom;}
   .live-preview-paper,.live-preview-food{container-type:inline-size;}
   .form-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
   .form-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));}
@@ -153,6 +154,9 @@
   .money{white-space:nowrap; direction:ltr; unicode-bidi:isolate;}
   .money .riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
   .field-hint{margin:4px 0 0; color:var(--muted); font-size:11px;}
+  .layout-group{min-width:0; margin:14px 0 0; padding:10px 12px 12px; border:1px solid var(--line); border-radius:6px;}
+  .layout-group legend{padding:0 5px; color:var(--gold); font-size:12px; font-weight:700;}
+  .layout-group .field-hint{margin-top:8px; line-height:1.5;}
   .image-advanced{margin-top:14px;}
   .image-advanced summary{cursor:pointer; color:var(--muted); font-size:12px;}
   .image-advanced .image-tools{grid-template-columns:minmax(0,1fr);}
@@ -330,7 +334,7 @@
         </div>
 
         <h3 style="margin:22px 0 6px;">"This meal automatically includes" text</h3>
-        <p class="form-note" style="margin:0 0 12px;">Shown under the title on every dish. Leave a language empty to use the built-in text: "Seaweed Soup, Fried Egg Rice, Noodles, Salad &amp; Water".</p>
+        <p class="form-note" style="margin:0 0 12px;">Shown in the dish pop-up, only for the dishes that are ticked "This dish is a meal" (Menu items). Leave a language empty to use the built-in text: "Seaweed Soup, Fried Egg Rice, Noodles, Salad &amp; Water". To make some words bold, type two stars before and after them, for example **Seaweed Soup**.</p>
         <div class="language-fields">
           <label>English<textarea id="includes_en" maxlength="300" lang="en" placeholder="Seaweed Soup, Fried Egg Rice, Noodles, Salad &amp; Water"></textarea></label>
           <label>العربية<textarea id="includes_ar" maxlength="300" lang="ar" dir="rtl" placeholder="شوربة أعشاب البحر، أرز مقلي بالبيض، نودلز، سلطة وماء"></textarea></label>
@@ -338,6 +342,30 @@
           <label>中文<textarea id="includes_zh" maxlength="300" lang="zh" placeholder="紫菜汤、蛋炒饭、面条、沙拉和水"></textarea></label>
         </div>
         <div class="form-actions"><button class="action-btn primary" id="langSave" type="submit">Save language settings</button><span class="form-note" id="langNote" role="status"></span></div>
+      </form>
+
+      <form class="manager-form" id="styleForm" novalidate style="margin-top:22px;">
+        <h3 style="margin:0 0 6px;">Category boxes: outline</h3>
+        <p class="form-note" style="margin:0 0 12px;">The category boxes are the row at the top of the menu page (Beef Meal, Chicken Meal ...). Tick the box, choose any color and thickness. Untick it to go back to the normal thin grey line.</p>
+        <div class="check-fields" style="margin-top:0;">
+          <label><input type="checkbox" id="chipOutlineOn"> <span>Show a colored outline</span></label>
+        </div>
+        <div class="form-grid compact">
+          <label>Outline color<input id="chipOutlineColor" type="color" value="#e3b23c"></label>
+          <label>Outline thickness (px, 1 to 4)<input id="chipOutlineWidth" type="number" min="1" max="4" step="1" value="1"></label>
+        </div>
+
+        <h3 style="margin:22px 0 6px;">Bold text</h3>
+        <p class="form-note" style="margin:0 0 12px;">Tick a text to make it bold. Untick it to make it normal. To make only some words bold, type two stars before and after them, for example **Seaweed Soup**. This works in the dish description (Menu items) and in the "This meal automatically includes" text above.</p>
+        <div class="check-fields" style="margin-top:0;">
+          <label><input type="checkbox" id="bold_name"> <span>Dish name on the card</span></label>
+          <label><input type="checkbox" id="bold_price"> <span>Price on the card</span></label>
+          <label><input type="checkbox" id="bold_add_to_cart"> <span>Add to cart button</span></label>
+          <label><input type="checkbox" id="bold_categories"> <span>Category boxes</span></label>
+          <label><input type="checkbox" id="bold_description"> <span>Dish description (pop-up)</span></label>
+          <label><input type="checkbox" id="bold_includes"> <span>"This meal automatically includes" text (pop-up)</span></label>
+        </div>
+        <div class="form-actions"><button class="action-btn primary" id="styleSave" type="submit">Save style settings</button><span class="form-note" id="styleNote" role="status"></span></div>
       </form>
     </section>
 
@@ -401,6 +429,7 @@
         <div class="check-fields">
           <label><input type="checkbox" name="is_available" id="itemAvailable" checked> <span data-ui="availableToOrder">Available to order</span></label>
           <label><input type="checkbox" name="is_offer" id="itemOffer"> <span data-ui="featuredOffer">Featured offer</span></label>
+          <label><input type="checkbox" id="itemIncludesMeal"> <span>This dish is a meal (shows "This meal automatically includes")</span></label>
         </div>
         <!-- Menu card layers: 1 = background (this block), 2 = the card (automatic), 3 = food PNG (next block) -->
         <div class="image-tools">
@@ -414,15 +443,46 @@
         </div>
         <p class="field-hint" data-ui="foodPngHint">Leave the food PNG empty to use the item image above on the menu card.</p>
         <div class="image-preview card-image-preview is-png" id="itemFoodPreview"></div>
-        <div class="form-grid compact" style="margin-top:14px;">
-          <label>Food size (%)<input name="food_scale" type="number" min="50" max="150" step="1" value="100"></label>
-          <label>Food position X (%)<input name="food_x" type="number" min="-50" max="50" step="1" value="0"></label>
-          <label>Food position Y (%)<input name="food_y" type="number" min="-50" max="50" step="1" value="0"></label>
-          <label>Background position X (%)<input name="bg_x" type="number" min="0" max="100" step="1" value="50"></label>
-          <label>Background position Y (%)<input name="bg_y" type="number" min="0" max="100" step="1" value="50"></label>
-          <label>Background scale (%)<input name="bg_scale" type="number" min="100" max="200" step="1" value="100"></label>
-          <label>Vector card color<input name="card_color" type="color" value="#f6f1e6"></label>
-        </div>
+        <fieldset class="layout-group"><legend>Food picture</legend>
+          <div class="form-grid compact">
+            <label>Size (%)<input name="food_scale" type="number" min="50" max="150" step="1" value="100"></label>
+            <label>Width only (%)<input name="food_width" type="number" min="50" max="150" step="1" value="100"></label>
+            <label>Move left / right (%)<input name="food_x" type="number" min="-50" max="50" step="1" value="0"></label>
+            <label>Move up / down (%)<input name="food_y" type="number" min="-50" max="50" step="1" value="0"></label>
+          </div>
+          <p class="field-hint">Size makes the whole dish bigger or smaller. Width only makes the dish wider or thinner and does not change its height. 100 = normal. For moving, a plus number goes right or down, a minus number goes left or up, 0 = normal place.</p>
+        </fieldset>
+        <fieldset class="layout-group"><legend>White card (name and price)</legend>
+          <div class="form-grid compact">
+            <label>Width (%)<input name="card_width" type="number" min="40" max="85" step="1" value="67"></label>
+            <label>Height (%)<input name="card_height" type="number" min="60" max="100" step="1" value="100"></label>
+            <label>Color<input name="card_color" type="color" value="#f6f1e6"></label>
+          </div>
+          <p class="field-hint">A bigger width makes the white card wider and leaves less room for the picture on the left. 67 = normal. Height 100 = the card covers the full height.</p>
+        </fieldset>
+        <fieldset class="layout-group"><legend>Price</legend>
+          <div class="form-grid compact">
+            <label>Move left / right (%)<input name="price_x" type="number" min="-50" max="50" step="1" value="0"></label>
+            <label>Move up / down (%)<input name="price_y" type="number" min="-50" max="50" step="1" value="0"></label>
+          </div>
+          <p class="field-hint">Plus numbers move the price right or down, minus numbers move it left or up. 0 = normal place (under the name). Watch the live preview while you type.</p>
+        </fieldset>
+        <fieldset class="layout-group"><legend>Add to cart button</legend>
+          <div class="form-grid compact">
+            <label>Size (%)<input name="add_scale" type="number" min="50" max="150" step="1" value="100"></label>
+            <label>Move left / right (%)<input name="add_x" type="number" min="-50" max="50" step="1" value="0"></label>
+            <label>Move up / down (%)<input name="add_y" type="number" min="-50" max="50" step="1" value="0"></label>
+          </div>
+          <p class="field-hint">Size 100 = normal, 150 = one and a half times bigger. Plus numbers move the button right or down, minus numbers move it left or up. 0 = normal place (bottom corner).</p>
+        </fieldset>
+        <fieldset class="layout-group"><legend>Background picture (the photo behind the dish)</legend>
+          <div class="form-grid compact">
+            <label>Size (%)<input name="bg_scale" type="number" min="100" max="200" step="1" value="100"></label>
+            <label>Move left / right (0 to 100)<input name="bg_x" type="number" min="0" max="100" step="1" value="50"></label>
+            <label>Move up / down (0 to 100)<input name="bg_y" type="number" min="0" max="100" step="1" value="50"></label>
+          </div>
+          <p class="field-hint">Only the strip of the picture that is not covered by the white card can be seen. 100 = normal size, 50 = centered.</p>
+        </fieldset>
         <details class="image-advanced">
           <summary data-ui="plainPhotoSummary">Plain product photo URL (optional, fills itself from the Food PNG)</summary>
           <div class="image-tools"><label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label></div>
@@ -471,7 +531,7 @@ const ADMIN_UI_STRINGS = {
     all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', completed:'Completed', cancelled:'Cancelled',
     orderCount:'{count} orders', orderCountOne:'1 order', paid:'Paid', unpaid:'Unpaid',
     contact:'Contact', items:'Items', deliveryAddressLine:'Delivery — {address}', pickup:'Pickup', subtotal:'Subtotal', total:'Total', payment:'Payment',
-    noOrders:'No orders here yet.', failedLoadOrders:'Failed to load orders.', saving:'Saving…', saved:'Saved.', failedSave:'Failed to save.',
+    noOrders:'No orders here yet.', failedLoadOrders:'Failed to load orders.', saving:'Saving…', saved:'Saved.', failedSave:'Failed to save.', deleteOrder:'Delete order', deleteOrderConfirm:'Delete this cancelled order for good? You cannot get it back.', couldNotDeleteOrder:'Could not delete the order.',
     loadingCategories:'Loading categories…', failedLoadCategories:'Failed to load categories.', noCategories:'No categories yet.',
     categoryCount:'{count} categories', categoryCountOne:'1 category',
     loadingMenuItems:'Loading menu items…', failedLoadMenuItems:'Failed to load menu items.', noMenuItems:'No menu items yet.',
@@ -516,7 +576,7 @@ const ADMIN_UI_STRINGS = {
     all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', completed:'مكتمل', cancelled:'ملغي',
     orderCount:'عدد الطلبات: {count}', orderCountOne:'طلب واحد', paid:'مدفوع', unpaid:'غير مدفوع',
     contact:'التواصل', items:'الأصناف', deliveryAddressLine:'توصيل — {address}', pickup:'استلام', subtotal:'المجموع الفرعي', total:'الإجمالي', payment:'الدفع',
-    noOrders:'لا توجد طلبات حالياً.', failedLoadOrders:'تعذر تحميل الطلبات.', saving:'جارٍ الحفظ…', saved:'تم الحفظ.', failedSave:'تعذر الحفظ.',
+    noOrders:'لا توجد طلبات حالياً.', failedLoadOrders:'تعذر تحميل الطلبات.', saving:'جارٍ الحفظ…', saved:'تم الحفظ.', failedSave:'تعذر الحفظ.', deleteOrder:'حذف الطلب', deleteOrderConfirm:'هل تريد حذف هذا الطلب الملغى نهائياً؟ لا يمكن استرجاعه.', couldNotDeleteOrder:'تعذّر حذف الطلب.',
     loadingCategories:'جارٍ تحميل الفئات…', failedLoadCategories:'تعذر تحميل الفئات.', noCategories:'لا توجد فئات بعد.',
     categoryCount:'عدد الفئات: {count}', categoryCountOne:'فئة واحدة',
     loadingMenuItems:'جارٍ تحميل الأصناف…', failedLoadMenuItems:'تعذر تحميل الأصناف.', noMenuItems:'لا توجد أصناف بعد.',
@@ -561,7 +621,7 @@ const ADMIN_UI_STRINGS = {
     all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', completed:'مکمل', cancelled:'منسوخ',
     orderCount:'آرڈرز: {count}', orderCountOne:'ایک آرڈر', paid:'ادا شدہ', unpaid:'غیر ادا شدہ',
     contact:'رابطہ', items:'آئٹمز', deliveryAddressLine:'ڈیلیوری — {address}', pickup:'پک اَپ', subtotal:'ذیلی مجموعہ', total:'کل', payment:'ادائیگی',
-    noOrders:'ابھی کوئی آرڈر نہیں۔', failedLoadOrders:'آرڈرز لوڈ نہیں ہو سکے۔', saving:'محفوظ ہو رہا ہے…', saved:'محفوظ ہو گیا۔', failedSave:'محفوظ نہیں ہو سکا۔',
+    noOrders:'ابھی کوئی آرڈر نہیں۔', failedLoadOrders:'آرڈرز لوڈ نہیں ہو سکے۔', saving:'محفوظ ہو رہا ہے…', saved:'محفوظ ہو گیا۔', failedSave:'محفوظ نہیں ہو سکا۔', deleteOrder:'آرڈر حذف کریں', deleteOrderConfirm:'کیا اس منسوخ آرڈر کو ہمیشہ کے لیے حذف کرنا ہے؟ اسے واپس نہیں لایا جا سکتا۔', couldNotDeleteOrder:'آرڈر حذف نہیں ہو سکا۔',
     loadingCategories:'زمرے لوڈ ہو رہے ہیں…', failedLoadCategories:'زمرے لوڈ نہیں ہو سکے۔', noCategories:'ابھی کوئی زمرہ نہیں۔',
     categoryCount:'زمرے: {count}', categoryCountOne:'ایک زمرہ',
     loadingMenuItems:'مینو آئٹمز لوڈ ہو رہے ہیں…', failedLoadMenuItems:'مینو آئٹمز لوڈ نہیں ہو سکے۔', noMenuItems:'ابھی کوئی مینو آئٹم نہیں۔',
@@ -606,7 +666,7 @@ const ADMIN_UI_STRINGS = {
     all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', completed:'已完成', cancelled:'已取消',
     orderCount:'共 {count} 个订单', orderCountOne:'1 个订单', paid:'已付款', unpaid:'未付款',
     contact:'联系方式', items:'商品', deliveryAddressLine:'配送 — {address}', pickup:'自取', subtotal:'小计', total:'总计', payment:'付款',
-    noOrders:'暂无订单。', failedLoadOrders:'无法加载订单。', saving:'正在保存…', saved:'已保存。', failedSave:'保存失败。',
+    noOrders:'暂无订单。', failedLoadOrders:'无法加载订单。', saving:'正在保存…', saved:'已保存。', failedSave:'保存失败。', deleteOrder:'删除订单', deleteOrderConfirm:'要永久删除这个已取消的订单吗？删除后无法恢复。', couldNotDeleteOrder:'无法删除订单。',
     loadingCategories:'正在加载分类…', failedLoadCategories:'无法加载分类。', noCategories:'暂无分类。',
     categoryCount:'共 {count} 个分类', categoryCountOne:'1 个分类',
     loadingMenuItems:'正在加载菜单商品…', failedLoadMenuItems:'无法加载菜单商品。', noMenuItems:'暂无菜单商品。',
@@ -1078,6 +1138,7 @@ function renderOrders(orders){
         </div>
         <div class="status-row">
           <select data-id="${order.id}">${statusOptions}</select>
+          <button class="action-btn danger" type="button" data-delete-order="${order.id}" ${order.status === 'cancelled' ? '' : 'hidden'}>${adminText('deleteOrder')}</button>
           <span class="save-note"></span>
         </div>
       </div>`;
@@ -1087,6 +1148,20 @@ function renderOrders(orders){
     select.addEventListener('change', () => updateStatus(select));
   });
 }
+
+document.getElementById('ordersList').addEventListener('click', async event => {
+  const button = event.target.closest('[data-delete-order]');
+  if(!button) return;
+  if(!window.confirm(adminText('deleteOrderConfirm'))) return;
+  button.disabled = true;
+  try{
+    await adminRequest(`/orders/${encodeURIComponent(button.dataset.deleteOrder)}`, { method: 'DELETE' });
+    await loadOrders();
+  }catch(error){
+    window.alert(error.message || adminText('couldNotDeleteOrder'));
+    button.disabled = false;
+  }
+});
 
 async function updateStatus(select){
   const id = select.dataset.id;
@@ -1108,6 +1183,7 @@ async function updateStatus(select){
     const badge = select.closest('.order-card').querySelector('.badge');
     badge.className = `badge ${newStatus}`;
     badge.textContent = adminText(newStatus);
+    select.closest('.status-row').querySelector('[data-delete-order]').hidden = newStatus !== 'cancelled';   // Delete order only on cancelled orders
     setTimeout(() => { note.textContent = ''; }, 2000);
   }catch(err){
     note.textContent = adminText('failedSave');
@@ -1196,6 +1272,7 @@ function showDesignSettings(design){
   document.getElementById('designFontColor').value = design.font_color || '#2b2622';
   document.getElementById('designFontStatus').textContent = design.font_url ? 'Custom font uploaded.' : 'No custom font uploaded.';
   showLanguageSettings(design);
+  showStyleSettings(design);
 }
 
 /* ---------- language font / size and the "includes" text ---------- */
@@ -1240,6 +1317,47 @@ document.getElementById('langForm').addEventListener('submit', async event => {
     setFormNote('langNote', 'Saved. Refresh the menu page to see it.');
   }catch(error){
     setFormNote('langNote', error.message || 'Could not save language settings.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+/* ---------- category box outline and bold text ---------- */
+const BOLD_KEYS = ['name', 'price', 'add_to_cart', 'categories', 'description', 'includes'];
+const BOLD_DEFAULTS = { name:true, price:true, add_to_cart:true, categories:true, description:false, includes:false };   // how the menu page looks before anything is saved
+
+function showStyleSettings(design){
+  const color = /^#[0-9a-f]{6}$/i.test(design.chip_outline_color || '') ? design.chip_outline_color : '';
+  document.getElementById('chipOutlineOn').checked = Boolean(color);
+  document.getElementById('chipOutlineColor').value = color || '#e3b23c';
+  document.getElementById('chipOutlineWidth').value = Number(design.chip_outline_width) || 1;
+  for(const key of BOLD_KEYS){
+    const saved = (design.bold || {})[key];
+    document.getElementById(`bold_${key}`).checked = typeof saved === 'boolean' ? saved : BOLD_DEFAULTS[key];
+  }
+}
+
+document.getElementById('styleForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('styleSave');
+  button.disabled = true;
+  setFormNote('styleNote', 'Saving...');
+  try{
+    const payload = {
+      chip_outline_color: document.getElementById('chipOutlineOn').checked ? document.getElementById('chipOutlineColor').value : '',
+      chip_outline_width: Number(document.getElementById('chipOutlineWidth').value),
+      bold: {},
+    };
+    for(const key of BOLD_KEYS) payload.bold[key] = document.getElementById(`bold_${key}`).checked;
+    const result = await adminRequest('/design/style', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    showStyleSettings(result.design);
+    setFormNote('styleNote', 'Saved. Refresh the menu page to see it.');
+  }catch(error){
+    setFormNote('styleNote', error.message || 'Could not save the style settings.', true);
   }finally{
     button.disabled = false;
   }
@@ -1545,6 +1663,11 @@ function setLivePreviewImage(image, value){
   }
 }
 
+// the normal number of every layout box (what an empty database value means on the menu page)
+const ITEM_LAYOUT_DEFAULTS = {
+  food_scale:100, food_width:100, food_x:0, food_y:0, card_width:67, card_height:100,
+  price_x:0, price_y:0, add_scale:100, add_x:0, add_y:0, bg_x:50, bg_y:50, bg_scale:100,
+};
 function updateLiveMenuPreview(){
   const form = document.getElementById('itemForm');
   if(!form) return;
@@ -1570,6 +1693,15 @@ function updateLiveMenuPreview(){
   card.style.setProperty('--preview-paper', cardColor);
   card.style.setProperty('--preview-edge', `color-mix(in srgb, ${cardColor}, #000 8%)`);
   card.style.setProperty('--preview-food-scale', String(percent('food_scale', 100, 50, 150) / 100));
+  card.style.setProperty('--preview-food-width', String(percent('food_width', 100, 50, 150) / 100));
+  card.style.setProperty('--preview-card-w', `${percent('card_width', 66.6667, 40, 85)}%`);
+  card.style.setProperty('--preview-card-h', `${percent('card_height', 100, 60, 100)}%`);
+  card.style.setProperty('--preview-price-x', String(percent('price_x', 0, -50, 50)));
+  card.style.setProperty('--preview-price-y', String(percent('price_y', 0, -50, 50)));
+  card.style.setProperty('--preview-add-scale', String(percent('add_scale', 100, 50, 150) / 100));
+  card.style.setProperty('--preview-add-x', String(percent('add_x', 0, -50, 50)));
+  card.style.setProperty('--preview-add-y', String(percent('add_y', 0, -50, 50)));
+  card.style.setProperty('--preview-u', `${(card.clientWidth || 400) / 100}px`);   // 1 % of the preview width, so moving looks the same as on the menu page
   card.style.setProperty('--preview-food-x', `${percent('food_x', 0, -50, 50)}%`);
   card.style.setProperty('--preview-food-y', `${percent('food_y', 0, -50, 50)}%`);
   card.style.setProperty('--preview-bg-x', `${percent('bg_x', 50, 0, 100)}%`);
@@ -1606,6 +1738,7 @@ document.getElementById('itemForm').addEventListener('submit', async event => {
   const payload = Object.fromEntries(new FormData(form).entries());
   payload.is_available = document.getElementById('itemAvailable').checked;
   payload.is_offer = document.getElementById('itemOffer').checked;
+  payload.includes_meal = document.getElementById('itemIncludesMeal').checked;
   const button = document.getElementById('itemSubmit');
   button.disabled = true;
   setFormNote('itemNote', id ? adminText('savingChanges') : adminText('creatingMenuItem'));
@@ -1635,12 +1768,13 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
   if(button.dataset.menuAction === 'edit'){
     document.getElementById('itemId').value = item.id;
     renderCategoryOptions(item.category_id);
-    for(const field of ['price', 'calories', 'rating', 'popularity', 'display_order', 'image_path', 'bg_image_url', 'food_png_url', 'food_scale', 'food_x', 'food_y', 'bg_x', 'bg_y', 'bg_scale', 'card_color', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
+    for(const field of ['price', 'calories', 'rating', 'popularity', 'display_order', 'image_path', 'bg_image_url', 'food_png_url', 'food_scale', 'food_width', 'food_x', 'food_y', 'bg_x', 'bg_y', 'bg_scale', 'card_color', 'card_width', 'card_height', 'price_x', 'price_y', 'add_scale', 'add_x', 'add_y', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
       const input = document.querySelector(`#itemForm [name="${field}"]`);
-      input.value = item[field] ?? (field === 'card_color' ? '#f6f1e6' : '');
+      input.value = item[field] ?? (field === 'card_color' ? '#f6f1e6' : (ITEM_LAYOUT_DEFAULTS[field] ?? ''));   // empty in the database = the normal look, shown as its normal number
     }
     document.getElementById('itemAvailable').checked = item.is_available;
     document.getElementById('itemOffer').checked = item.is_offer;
+    document.getElementById('itemIncludesMeal').checked = item.includes_meal === true;
     document.getElementById('itemFormTitle').textContent = adminText('editMenuItem');
     document.getElementById('itemSubmit').textContent = adminText('saveMenuItem');
     document.getElementById('itemCancel').hidden = false;
@@ -1668,6 +1802,7 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
 
 document.getElementById('menuSearch').addEventListener('input', renderMenu);
 document.getElementById('itemForm').addEventListener('input', updateLiveMenuPreview);
+window.addEventListener('resize', updateLiveMenuPreview);
 document.getElementById('itemForm').addEventListener('change', updateLiveMenuPreview);
 document.getElementById('itemImageUrl').addEventListener('input', event => updateImagePreview(event.currentTarget.value.trim()));
 /* ---------- menu card layers: background image + food PNG (same Imgbb upload as the item image) ---------- */

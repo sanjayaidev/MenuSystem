@@ -26,7 +26,12 @@ const DEFAULTS = {
   lang_style: DEFAULT_LANG_STYLE,
   // empty = the translated text built into the menu page ("Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water")
   includes_text: { en: '', ar: '', ur: '', zh: '' },
+  // 16/10/2026: outline around the category boxes ('' = the normal thin grey line) and bold on / off per text.
+  // bold = {} means nothing was saved yet, so the menu page keeps its original look.
+  chip_outline_color: '', chip_outline_width: 1,
+  bold: {},
 };
+const BOLD_KEYS = ['name', 'price', 'add_to_cart', 'categories', 'description', 'includes'];
 
 async function readDesign() {
   const { data, error } = await supabase.from('site_settings').select('value').eq('key', SETTINGS_KEY).maybeSingle();
@@ -119,6 +124,29 @@ router.put('/admin/design/languages', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Could not save language settings:', error.message);
     res.status(500).json({ error: 'Could not save the language settings.' });
+  }
+});
+
+// Category box outline (any colour) and bold text on / off.
+router.put('/admin/design/style', requireAdmin, async (req, res) => {
+  const color = typeof req.body?.chip_outline_color === 'string' ? req.body.chip_outline_color.trim() : '';
+  const width = Number(req.body?.chip_outline_width);
+  if (color && !/^#[0-9a-f]{6}$/i.test(color)) {
+    return res.status(400).json({ error: 'Choose a valid outline color.' });
+  }
+  if (!Number.isInteger(width) || width < 1 || width > 4) {
+    return res.status(400).json({ error: 'Outline thickness must be a whole number from 1 to 4 px.' });
+  }
+  const bold = {};
+  for (const key of BOLD_KEYS) bold[key] = req.body?.bold?.[key] === true;
+  try {
+    const design = await readDesign();
+    Object.assign(design, { chip_outline_color: color, chip_outline_width: width, bold });
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not save style settings:', error.message);
+    res.status(500).json({ error: 'Could not save the style settings.' });
   }
 });
 

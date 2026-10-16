@@ -147,11 +147,11 @@
   }
   .cat-chip{
     flex:0 0 auto; scroll-snap-align:start; white-space:nowrap; cursor:pointer;
-    background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:10px;
-    padding:10px 14px; font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); font-weight:600; -webkit-tap-highlight-color:transparent;
+    background:var(--surface); color:var(--text); border:var(--chip-line-w,1px) solid var(--chip-line,var(--line)); border-radius:10px;
+    padding:10px 14px; font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); font-weight:var(--bold-categories,600); -webkit-tap-highlight-color:transparent;
     transition:background .15s ease, color .15s ease, border-color .15s ease;
   }
-  .cat-chip.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .cat-chip.active{background:var(--gold); color:#1a1408; border-color:var(--chip-line,var(--gold));}
   .cat-chip:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
   .offer-banner{order:2; display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:8px 16px 10px; padding:0; overflow:hidden; background:var(--gold); color:#1a1408;}
   .offer-banner-copy{grid-row:2; min-width:0; padding:14px 16px;}
@@ -186,7 +186,7 @@
 
   /* layer 2 */
   .row .card{
-    position:absolute; inset-block:0; inset-inline-end:0; z-index:1; width:var(--card-w);
+    position:absolute; inset-block-start:calc((100% - var(--card-h,100%)) / 2); inset-inline-end:0; z-index:1; width:var(--card-w); height:var(--card-h,100%);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:calc(2.4 * var(--u)); text-align:center;
     padding:calc(4 * var(--u)) calc(3 * var(--u)) calc(11 * var(--u));
@@ -205,7 +205,7 @@
   .row .corner.br{bottom:calc(1.1 * var(--u)); right:calc(1.1 * var(--u)); transform:scale(-1,-1);}
   .row .flourish{width:calc(11 * var(--u)); height:auto; color:var(--ornament);}
   .row .name{
-    margin:0; font-family:var(--lang-font,var(--menu-font-family,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif)); font-weight:700;
+    margin:0; font-family:var(--lang-font,var(--menu-font-family,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif)); font-weight:var(--bold-name,700);
     letter-spacing:.06em; text-transform:uppercase; font-size:calc(max(12px, calc(var(--menu-font-scale,3.2) * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1.2;
     color:var(--menu-font-color,var(--ink)); overflow-wrap:anywhere;
   }
@@ -213,8 +213,10 @@
   .money{white-space:nowrap; direction:ltr; unicode-bidi:isolate;}
   .money .riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
   .row .price{
-    margin:0; font-family:var(--menu-font-family,'Cormorant Garamond',Georgia,'Times New Roman',serif); font-weight:700;
+    margin:0; font-family:var(--menu-font-family,'Cormorant Garamond',Georgia,'Times New Roman',serif); font-weight:var(--bold-price,700);
     font-size:calc(max(16px, calc(4.6 * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1; letter-spacing:.02em; color:var(--menu-font-color,#5b4a2c);
+    /* Admin: Price - move left / right and up / down (% of the whole menu card; 0 = the normal place). 1 % of the card height = .4 * --u */
+    transform:translate(calc(var(--price-x,0) * var(--dir,1) * var(--u)), calc(var(--price-y,0) * .4 * var(--u)));
   }
   /* scripts where uppercase / letter-spacing / Cinzel would break the text */
   html[lang="ar"] .row .name{font-family:var(--lang-font,'Noto Naskh Arabic',serif); letter-spacing:0; text-transform:none; line-height:1.5;}
@@ -226,7 +228,7 @@
     position:absolute; z-index:2; pointer-events:none;
     inset-block:5%; inset-inline-start:0; width:calc(100% - var(--card-w) + var(--food-overlap));
     display:flex; align-items:flex-end; justify-content:flex-end;
-    transform:translate(var(--food-x,0%),var(--food-y,0%)) scale(var(--food-scale,1)); transform-origin:bottom right;
+    transform:translate(var(--food-x,0%),var(--food-y,0%)) scale(calc(var(--food-scale,1) * var(--food-width,1)), var(--food-scale,1)); transform-origin:bottom right;
   }
   html[dir="rtl"] .row .food{transform-origin:bottom left;}
   .row .food img{
@@ -250,13 +252,17 @@
     display:flex; align-items:center; gap:calc(1.4 * var(--u)); border:0; cursor:pointer;
     background:var(--gold); color:#1a1408;
     padding:max(9px, calc(1.3 * var(--u))) max(10px, calc(2.2 * var(--u)));
-    font-family:inherit; font-weight:600; font-size:calc(max(11px, calc(1.9 * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1;
+    font-family:inherit; font-weight:var(--bold-add,600); font-size:calc(max(11px, calc(1.9 * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1;
     box-shadow:0 calc(.3 * var(--u)) calc(1 * var(--u)) rgba(0,0,0,.3);
+    /* Admin: Add to cart button - size, move left / right, move up / down (0 = the normal place) */
+    transform:translate(calc(var(--add-x,0) * var(--dir,1) * var(--u)), calc(var(--add-y,0) * .4 * var(--u))) scale(var(--add-scale,1)); transform-origin:right bottom;
     transition:filter .15s, transform .1s;
   }
   .row .add:hover{filter:brightness(1.07);}
-  .row .add:active{transform:translateY(1px);}
-  .row .add b{font-weight:700;}
+  .row .add:active{transform:translate(calc(var(--add-x,0) * var(--dir,1) * var(--u)), calc(var(--add-y,0) * .4 * var(--u) + 1px)) scale(var(--add-scale,1));}
+  html[dir="rtl"] .row{--dir:-1;}   /* Arabic / Urdu: the card is mirrored, so left / right moves of the price and the button are mirrored too */
+  html[dir="rtl"] .row .add{transform-origin:left bottom;}
+  .row .add b{font-weight:var(--bold-add,700);}
 
   @media (max-width:420px){
     .row .card{gap:calc(2 * var(--u)); padding-bottom:calc(12 * var(--u));}
@@ -330,13 +336,14 @@
   }
   .item-body h2{font-size:calc(21px + 2pt + var(--lang-add,0px)); margin:4px 0 2px;}
   .item-subtitle{color:var(--gold); font-size:calc(13px + 2pt + var(--lang-add,0px)); font-weight:600; margin:0 0 12px;}
-  .item-desc{color:var(--muted); font-size:calc(14px + 2pt + var(--lang-add,0px)); line-height:1.6; margin:0 0 16px;}
+  .item-desc{color:var(--muted); font-size:calc(14px + 2pt + var(--lang-add,0px)); line-height:1.6; margin:0 0 16px; font-weight:var(--bold-description,400);}
   .includes-box{
     border:1px solid var(--gold); background:rgba(227,178,60,.08); border-radius:12px;
     padding:12px 14px; margin-bottom:16px;
   }
   .includes-box .includes-title{color:var(--gold); font-weight:700; font-size:calc(13px + 2pt + var(--lang-add,0px)); margin:0 0 6px;}
   .includes-box p{margin:0; font-size:calc(13px + 2pt + var(--lang-add,0px)); color:var(--text); line-height:1.5;}
+  .includes-box #itemModalIncludesText{font-weight:var(--bold-includes,400);}
   .item-actionbar{
     display:flex; align-items:center; gap:10px; padding:12px 16px 16px; position:sticky; bottom:0; flex-shrink:0;
     background:var(--bg); border-top:1px solid var(--line);
@@ -951,6 +958,15 @@ async function loadMenuDesign(){
     root.setProperty('--menu-font-family', family);
     root.setProperty('--menu-font-scale', String((Number(design.font_size) || 14) / 4.375));
     if(/^#[0-9a-f]{6}$/i.test(design.font_color || '')) root.setProperty('--menu-font-color', design.font_color);
+    // Admin > Menu design > Category boxes and bold text
+    if(/^#[0-9a-f]{6}$/i.test(design.chip_outline_color || '')){
+      root.setProperty('--chip-line', design.chip_outline_color);
+      root.setProperty('--chip-line-w', `${Math.min(4, Math.max(1, Number(design.chip_outline_width) || 1))}px`);
+    }
+    const BOLD_VARS = { name:'--bold-name', price:'--bold-price', add_to_cart:'--bold-add', categories:'--bold-categories', description:'--bold-description', includes:'--bold-includes' };
+    for(const [key, cssVar] of Object.entries(BOLD_VARS)){
+      if(design.bold && typeof design.bold[key] === 'boolean') root.setProperty(cssVar, design.bold[key] ? '700' : '400');
+    }
     applyLangTypography();
   }catch(error){ console.warn('Could not load menu design settings:', error); }
 }
@@ -1250,7 +1266,14 @@ function render(){
     const bgX = Number.isFinite(i.bgX) ? Math.min(100, Math.max(0, i.bgX)) : 50;
     const bgY = Number.isFinite(i.bgY) ? Math.min(100, Math.max(0, i.bgY)) : 50;
     const bgScale = Number.isFinite(i.bgScale) ? Math.min(200, Math.max(100, i.bgScale)) / 100 : 1;
-    return `<article class="row" data-id="${i.id}" style="--paper:${cardColor};--paper-edge:color-mix(in srgb, ${cardColor}, #000 8%);--food-scale:${foodScale};--food-x:${foodX}%;--food-y:${foodY}%;--bg-x:${bgX}%;--bg-y:${bgY}%;--bg-scale:${bgScale}">
+    const num = (value, min, max, fallback) => Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+    const foodWidth = num(i.foodWidth, 50, 150, 100) / 100;
+    const cardWidth = num(i.cardWidth, 40, 85, 66.6667);
+    const cardHeight = num(i.cardHeight, 60, 100, 100);
+    const priceX = num(i.priceX, -50, 50, 0), priceY = num(i.priceY, -50, 50, 0);
+    const addScale = num(i.addScale, 50, 150, 100) / 100;
+    const addX = num(i.addX, -50, 50, 0), addY = num(i.addY, -50, 50, 0);
+    return `<article class="row" data-id="${i.id}" style="--paper:${cardColor};--paper-edge:color-mix(in srgb, ${cardColor}, #000 8%);--food-scale:${foodScale};--food-x:${foodX}%;--food-y:${foodY}%;--bg-x:${bgX}%;--bg-y:${bgY}%;--bg-scale:${bgScale};--food-width:${foodWidth};--card-w:${cardWidth}%;--card-h:${cardHeight}%;--price-x:${priceX};--price-y:${priceY};--add-x:${addX};--add-y:${addY};--add-scale:${addScale}">
       ${bgUrl ? `<img class="bg" src="${escapeHtml(bgUrl)}" alt="" loading="lazy" decoding="async">` : ''}
       <div class="card">
         ${corner('tl')}${corner('tr')}${corner('bl')}${corner('br')}
@@ -1543,6 +1566,16 @@ async function loadMenuData(){
       bgY: i.bg_y == null ? null : Number(i.bg_y),
       bgScale: i.bg_scale == null ? null : Number(i.bg_scale),
       cardColor: i.card_color || '',
+      foodWidth: i.food_width == null ? null : Number(i.food_width),
+      cardWidth: i.card_width == null ? null : Number(i.card_width),
+      cardHeight: i.card_height == null ? null : Number(i.card_height),
+      priceX: i.price_x == null ? null : Number(i.price_x),
+      priceY: i.price_y == null ? null : Number(i.price_y),
+      addScale: i.add_scale == null ? null : Number(i.add_scale),
+      addX: i.add_x == null ? null : Number(i.add_x),
+      addY: i.add_y == null ? null : Number(i.add_y),
+      // meals only (Admin > Menu items > "This dish is a meal"); a database without the column keeps the old behaviour
+      includesMeal: ('includes_meal' in i) ? i.includes_meal === true : true,
       name: { en:i.name_en, ar:i.name_ar, ur:i.name_ur, zh:i.name_zh },
       desc: { en:i.description_en || null, ar:i.description_ar || null, ur:i.description_ur || null, zh:i.description_zh || null },
     }));
@@ -1776,13 +1809,16 @@ function openItemModal(id){
   // language (description_en / _ar / _ur / _zh); only when that one is empty
   // fall back to the generic template so every language still shows something.
   const realDesc = modalItem.desc && modalItem.desc[lang];
-  document.getElementById('itemModalDesc').textContent = realDesc || STR[lang].descTemplate.replace('{name}', modalItem.name[lang]);
+  document.getElementById('itemModalDesc').innerHTML = richText(realDesc || STR[lang].descTemplate.replace('{name}', modalItem.name[lang]));   // **word** = bold
   document.getElementById('itemModalIncludesTitle').textContent = STR[lang].includesTitle;
-  document.getElementById('itemModalIncludesText').textContent = (DESIGN_LANG.includes_text && DESIGN_LANG.includes_text[lang]) || STR[lang].includesText;   // admin text first, built-in text otherwise
+  document.getElementById('itemModalIncludesText').innerHTML = richText((DESIGN_LANG.includes_text && DESIGN_LANG.includes_text[lang]) || STR[lang].includesText);   // admin text first, built-in text otherwise; **word** = bold
+  document.querySelector('#itemModal .includes-box').style.display = modalItem.includesMeal ? '' : 'none';   // meals only
   document.getElementById('itemModalQty').textContent = modalQty;
   updateModalAddBtn();
   openOverlay(itemModal);
 }
+// plain text made safe, then **word** becomes bold (used for the dish description and the "includes" text)
+function richText(value){ return escapeHtml(value).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
 function updateModalAddBtn(){
   const price = itemPrice(modalItem) * modalQty;
   document.getElementById('itemModalAdd').innerHTML =
