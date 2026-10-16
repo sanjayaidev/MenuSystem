@@ -106,6 +106,12 @@ To make **only some words** bold, type two stars before and after them, for exam
 - `DELETE /api/admin/orders/:ref` deletes a cancelled order (its items are removed by the database).
 - Checked in a headless browser with a mocked API (English and Arabic): moved/resized card, mirrored offsets, meal-only box, bold stars, outline, Delete order only on cancelled orders, edit form values.
 
+### Auto-translate (Arabic + Chinese)
+In Admin, **Menu items**, **Categories** and **Menu design → "This meal automatically includes" text** have an **Auto-translate from English (Arabic + Chinese)** button. Type the English text, press the button, and the Arabic and Chinese boxes are filled in. **Nothing is saved by the button**: read the text, fix anything wrong, then press the normal save button. If Arabic or Chinese text is already there, you are asked before it is replaced. Urdu is not translated (it is hidden in the admin).
+- Needs `GEMINI_API_KEY` in the server's environment (Render → Environment). Get a key in Google AI Studio. The free tier is enough for a menu this size; on the free tier Google may use the text sent to improve its products, so only menu text is sent (never customer data).
+- `POST /api/admin/translate` — `{ "texts": { "name": "Kung Pao Chicken" } }` → `{ "translations": { "name": { "ar": "...", "zh": "..." } } }`. Admin only, up to 10 texts of 600 characters, 30 calls a minute. The code is in `db/translate.js`.
+- Machine translation can be wrong (especially Arabic wording for dishes), so have an Arabic and a Chinese reader check new dishes.
+
 ### Category boxes (menu page)
 *(Current order after `db/03_menu_and_categories.sql`: Beef Meal, Chicken Meal, Shrimp Meal, Tofu, Dumpling, Rice Noodles, Side Orders, **Most Popular**, Dine In, Outside Catering. The paragraph below describes the earlier nine-box version.)*
 The category dropdown is now one horizontally scrolling row of nine boxes, in this order: Beef Meal, Chicken Meal, Shrimp Meal, Tofu Noodle, Soup Rice, Salad Appetizer, **Most Popular**, Dine In, Outside Catering. Nothing selected shows every dish; tap a box to filter and tap it again to clear. *Most Popular* is not a database category: it lists the 8 best-selling dishes (`POPULAR_COUNT` in `menu-page.html`). *Dine In* and *Outside Catering* are normal categories and start empty — give dishes to them in Admin → Menu items (a dish belongs to one category). The Arabic / Urdu / Chinese names of those two are drafts to be confirmed by a native speaker.
@@ -176,6 +182,8 @@ cp .env.example .env
 | `WHATSAPP_NUMBER` | yes for checkout | Your business WhatsApp, digits only, no `+` or leading `00` (e.g. `9665XXXXXXXX`) |
 | `BRANCH_NAME` | no (default "Red House Trading") | Shown in the WhatsApp message and checkout screen |
 | `DELIVERY_FEE` | no (default `20`) | Single source of truth for the delivery fee — used by `POST /api/orders` and served to the frontend via `GET /api/config`, so it only needs setting in one place |
+| `GEMINI_API_KEY` | no | Turns on the admin **Auto-translate from English** buttons (Gemini API, server-side only). Without it the buttons show "GEMINI_API_KEY is not configured on the server." and everything else works as before |
+| `GEMINI_MODEL` | no (default `gemini-3.5-flash-lite`) | Gemini model used for translation. It is pinned on purpose; `-latest` names can change by themselves |
 
 ## 4. Supabase Auth setup for password reset
 The app uses Supabase Auth's built-in "send password recovery email" flow — no separate

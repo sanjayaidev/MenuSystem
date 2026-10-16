@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const supabase = require('../db/supabase');
 const { parseOrderRef, sanitizeSearch } = require('../db/order-ref');
 const { requireAdmin } = require('../middleware/auth');
+const { translateTexts, TranslateError } = require('../db/translate');
 
 const router = express.Router();
 
@@ -298,6 +299,43 @@ async function uploadToImgbb(buffer, contentType) {
   // `url` is the original file exactly as uploaded; `display_url` can be resized/recompressed and made food photos look soft.
   return result.data.url || result.data.image?.url || result.data.display_url;
 }
+
+// POST /api/admin/translate — { texts: { id: "English text", ... } } -> { translations: { id: { ar, zh } } }
+// Uses Gemini (db/translate.js). Nothing is saved: the admin reviews the text in the form and saves it themselves.
+const TRANSLATE_MAX_TEXTS = 10;
+const TRANSLATE_MAX_LENGTH = 600;
+let translateWindowStart = 0;
+let translateCount = 0;
+router.post('/translate', asyncHandler(async (req, res) => {
+  // small guard against runaway clicking (the free Gemini quota is shared): 30 calls a minute
+  const now = Date.now();
+  if (now - translateWindowStart > 60000) { translateWindowStart = now; translateCount = 0; }
+  if (++translateCount > 30) return res.status(429).json({ error: 'Too many translations. Wait a minute and try again.' });
+
+  const input = req.body && req.body.texts;
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return res.status(400).json({ error: 'Nothing to translate.' });
+  }
+  const texts = {};
+  for (const [id, value] of Object.entries(input)) {
+    if (typeof value !== 'string' || !value.trim()) continue;
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) return res.status(400).json({ error: 'Invalid text id.' });
+    if (value.length > TRANSLATE_MAX_LENGTH) {
+      return res.status(400).json({ error: `Text is too long to translate (max ${TRANSLATE_MAX_LENGTH} characters).` });
+    }
+    texts[id] = value.trim();
+  }
+  const count = Object.keys(texts).length;
+  if (!count) return res.status(400).json({ error: 'Type the English text first, then translate.' });
+  if (count > TRANSLATE_MAX_TEXTS) return res.status(400).json({ error: 'Too many texts at once.' });
+
+  try {
+    res.json({ translations: await translateTexts(texts) });
+  } catch (error) {
+    if (error instanceof TranslateError) return res.status(error.status).json({ error: error.message });
+    throw error;
+  }
+}));
 
 router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), asyncHandler(async (req, res) => {
   const imageMatch = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/.exec(req.body || '');

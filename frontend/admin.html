@@ -132,6 +132,8 @@
   .language-switcher{display:flex; gap:3px; width:max-content; max-width:100%; margin-top:14px; padding:3px; border:1px solid var(--line); border-radius:7px; background:var(--bg);}
   .language-switcher button{border:0; border-radius:4px; padding:7px 10px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:650; cursor:pointer;}
   .language-switcher button[aria-pressed="true"]{background:var(--gold); color:#1a1408;}
+  .translate-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px;}
+  .translate-bar .field-hint{margin:0;}
   .language-fields{margin-top:8px;}
   .language-card{min-width:0; border:1px solid var(--line); border-radius:6px; padding:10px;}
   .language-card[hidden]{display:none;}
@@ -265,6 +267,7 @@
           <!-- <button type="button" data-language="ur" aria-pressed="false">اردو</button> -->
           <button type="button" data-language="zh" aria-pressed="false">中文</button>
         </div>
+        <div class="translate-bar"><button class="action-btn" id="categoryTranslateBtn" type="button">Auto-translate from English (Arabic + Chinese)</button><span class="field-hint">Fills the Arabic and Chinese names. Check them, then save.</span></div>
         <div class="language-fields">
           <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Category name<input name="label_en" required></label></fieldset>
           <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الفئة<input name="label_ar" required></label></fieldset>
@@ -341,6 +344,7 @@
           <label style="display:none">اردو<textarea id="includes_ur" maxlength="300" lang="ur" dir="rtl" placeholder="سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی"></textarea></label>
           <label>中文<textarea id="includes_zh" maxlength="300" lang="zh" placeholder="紫菜汤、蛋炒饭、面条、沙拉和水"></textarea></label>
         </div>
+        <div class="translate-bar"><button class="action-btn" id="includesTranslateBtn" type="button">Auto-translate from English (Arabic + Chinese)</button><span class="field-hint">Fills the Arabic and Chinese text. Check it, then save.</span></div>
         <div class="form-actions"><button class="action-btn primary" id="langSave" type="submit">Save language settings</button><span class="form-note" id="langNote" role="status"></span></div>
       </form>
 
@@ -420,6 +424,7 @@
           <!-- <button type="button" data-language="ur" aria-pressed="false">اردو</button> -->
           <button type="button" data-language="zh" aria-pressed="false">中文</button>
         </div>
+        <div class="translate-bar"><button class="action-btn" id="itemTranslateBtn" type="button">Auto-translate from English (Arabic + Chinese)</button><span class="field-hint">Fills the Arabic and Chinese name and description. Check them, then save.</span></div>
         <div class="language-fields">
           <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Item name<input name="name_en" required></label><label>Description<textarea name="description_en"></textarea></label></fieldset>
           <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الطبق<input name="name_ar" required></label><label>الوصف<textarea name="description_ar"></textarea></label></fieldset>
@@ -1242,6 +1247,7 @@ async function adminRequest(path, options = {}){
     if(path.startsWith('/contact')) throw new Error(contactErrorText(message));
     if(path.startsWith('/music')) throw new Error(musicErrorText(message));
     if(path.startsWith('/poster')) throw new Error(posterErrorText(message));
+    if(path.startsWith('/translate')) throw new Error(message || adminText('requestFailed', { status: response.status }));
     let key = 'requestFailed';
     if(message.includes('That key is already in use')) key = 'categoryKeyInUse';
     else if(message.includes('This record is still in use')) key = 'recordInUse';
@@ -1456,6 +1462,59 @@ document.querySelectorAll('.language-switcher').forEach(switcher => {
     }
   });
 });
+
+/* ---------- auto-translate (English -> Arabic + Chinese, Gemini on the server) ---------- */
+// pairs: [{ id, source: <English field>, targets: { ar: <field>, zh: <field> } }]
+// It only fills the boxes. Nothing is saved until the admin presses the normal save button.
+async function autoTranslate({ button, noteId, pairs }){
+  const texts = {};
+  pairs.forEach(pair => { const value = pair.source.value.trim(); if(value) texts[pair.id] = value; });
+  if(!Object.keys(texts).length){
+    setFormNote(noteId, 'Type the English text first, then translate.', true);
+    return;
+  }
+  const overwrites = pairs.some(pair => texts[pair.id] && Object.values(pair.targets).some(field => field.value.trim()));
+  if(overwrites && !window.confirm('There is already Arabic or Chinese text. Replace it with the new translation?')) return;
+  button.disabled = true;
+  setFormNote(noteId, 'Translating…');
+  try{
+    const result = await adminRequest('/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts }),
+    });
+    for(const pair of pairs){
+      const translated = result.translations && result.translations[pair.id];
+      if(!translated) continue;
+      for(const [language, field] of Object.entries(pair.targets)){
+        if(!translated[language]) continue;
+        field.value = translated[language];
+        field.dispatchEvent(new Event('input', { bubbles: true }));   // keeps the live preview in step
+      }
+    }
+    setFormNote(noteId, 'Translated. Please check the Arabic and Chinese text, then save.');
+  }catch(error){
+    setFormNote(noteId, error.message || 'Could not translate.', true);
+  }finally{
+    button.disabled = false;
+  }
+}
+function formField(formId, name){ return document.getElementById(formId).elements[name]; }
+document.getElementById('itemTranslateBtn').addEventListener('click', event => autoTranslate({
+  button: event.currentTarget, noteId: 'itemNote',
+  pairs: [
+    { id: 'name', source: formField('itemForm', 'name_en'), targets: { ar: formField('itemForm', 'name_ar'), zh: formField('itemForm', 'name_zh') } },
+    { id: 'description', source: formField('itemForm', 'description_en'), targets: { ar: formField('itemForm', 'description_ar'), zh: formField('itemForm', 'description_zh') } },
+  ],
+}));
+document.getElementById('categoryTranslateBtn').addEventListener('click', event => autoTranslate({
+  button: event.currentTarget, noteId: 'categoryNote',
+  pairs: [{ id: 'label', source: formField('categoryForm', 'label_en'), targets: { ar: formField('categoryForm', 'label_ar'), zh: formField('categoryForm', 'label_zh') } }],
+}));
+document.getElementById('includesTranslateBtn').addEventListener('click', event => autoTranslate({
+  button: event.currentTarget, noteId: 'langNote',
+  pairs: [{ id: 'includes', source: document.getElementById('includes_en'), targets: { ar: document.getElementById('includes_ar'), zh: document.getElementById('includes_zh') } }],
+}));
 
 /* ---------- categories ---------- */
 let categories = [];
