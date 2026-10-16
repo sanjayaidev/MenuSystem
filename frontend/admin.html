@@ -169,6 +169,8 @@
   .action-btn:disabled{opacity:.55; cursor:wait;}
   .form-note{min-height:18px; color:var(--muted); font-size:12px;}
   .form-note.error{color:#ff9085;}
+  .form-note.ok{color:var(--green);}
+  .translate-bar .action-btn.done{border-color:var(--green); color:var(--green);}
   .records{display:grid; gap:8px;}
   .record{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:7px;}
   .record-main{display:flex; align-items:center; gap:12px; min-width:0;}
@@ -1269,6 +1271,7 @@ function setFormNote(id, message, isError = false){
   const note = document.getElementById(id);
   note.textContent = message;
   note.classList.toggle('error', isError);
+  note.classList.remove('ok');
 }
 
 function showDesignSettings(design){
@@ -1477,6 +1480,9 @@ async function autoTranslate({ button, noteId, pairs }){
   const overwrites = pairs.some(pair => texts[pair.id] && Object.values(pair.targets).some(field => field.value.trim()));
   if(overwrites && !window.confirm('There is already Arabic or Chinese text. Replace it with the new translation?')) return;
   button.disabled = true;
+  clearTimeout(button._tickTimer);
+  if(button.dataset.label) button.textContent = button.dataset.label;
+  button.classList.remove('done');
   setFormNote(noteId, 'Translating…');
   const controller = new AbortController();
   const giveUp = setTimeout(() => controller.abort(), TRANSLATE_WAIT_MS);
@@ -1496,7 +1502,14 @@ async function autoTranslate({ button, noteId, pairs }){
         field.dispatchEvent(new Event('input', { bubbles: true }));   // keeps the live preview in step
       }
     }
-    setFormNote(noteId, 'Translated. Please check the Arabic and Chinese text, then save.');
+    setFormNote(noteId, '✓ Translated. Please check the Arabic and Chinese text, then save.');
+    document.getElementById(noteId).classList.add('ok');
+    // green tick on the button for a few seconds, then it goes back to normal
+    clearTimeout(button._tickTimer);
+    button.dataset.label = button.dataset.label || button.textContent;
+    button.textContent = '✓ Done';
+    button.classList.add('done');
+    button._tickTimer = setTimeout(() => { button.textContent = button.dataset.label; button.classList.remove('done'); }, 4000);
   }catch(error){
     setFormNote(noteId, error && error.name === 'AbortError'
       ? 'The translation is taking too long. Wait a moment and press the button again.'
