@@ -183,7 +183,7 @@ cp .env.example .env
 | `BRANCH_NAME` | no (default "Red House Trading") | Shown in the WhatsApp message and checkout screen |
 | `DELIVERY_FEE` | no (default `20`) | Single source of truth for the delivery fee — used by `POST /api/orders` and served to the frontend via `GET /api/config`, so it only needs setting in one place |
 | `GEMINI_API_KEY` | no | Turns on the admin **Auto-translate from English** buttons (Gemini API, server-side only). Without it the buttons show "GEMINI_API_KEY is not configured on the server." and everything else works as before |
-| `GEMINI_MODEL` | no (default `gemini-3.5-flash-lite`) | Gemini model used for translation. It is pinned on purpose; `-latest` names can change by themselves |
+| `GEMINI_MODEL` | no (default `gemini-flash-lite-latest`) | Gemini model used for translation. `-latest` follows Google's newest Flash-Lite; set a fixed name here if you want it to never change |
 
 ## 4. Supabase Auth setup for password reset
 The app uses Supabase Auth's built-in "send password recovery email" flow — no separate

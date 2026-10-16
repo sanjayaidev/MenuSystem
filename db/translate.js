@@ -3,10 +3,11 @@
 // Urdu is not translated (it is hidden in the admin for now).
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-// Pinned on purpose: "-latest" aliases can silently move to a newer model. Override with GEMINI_MODEL.
-const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
+// The model that was tested working with the project's key (about 5 s for a sample dish). "-latest" follows Google's newest
+// Flash-Lite, so if a future version ever misbehaves, set GEMINI_MODEL on the server to a fixed name.
+const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 const TARGETS = ['ar', 'zh'];
-const REQUEST_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 20000;   // must stay below the admin page's own wait (40 s) so the admin always sees a clear message
 
 class TranslateError extends Error {
   constructor(message, status = 502) {
@@ -39,6 +40,7 @@ async function translateTexts(texts) {
   const items = ids.map(id => ({ id, text: texts[id] }));
   const model = (process.env.GEMINI_MODEL || DEFAULT_MODEL).trim();
 
+  const startedAt = Date.now();
   let response;
   try {
     response = await fetch(`${API_BASE}/models/${encodeURIComponent(model)}:generateContent`, {
@@ -53,10 +55,12 @@ async function translateTexts(texts) {
     });
   } catch (error) {
     const timedOut = error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+    console.error(`Gemini translate ${timedOut ? 'timed out' : 'could not connect'} (${model}, ${Date.now() - startedAt} ms):`, error && error.message);
     throw new TranslateError(timedOut ? 'Translation took too long. Try again.' : 'Could not reach the translation service.');
   }
 
   const raw = await response.text();
+  console.log(`Gemini translate ${model}: HTTP ${response.status} in ${Date.now() - startedAt} ms`);
   let body = null;
   try { body = JSON.parse(raw); } catch { /* not JSON */ }
 
