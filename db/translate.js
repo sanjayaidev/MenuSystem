@@ -7,7 +7,10 @@ const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 // Flash-Lite, so if a future version ever misbehaves, set GEMINI_MODEL on the server to a fixed name.
 const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 const TARGETS = ['ar', 'zh'];
-const REQUEST_TIMEOUT_MS = 20000;   // must stay below the admin page's own wait (40 s) so the admin always sees a clear message
+const REQUEST_TIMEOUT_MS = 15000;   // per attempt
+const MAX_ATTEMPTS = 2;
+const RETRY_STATUSES = [500, 502, 503, 504];   // Google busy / hiccup; 4xx errors (bad key, quota, wrong model) are not retried
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 class TranslateError extends Error {
   constructor(message, status = 502) {
@@ -40,27 +43,34 @@ async function translateTexts(texts) {
   const items = ids.map(id => ({ id, text: texts[id] }));
   const model = (process.env.GEMINI_MODEL || DEFAULT_MODEL).trim();
 
-  const startedAt = Date.now();
+  // A call normally takes 5-8 s, but now and then Google leaves one hanging (seen in testing) or answers 5xx.
+  // So: up to 2 attempts, each with its own timeout. Worst case is about 31 s, under the admin page's 40 s wait.
   let response;
-  try {
-    response = await fetch(`${API_BASE}/models/${encodeURIComponent(model)}:generateContent`, {
-      method: 'POST',
-      // the key goes in a header, not the URL, so it cannot leak into logs or error text
-      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(items) }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
-      }),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch (error) {
-    const timedOut = error && (error.name === 'TimeoutError' || error.name === 'AbortError');
-    console.error(`Gemini translate ${timedOut ? 'timed out' : 'could not connect'} (${model}, ${Date.now() - startedAt} ms):`, error && error.message);
-    throw new TranslateError(timedOut ? 'Translation took too long. Try again.' : 'Could not reach the translation service.');
+  let raw;
+  for (let attempt = 1; ; attempt++) {
+    const startedAt = Date.now();
+    try {
+      response = await fetch(`${API_BASE}/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        // the key goes in a header, not the URL, so it cannot leak into logs or error text
+        headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: buildPrompt(items) }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+        }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      raw = await response.text();   // inside the try: the timeout also covers reading the reply
+    } catch (error) {
+      const timedOut = error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+      console.error(`Gemini translate ${timedOut ? 'timed out' : 'could not connect'} (${model}, attempt ${attempt}, ${Date.now() - startedAt} ms):`, error && error.message);
+      if (attempt < MAX_ATTEMPTS) { await sleep(500); continue; }
+      throw new TranslateError(timedOut ? 'Translation took too long. Try again.' : 'Could not reach the translation service.');
+    }
+    console.log(`Gemini translate ${model}: HTTP ${response.status} in ${Date.now() - startedAt} ms (attempt ${attempt})`);
+    if (RETRY_STATUSES.includes(response.status) && attempt < MAX_ATTEMPTS) { await sleep(1000); continue; }
+    break;
   }
-
-  const raw = await response.text();
-  console.log(`Gemini translate ${model}: HTTP ${response.status} in ${Date.now() - startedAt} ms`);
   let body = null;
   try { body = JSON.parse(raw); } catch { /* not JSON */ }
 
