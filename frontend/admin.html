@@ -427,6 +427,8 @@
           <div class="image-preview" id="itemImagePreview"><img src="images/food.png" alt="Fallback food image"><span data-ui="fallbackFoodImage">Fallback food image</span></div>
         </div>
         <input type="hidden" name="id" id="itemId">
+        <input type="hidden" name="price_x" value="0">
+        <input type="hidden" name="price_y" value="0">
         <div class="form-grid">
           <label><span data-ui="category">Category</span><select name="category_id" id="itemCategory" required></select></label>
           <label><span data-ui="price">Price</span><input name="price" id="itemPrice" type="number" min="0" step="0.01" required></label>
@@ -485,17 +487,10 @@
           </div>
           <div class="form-grid compact style-grid" id="cardStyleControls"></div>
           <p class="field-hint">A bigger width makes the white card wider and leaves less room for the picture on the left. 67 = normal. Height 100 = the card covers the full height.
-            Font and Size (100 = normal) are the starting look of the name, the price and the Add to cart button; the name and price boxes below can still override them for one language. Border width 0 hides the line inside the card. Empty = the normal look.</p>
+            Font sets the starting font for the name, price and Add to cart button. Size (100 = normal) scales the name and price; each language's name and price Size multiplies this scale. Border width 0 hides the line inside the card. Empty = the normal look.</p>
         </fieldset>
         <!-- Name and price text style, one box per language. Built by buildTextStyleBoxes(); they follow the language buttons above. -->
         <div id="textStyleBoxes"></div>
-        <fieldset class="layout-group"><legend>Price</legend>
-          <div class="form-grid compact">
-            <label>Move left / right (%)<input name="price_x" type="number" min="-50" max="50" step="1" value="0"></label>
-            <label>Move up / down (%)<input name="price_y" type="number" min="-50" max="50" step="1" value="0"></label>
-          </div>
-          <p class="field-hint">Plus numbers move the price right or down, minus numbers move it left or up. 0 = normal place (under the name). Watch the live preview while you type. This is the position in every language; the Text style box of a language can set its own position for the price.</p>
-        </fieldset>
         <fieldset class="layout-group"><legend>Add to cart button</legend>
           <div class="form-grid compact">
             <label>Size (%)<input name="add_scale" type="number" min="50" max="150" step="1" value="100"></label>
@@ -1828,8 +1823,8 @@ function buildTextStyleBoxes(){
   const part = (code, key, title) => `<p class="style-part">${title}</p>` +
     styleFontField(`${code}.${key}.font`) + styleNumberField(`${code}.${key}.size`, 'Size (%)', 50, 250, '100') +
     styleColorField(`${code}.${key}.color`, 'Color', STYLE_COLOR_DEFAULTS[key]) +
-    styleNumberField(`${code}.${key}.x`, 'Move left / right (%)', -50, 50, key === 'price' ? 'as in Price box' : '0') +
-    styleNumberField(`${code}.${key}.y`, 'Move up / down (%)', -50, 50, key === 'price' ? 'as in Price box' : '0');
+    styleNumberField(`${code}.${key}.x`, 'Move left / right (%)', -50, 50, key === 'price' ? 'fallback' : '0') +
+    styleNumberField(`${code}.${key}.y`, 'Move up / down (%)', -50, 50, key === 'price' ? 'fallback' : '0');
   document.getElementById('textStyleBoxes').innerHTML = STYLE_LANGUAGES.map(([code, label]) => `
     <fieldset class="layout-group" data-language-panel="${code}"${code === 'en' ? '' : ' hidden'}>
       <legend>Text style: ${label}</legend>

@@ -33,15 +33,15 @@ The old numbered scripts (`01`–`14`) were merged into these four on 13/10/2026
 
 **How to read the numbers.** Every number box has a normal value, shown in the instructions below. Plus numbers move a thing right or down, minus numbers move it left or up, and 0 means "the normal place". In Arabic and Urdu the card is mirrored, so left and right moves of the price and the button are mirrored too, and the dish looks the same in every language. Always look at **Live menu preview** (top right of the form) while you type. The settings of a dish are saved only when you click **Save menu item** (or **Create menu item** for a new dish).
 
-#### Point 2: Move the price anywhere on the white card
+#### Point 2: Set the price position on the white card
 1. Click **Menu items** in the left menu.
 2. Find the dish and click **Edit**.
-3. Scroll down to the box **Price**.
-4. Type a number in **Move left / right (%)** and in **Move up / down (%)**. Numbers go from -50 to 50. 0 = the normal place under the name.
+3. In **Text style** for the selected language, find **Food price**. Use the language buttons above the name fields to switch languages.
+4. Set **Move left / right (%)** and **Move up / down (%)** from -50 to 50. 0 = the normal place under the name. Set each language separately if the price should stay in the same place in every language.
 5. Look at **Live menu preview**. When it looks right, click **Save menu item**.
 6. Refresh the menu page to see it.
 
-If the price disappears, it is hidden behind the dish picture. Type a smaller number to bring it back.
+An empty position uses the normal place unless the dish has an older shared price offset, which remains as a fallback. Set 0 to override that fallback and return the price to its normal place. If the price disappears, it is hidden behind the dish picture; type a smaller number to bring it back.
 
 #### Point 3: Make the Add to cart button bigger or smaller, or move it
 1. **Menu items** → **Edit** next to the dish.
@@ -112,8 +112,10 @@ To make **only some words** bold, type two stars before and after them, for exam
 
 **What the admin can set for each dish** (Admin → Menu items → Edit):
 - **Text style box for English, Arabic and Chinese** (follows the language buttons above the name fields). For **Food name** and **Food price**: Font, Size (%), Color, Move left / right (%), Move up / down (%). Hindi is not a menu language in this app, so it has no box.
-- **White card box**: *Card color* (as before) plus Font, Size (%), Border width (px, 0 hides the line) and Border color. Font and Size are the starting look of the name, the price and the Add to cart button; a language's name / price box overrides them for that language.
-- Every empty box (or the **Normal** button next to a color) = the normal look, so existing dishes do not change. A language box only affects the menu when it is shown in that language. The Price box's Move left / right and up / down still applies to all languages; the price position inside a language box wins when it is filled in.
+- **White card box**: *Card color* (as before) plus Font, Size (%), Border width (px, 0 hides the line) and Border color. Card Font is the fallback for the name, price and Add to cart button. Card Size scales the name and price; language-specific name/price fonts replace the card font, while their Size multipliers compound with Card Size.
+- **Bold text** in Menu design changes font weight independently of the per-item font, size, color and position settings. Per-item card Size and language-specific name/price Size are multipliers, so the percentages compound.
+- Empty style boxes (or the **Normal** button next to a color) use the normal look. An empty price-position field falls back to an older dish's shared offset, if present. A language box only affects the menu when it is shown in that language; set price position in that language's **Food price** style box.
+- Older dishes keep their shared price position as a fallback; a position set in a language's **Food price** style box takes precedence for that language.
 - Size 100 = normal; 50 to 250 allowed. Moves are -50 to 50 and mirrored in Arabic like the existing price / button moves. Fonts: Poppins, Cinzel, Cormorant Garamond, Georgia, Arial, Noto Naskh (Arabic), Noto Nastaliq (Urdu), Noto Sans SC (Chinese), and the uploaded custom font.
 - **Live menu preview** shows the language you selected, so switch language and watch it change.
 
