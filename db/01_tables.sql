@@ -180,3 +180,7 @@ begin
   end if;
 end $$;
 alter table menu_items add column if not exists display_order integer;
+
+-- Per-dish text styles: font, size, color and position of the name and the price in each language (English, Arabic, Chinese),
+-- plus the card's font, size and border. One json value; empty = the normal look. See routes/admin.js (cardStyleValue).
+alter table menu_items add column if not exists card_style jsonb;

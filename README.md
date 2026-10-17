@@ -106,6 +106,21 @@ To make **only some words** bold, type two stars before and after them, for exam
 - `DELETE /api/admin/orders/:ref` deletes a cancelled order (its items are removed by the database).
 - Checked in a headless browser with a mocked API (English and Arabic): moved/resized card, mirrored offsets, meal-only box, bold stars, outline, Delete order only on cancelled orders, edit form values.
 
+### 17/10/2026 text styles per language + card border
+
+**One-time setup (developer).** Run `db/01_tables.sql` in Supabase → SQL Editor once (safe to run again). It adds the column `menu_items.card_style` (jsonb). Run the SQL first, then deploy the code. Until the SQL is run, everything keeps working; saving a dish that uses the new styles shows "The database has no card_style column yet".
+
+**What the admin can set for each dish** (Admin → Menu items → Edit):
+- **Text style box for English, Arabic and Chinese** (follows the language buttons above the name fields). For **Food name** and **Food price**: Font, Size (%), Color, Move left / right (%), Move up / down (%). Hindi is not a menu language in this app, so it has no box.
+- **White card box**: *Card color* (as before) plus Font, Size (%), Border width (px, 0 hides the line) and Border color. Font and Size are the starting look of the name, the price and the Add to cart button; a language's name / price box overrides them for that language.
+- Every empty box (or the **Normal** button next to a color) = the normal look, so existing dishes do not change. A language box only affects the menu when it is shown in that language. The Price box's Move left / right and up / down still applies to all languages; the price position inside a language box wins when it is filled in.
+- Size 100 = normal; 50 to 250 allowed. Moves are -50 to 50 and mirrored in Arabic like the existing price / button moves. Fonts: Poppins, Cinzel, Cormorant Garamond, Georgia, Arial, Noto Naskh (Arabic), Noto Nastaliq (Urdu), Noto Sans SC (Chinese), and the uploaded custom font.
+- **Live menu preview** shows the language you selected, so switch language and watch it change.
+
+**Display order warning.** Typing a display order number that another dish already has now shows a red warning right under the field (naming that dish and the next free number), outlines the box in red and stops the save. A note under the field explains the rule. The server still refuses it with 409 as before. Editing a dish never warns about its own number.
+
+**Developer notes.** `card_style` shape: `{ card:{font,size,border_w,border_color}, en|ar|zh:{ name:{font,size,color,x,y}, price:{font,size,color,x,y} } }`, validated in `routes/admin.js` (`cardStyleValue`) and re-checked in `cardStyleVars()` of `frontend/menu-page.html`, which sets `--cs-*` CSS variables on each card for the language being shown. `GET /api/menu` already returns it (`select *`). Also fixed: switching the language buttons in the dish form did not refresh the live preview (`form.id` was the hidden `id` input).
+
 ### Auto-translate (Arabic + Chinese)
 In Admin, **Menu items**, **Categories** and **Menu design → "This meal automatically includes" text** have an **Auto-translate from English (Arabic + Chinese)** button. Type the English text, press the button, and the Arabic and Chinese boxes are filled in. **Nothing is saved by the button**: read the text, fix anything wrong, then press the normal save button. If Arabic or Chinese text is already there, you are asked before it is replaced. Urdu is not translated (it is hidden in the admin).
 - Needs `GEMINI_API_KEY` in the server's environment (Render → Environment). Get a key in Google AI Studio. The free tier is enough for a menu this size; on the free tier Google may use the text sent to improve its products, so only menu text is sent (never customer data).

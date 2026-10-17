@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Red House Catering — Admin</title>
+<!-- the same fonts as the menu page, so the Live menu preview shows the font you pick for a dish -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:wght@600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#121110; --surface:#1c1a18; --line:#2c2925;
@@ -115,9 +118,22 @@
   .live-preview-bg{position:absolute; inset:0 auto 0 0; z-index:0; width:calc(100% - var(--preview-card-w,66.6667%) + 1px); height:100%; object-fit:cover; object-position:var(--preview-bg-x,50%) var(--preview-bg-y,50%); transform:scale(var(--preview-bg-scale,1));}
   .live-preview-paper{position:absolute; inset:auto 0 auto auto; top:calc((100% - var(--preview-card-h,100%)) / 2); height:var(--preview-card-h,100%); z-index:1; display:flex; width:var(--preview-card-w,66.6667%); flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:8px 8px 18px 22%; text-align:center; background:radial-gradient(120% 90% at 50% 40%,#fbf8f0 0%,var(--preview-paper) 55%,var(--preview-edge) 100%);}
   .live-preview-paper small{color:#b8975a; font-size:7px; font-weight:700;}
-  .live-preview-paper strong{max-width:100%; overflow-wrap:anywhere; font-family:Georgia,'Times New Roman',serif; font-size:calc(clamp(9px,4.2cqw,15px) + 2pt); line-height:1.2;}
-  #liveMenuPrice{transform:translate(calc(var(--preview-price-x,0) * var(--preview-u,4px)), calc(var(--preview-price-y,0) * .4 * var(--preview-u,4px)));}
-  .live-preview-paper span{font-family:Georgia,'Times New Roman',serif; font-size:calc(clamp(10px,5cqw,17px) + 2pt); font-weight:700; line-height:1;}
+  /* --pv-* are set from the "Text style" and card boxes by updateLiveMenuPreview() (unset = the normal look) */
+  .live-preview-paper::before{content:""; position:absolute; inset:5px; border:var(--pv-border-w,1px) solid var(--pv-border-color,rgba(184,151,90,.55)); pointer-events:none;}
+  .live-preview-paper strong{max-width:100%; overflow-wrap:anywhere; font-family:var(--pv-name-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(9px,4.2cqw,15px) + 2pt) * var(--pv-name-size,1) * var(--pv-size,1)); line-height:1.2; color:var(--pv-name-color,#2b2622);
+    transform:translate(calc(var(--pv-name-x,0) * var(--preview-u,4px)), calc(var(--pv-name-y,0) * .4 * var(--preview-u,4px)));}
+  #liveMenuPrice{transform:translate(calc(var(--pv-price-x,var(--preview-price-x,0)) * var(--preview-u,4px)), calc(var(--pv-price-y,var(--preview-price-y,0)) * .4 * var(--preview-u,4px)));}
+  .live-preview-paper span{font-family:var(--pv-price-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(10px,5cqw,17px) + 2pt) * var(--pv-price-size,1) * var(--pv-size,1)); font-weight:700; line-height:1; color:var(--pv-price-color,#2b2622);}
+  .live-preview-add{font-family:var(--pv-font,inherit);}
+  .style-grid .style-part{grid-column:1 / -1; margin:6px 0 0; color:var(--gold); font-size:12px; font-weight:700;}
+  .style-color{display:flex; align-items:center; gap:6px;}
+  .style-color input[type=color]{flex:1 1 auto; min-width:0;}
+  .style-color button{flex:0 0 auto; padding:4px 8px; border:1px solid var(--line); border-radius:5px; background:transparent; color:var(--muted); font-size:11px; cursor:pointer;}
+  .style-color input[data-empty="1"]{opacity:.45;}
+  .order-warning{margin:8px 0 0; padding:8px 10px; border:1px solid var(--red); border-radius:6px; background:rgba(184,53,43,.12); color:#ffb4ab; font-size:12px; line-height:1.5;}
+  .order-warning[hidden]{display:none;}
+  .order-note{margin:8px 0 0; padding:8px 10px; border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:6px; color:var(--muted); font-size:12px; line-height:1.5;}
+  input.order-clash{border-color:var(--red) !important;}
   .live-preview-food{position:absolute; inset:5% auto 5% 0; z-index:2; display:flex; width:calc(100% - var(--preview-card-w,66.6667%) + 20%); align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(calc(var(--preview-food-scale,1) * var(--preview-food-width,1)), var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
   .live-preview-food img{display:block; width:auto; height:100%; max-width:100%; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));}
   .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; background:var(--gold); color:#1a1408; font-size:calc(8px + 2pt); font-weight:700; transform:translate(calc(var(--preview-add-x,0) * var(--preview-u,4px)), calc(var(--preview-add-y,0) * .4 * var(--preview-u,4px))) scale(var(--preview-add-scale,1)); transform-origin:right bottom;}
@@ -420,6 +436,8 @@
           <label><span data-ui="displayOrder">Display order (unique)</span><input name="display_order" id="itemDisplayOrder" type="number" min="1" max="9999" step="1" placeholder="1, 2, 3..."></label>
         </div>
         <p class="field-hint" data-ui="displayOrderHint">Dishes are listed on the menu page in this order (1 first). Each number can be used by one dish only. Empty on a new dish = added at the end.</p>
+        <p class="order-warning" id="displayOrderWarning" role="alert" hidden></p>
+        <p class="order-note" data-ui="displayOrderNote">Note: every dish needs its own display order number. If the number you type is already used by another dish, a red warning appears here and the dish cannot be saved until you choose a different number (or clear the box to put it at the end).</p>
         <div class="language-switcher" role="group" aria-label="Menu item translation language" data-ui-aria-label="itemTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
@@ -463,16 +481,20 @@
           <div class="form-grid compact">
             <label>Width (%)<input name="card_width" type="number" min="40" max="85" step="1" value="67"></label>
             <label>Height (%)<input name="card_height" type="number" min="60" max="100" step="1" value="100"></label>
-            <label>Color<input name="card_color" type="color" value="#f6f1e6"></label>
+            <label>Card color<input name="card_color" type="color" value="#f6f1e6"></label>
           </div>
-          <p class="field-hint">A bigger width makes the white card wider and leaves less room for the picture on the left. 67 = normal. Height 100 = the card covers the full height.</p>
+          <div class="form-grid compact style-grid" id="cardStyleControls"></div>
+          <p class="field-hint">A bigger width makes the white card wider and leaves less room for the picture on the left. 67 = normal. Height 100 = the card covers the full height.
+            Font and Size (100 = normal) are the starting look of the name, the price and the Add to cart button; the name and price boxes below can still override them for one language. Border width 0 hides the line inside the card. Empty = the normal look.</p>
         </fieldset>
+        <!-- Name and price text style, one box per language. Built by buildTextStyleBoxes(); they follow the language buttons above. -->
+        <div id="textStyleBoxes"></div>
         <fieldset class="layout-group"><legend>Price</legend>
           <div class="form-grid compact">
             <label>Move left / right (%)<input name="price_x" type="number" min="-50" max="50" step="1" value="0"></label>
             <label>Move up / down (%)<input name="price_y" type="number" min="-50" max="50" step="1" value="0"></label>
           </div>
-          <p class="field-hint">Plus numbers move the price right or down, minus numbers move it left or up. 0 = normal place (under the name). Watch the live preview while you type.</p>
+          <p class="field-hint">Plus numbers move the price right or down, minus numbers move it left or up. 0 = normal place (under the name). Watch the live preview while you type. This is the position in every language; the Text style box of a language can set its own position for the price.</p>
         </fieldset>
         <fieldset class="layout-group"><legend>Add to cart button</legend>
           <div class="form-grid compact">
@@ -741,6 +763,35 @@ const VIDEO_ADMIN_STRINGS = {
   },
 };
 Object.keys(VIDEO_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], VIDEO_ADMIN_STRINGS[code]));
+
+// Display order note and warning (Menu items form), merged into each language above.
+const ORDER_ADMIN_STRINGS = {
+  en: {
+    displayOrderNote:'Note: every dish needs its own display order number. If the number you type is already used by another dish, a red warning appears here and the dish cannot be saved until you choose a different number (or clear the box to put it at the end).',
+    displayOrderTaken:'Warning: display order {number} is already used by "{name}". Use a separate number for this dish{free}.',
+    displayOrderFree:' (next free number: {free})',
+    displayOrderBlocked:'Choose a display order number that no other dish uses.',
+  },
+  ar: {
+    displayOrderNote:'ملاحظة: لكل صنف رقم ترتيب عرض خاص به. إذا كان الرقم الذي تكتبه مستخدماً لصنف آخر يظهر تحذير أحمر هنا ولا يمكن حفظ الصنف حتى تختار رقماً مختلفاً (أو تترك الخانة فارغة ليُضاف في النهاية).',
+    displayOrderTaken:'تحذير: ترتيب العرض {number} مستخدم بالفعل للصنف "{name}". استخدم رقماً مختلفاً لهذا الصنف{free}.',
+    displayOrderFree:' (أقرب رقم متاح: {free})',
+    displayOrderBlocked:'اختر رقم ترتيب عرض لا يستخدمه صنف آخر.',
+  },
+  ur: {
+    displayOrderNote:'نوٹ: ہر ڈش کا اپنا ڈسپلے ترتیب نمبر ہونا چاہیے۔ اگر آپ کا لکھا نمبر کسی اور ڈش کے پاس ہے تو یہاں سرخ تنبیہ آئے گی اور جب تک الگ نمبر منتخب نہ کریں (یا خانہ خالی چھوڑ دیں تاکہ ڈش آخر میں آئے) ڈش محفوظ نہیں ہوگی۔',
+    displayOrderTaken:'تنبیہ: ڈسپلے ترتیب {number} پہلے سے "{name}" کے پاس ہے۔ اس ڈش کے لیے الگ نمبر استعمال کریں{free}۔',
+    displayOrderFree:' (اگلا خالی نمبر: {free})',
+    displayOrderBlocked:'ایسا ڈسپلے ترتیب نمبر منتخب کریں جو کسی اور ڈش کے پاس نہ ہو۔',
+  },
+  zh: {
+    displayOrderNote:'注意：每道菜都需要自己的显示顺序数字。如果输入的数字已被其他菜品使用，这里会出现红色警告，在换成不同的数字（或清空输入框让它排在最后）之前无法保存。',
+    displayOrderTaken:'警告：显示顺序 {number} 已被“{name}”使用。请为这道菜使用不同的数字{free}。',
+    displayOrderFree:'（下一个可用数字：{free}）',
+    displayOrderBlocked:'请选择没有被其他菜品使用的显示顺序数字。',
+  },
+};
+Object.keys(ORDER_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], ORDER_ADMIN_STRINGS[code]));
 
 // Strings for the Contact tab (merged into each language above).
 const CONTACT_ADMIN_STRINGS = {
@@ -1461,7 +1512,8 @@ document.querySelectorAll('.language-switcher').forEach(switcher => {
     if(button){
       const form = switcher.closest('form');
       setActiveLanguage(form, button.dataset.language);
-      if(form.id === 'itemForm') updateLiveMenuPreview();
+      // getAttribute: form.id is the hidden <input name="id"> inside the item form, not the form's own id
+      if(form.getAttribute('id') === 'itemForm') updateLiveMenuPreview();
     }
   });
 });
@@ -1677,6 +1729,7 @@ function renderMenu(){
       .some(value => String(value || '').toLocaleLowerCase().includes(query))
   );
   document.getElementById('menuResultCount').textContent = adminText('shownCount', { count: filtered.length });
+  refreshDisplayOrderWarning();   // the dish list changed, so a typed number may now clash (or no longer clash)
   const records = document.getElementById('menuRecords');
   if(!filtered.length){
     records.innerHTML = `<div class="empty">${adminText(menuItems.length ? 'noMatchingMenuItems' : 'noMenuItems')}</div>`;
@@ -1742,6 +1795,116 @@ function setLivePreviewImage(image, value){
   }
 }
 
+/* ---------- Text style per language (name, price) and card font / size / border ----------
+   Saved in menu_items.card_style as { card:{font,size,border_w,border_color}, en|ar|zh:{ name:{font,size,color,x,y}, price:{...} } }.
+   Every control has data-cs="<path>"; an empty control means "the normal look" and is not saved. */
+const STYLE_FONTS = [
+  ['', 'Normal'], ['poppins', 'Poppins'], ['cinzel', 'Cinzel (serif capitals)'], ['cormorant', 'Cormorant Garamond'], ['georgia', 'Georgia'],
+  ['arial', 'Arial'], ['naskh', 'Noto Naskh (Arabic)'], ['nastaliq', 'Noto Nastaliq (Urdu)'], ['sans-sc', 'Noto Sans SC (Chinese)'], ['custom', 'Uploaded custom font'],
+];
+const STYLE_FONT_STACKS = {   // same stacks as the menu page, for the live preview
+  poppins: "'Poppins',sans-serif", naskh: "'Noto Naskh Arabic','Poppins',sans-serif", nastaliq: "'Noto Nastaliq Urdu','Poppins',sans-serif",
+  'sans-sc': "'Noto Sans SC','Poppins',sans-serif", cinzel: "'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif",
+  cormorant: "'Cormorant Garamond',Georgia,'Times New Roman',serif", georgia: "Georgia,'Times New Roman',serif", arial: "Arial,Helvetica,sans-serif",
+  custom: "'MenuCustom',serif",
+};
+const STYLE_LANGUAGES = [['en', 'English'], ['ar', 'العربية'], ['zh', '中文']];
+const STYLE_COLOR_DEFAULTS = { name: '#2b2622', price: '#5b4a2c', border: '#b8975a' };
+
+function styleFontField(path){
+  return `<label>Font<select data-cs="${path}">${STYLE_FONTS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label>`;
+}
+function styleNumberField(path, label, min, max, placeholder){
+  return `<label>${label}<input type="number" data-cs="${path}" min="${min}" max="${max}" step="1" placeholder="${placeholder}"></label>`;
+}
+function styleColorField(path, label, fallback){
+  return `<label>${label}<span class="style-color"><input type="color" data-cs="${path}" data-empty="1" value="${fallback}"><button type="button" data-cs-reset="${path}" data-cs-default="${fallback}">Normal</button></span></label>`;
+}
+function buildTextStyleBoxes(){
+  document.getElementById('cardStyleControls').innerHTML =
+    styleFontField('card.font') + styleNumberField('card.size', 'Size (%)', 50, 250, '100') +
+    styleNumberField('card.border_w', 'Border width (px)', 0, 8, '1') + styleColorField('card.border_color', 'Border color', STYLE_COLOR_DEFAULTS.border);
+  const part = (code, key, title) => `<p class="style-part">${title}</p>` +
+    styleFontField(`${code}.${key}.font`) + styleNumberField(`${code}.${key}.size`, 'Size (%)', 50, 250, '100') +
+    styleColorField(`${code}.${key}.color`, 'Color', STYLE_COLOR_DEFAULTS[key]) +
+    styleNumberField(`${code}.${key}.x`, 'Move left / right (%)', -50, 50, key === 'price' ? 'as in Price box' : '0') +
+    styleNumberField(`${code}.${key}.y`, 'Move up / down (%)', -50, 50, key === 'price' ? 'as in Price box' : '0');
+  document.getElementById('textStyleBoxes').innerHTML = STYLE_LANGUAGES.map(([code, label]) => `
+    <fieldset class="layout-group" data-language-panel="${code}"${code === 'en' ? '' : ' hidden'}>
+      <legend>Text style: ${label}</legend>
+      <div class="form-grid compact style-grid">${part(code, 'name', 'Food name')}${part(code, 'price', 'Food price')}</div>
+      <p class="field-hint">These settings apply only when the menu is shown in ${label}; use the language buttons above to switch. Size 100 = normal. Plus numbers move right or down, minus numbers move left or up.
+        Color: pick one, or press Normal to go back to the menu's own color. Empty box or Normal = the normal look.</p>
+    </fieldset>`).join('');
+}
+buildTextStyleBoxes();
+
+document.getElementById('itemForm').addEventListener('input', event => {
+  if(event.target.matches('input[type="color"][data-cs]')) event.target.removeAttribute('data-empty');
+});
+document.getElementById('itemForm').addEventListener('click', event => {
+  const reset = event.target.closest('[data-cs-reset]');
+  if(!reset) return;
+  const input = document.querySelector(`#itemForm input[data-cs="${reset.dataset.csReset}"]`);
+  input.value = reset.dataset.csDefault;
+  input.setAttribute('data-empty', '1');
+  updateLiveMenuPreview();
+});
+
+// the form's style boxes -> one object (null when everything is empty)
+function collectCardStyle(){
+  const style = {};
+  document.querySelectorAll('#itemForm [data-cs]').forEach(input => {
+    if(input.type === 'color' && input.getAttribute('data-empty') === '1') return;
+    const value = input.value.trim();
+    if(value === '') return;
+    const keys = input.dataset.cs.split('.');
+    let target = style;
+    keys.slice(0, -1).forEach(key => { target = (target[key] = target[key] || {}); });
+    target[keys[keys.length - 1]] = input.type === 'number' ? Number(value) : value;
+  });
+  return Object.keys(style).length ? style : null;
+}
+// a saved object -> the form's style boxes (null = all empty)
+function fillCardStyle(style){
+  document.querySelectorAll('#itemForm [data-cs]').forEach(input => {
+    const value = input.dataset.cs.split('.').reduce((node, key) => (node && typeof node === 'object' ? node[key] : undefined), style);
+    if(input.type === 'color'){
+      const reset = document.querySelector(`#itemForm [data-cs-reset="${input.dataset.cs}"]`);
+      if(typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)){ input.value = value; input.removeAttribute('data-empty'); }
+      else { input.value = reset ? reset.dataset.csDefault : '#000000'; input.setAttribute('data-empty', '1'); }
+    } else {
+      input.value = value == null ? '' : value;
+    }
+  });
+}
+
+// Display order must be unique: warn as soon as the typed number belongs to another dish
+function displayOrderClash(){
+  const raw = document.getElementById('itemDisplayOrder').value.trim();
+  const number = Number(raw);
+  if(raw === '' || !Number.isInteger(number)) return null;
+  const editingId = document.getElementById('itemId').value;
+  return menuItems.find(item => item.display_order != null && Number(item.display_order) === number && String(item.id) !== String(editingId)) || null;
+}
+function refreshDisplayOrderWarning(){
+  const input = document.getElementById('itemDisplayOrder');
+  const warning = document.getElementById('displayOrderWarning');
+  if(!input || !warning) return;
+  const clash = displayOrderClash();
+  input.classList.toggle('order-clash', Boolean(clash));
+  if(!clash){ warning.hidden = true; warning.textContent = ''; return; }
+  const used = new Set(menuItems.filter(item => String(item.id) !== String(document.getElementById('itemId').value)).map(item => Number(item.display_order)));
+  let free = Number(input.value) + 1;
+  while(used.has(free)) free += 1;
+  warning.textContent = adminText('displayOrderTaken', {
+    number: Number(input.value),
+    name: clash[`name_${adminUiLanguage}`] || clash.name_en,
+    free: adminText('displayOrderFree', { free }),
+  });
+  warning.hidden = false;
+}
+
 // the normal number of every layout box (what an empty database value means on the menu page)
 const ITEM_LAYOUT_DEFAULTS = {
   food_scale:100, food_width:100, food_x:0, food_y:0, card_width:67, card_height:100,
@@ -1788,6 +1951,27 @@ function updateLiveMenuPreview(){
   card.style.setProperty('--preview-bg-scale', String(percent('bg_scale', 100, 100, 200) / 100));
   setLivePreviewImage(document.getElementById('liveMenuBg'), field('bg_image_url')?.value);
   setLivePreviewImage(document.getElementById('liveMenuFood'), field('food_png_url')?.value || field('image_path')?.value || 'images/food.png');
+
+  // text style: card font / size / border, plus the name and price style of the language being edited
+  const style = collectCardStyle() || {};
+  const setVar = (property, value) => {
+    if(value == null || value === '') card.style.removeProperty(property); else card.style.setProperty(property, String(value));
+  };
+  const cardStyle = style.card || {};
+  setVar('--pv-font', STYLE_FONT_STACKS[cardStyle.font]);
+  setVar('--pv-size', cardStyle.size != null ? cardStyle.size / 100 : null);
+  setVar('--pv-border-w', cardStyle.border_w != null ? `${cardStyle.border_w}px` : null);
+  setVar('--pv-border-color', cardStyle.border_color);
+  const languageStyle = style[activeLanguage] || {};
+  for(const part of ['name', 'price']){
+    const rule = languageStyle[part] || {};
+    setVar(`--pv-${part}-font`, STYLE_FONT_STACKS[rule.font]);
+    setVar(`--pv-${part}-size`, rule.size != null ? rule.size / 100 : null);
+    setVar(`--pv-${part}-color`, rule.color);
+    setVar(`--pv-${part}-x`, rule.x);
+    setVar(`--pv-${part}-y`, rule.y);
+  }
+  refreshDisplayOrderWarning();
 }
 
 function resetItemForm(){
@@ -1795,6 +1979,7 @@ function resetItemForm(){
   form.reset();
   setActiveLanguage(form, 'en');
   document.getElementById('itemId').value = '';
+  fillCardStyle(null);
   renderCategoryOptions();
   document.getElementById('itemFormTitle').textContent = adminText('newMenuItem');
   document.getElementById('itemSubmit').textContent = adminText('createMenuItem');
@@ -1814,10 +1999,22 @@ document.getElementById('itemForm').addEventListener('submit', async event => {
   const form = event.currentTarget;
   if(!validateAdminForm(form)) return;
   const id = document.getElementById('itemId').value;
+  // another dish already has this display order number: stop here and show the warning (the server checks again)
+  if(displayOrderClash()){
+    refreshDisplayOrderWarning();
+    setFormNote('itemNote', adminText('displayOrderBlocked'), true);
+    document.getElementById('itemDisplayOrder').focus();
+    return;
+  }
   const payload = Object.fromEntries(new FormData(form).entries());
   payload.is_available = document.getElementById('itemAvailable').checked;
   payload.is_offer = document.getElementById('itemOffer').checked;
   payload.includes_meal = document.getElementById('itemIncludesMeal').checked;
+  // font / size / color / position styles. Sent only when something is set, or to clear styles this dish already had
+  // (so a database without the card_style column keeps working until the styles are used).
+  const cardStyle = collectCardStyle();
+  const hadStyle = id && menuItems.find(record => String(record.id) === String(id))?.card_style != null;
+  if(cardStyle || hadStyle) payload.card_style = cardStyle;
   const button = document.getElementById('itemSubmit');
   button.disabled = true;
   setFormNote('itemNote', id ? adminText('savingChanges') : adminText('creatingMenuItem'));
@@ -1854,6 +2051,7 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
     document.getElementById('itemAvailable').checked = item.is_available;
     document.getElementById('itemOffer').checked = item.is_offer;
     document.getElementById('itemIncludesMeal').checked = item.includes_meal === true;
+    fillCardStyle(item.card_style && typeof item.card_style === 'object' ? item.card_style : null);
     document.getElementById('itemFormTitle').textContent = adminText('editMenuItem');
     document.getElementById('itemSubmit').textContent = adminText('saveMenuItem');
     document.getElementById('itemCancel').hidden = false;

@@ -18,6 +18,9 @@ function databaseError(res, error, fallback) {
   if (error.code === '23505' && /display_order/.test(`${error.message || ''} ${error.details || ''}`)) {
     return res.status(409).json({ error: 'That display order number is already used by another dish.' });
   }
+  if (/card_style/.test(`${error.message || ''} ${error.details || ''}`) && (error.code === 'PGRST204' || error.code === '42703')) {
+    return res.status(500).json({ error: 'The database has no card_style column yet. Run db/01_tables.sql in the Supabase SQL Editor, then save again.' });
+  }
   if (error.code === '23505') return res.status(409).json({ error: 'That key is already in use.' });
   if (error.code === '23503') return res.status(409).json({ error: 'This record is still in use.' });
   return res.status(500).json({ error: error.message || fallback });
@@ -44,6 +47,78 @@ function categoryValues(body = {}) {
     values[`label_${language}`] = label.trim();
   }
   return { values };
+}
+
+// Per-dish text styles (db/01_tables.sql: menu_items.card_style, jsonb).
+//   { card: { font, size, border_w, border_color },
+//     en|ar|zh: { name: { font, size, color, x, y }, price: { font, size, color, x, y } } }
+// Empty fields mean "the normal look", so they are dropped; an object with nothing left is stored as null.
+const STYLE_FONTS = ['poppins', 'naskh', 'nastaliq', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
+const STYLE_LANGUAGES = ['en', 'ar', 'ur', 'zh'];
+
+function styleFields(raw, label, fields) {
+  const out = {};
+  if (raw == null || raw === '') return { value: out };
+  if (typeof raw !== 'object' || Array.isArray(raw)) return { error: `${label} style is not valid.` };
+  for (const [field, rule] of Object.entries(fields)) {
+    const value = raw[field];
+    if (value === '' || value == null) continue;
+    if (rule.type === 'font') {
+      if (!STYLE_FONTS.includes(value)) return { error: `${label}: unknown font.` };
+      out[field] = value;
+    } else if (rule.type === 'color') {
+      if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value)) return { error: `${label}: color must be a six-digit hex color.` };
+      out[field] = value.toLowerCase();
+    } else {
+      const number = Number(value);
+      if (!Number.isInteger(number) || number < rule.min || number > rule.max) {
+        return { error: `${label}: ${rule.name || field} must be a whole number between ${rule.min} and ${rule.max}.` };
+      }
+      out[field] = number;
+    }
+  }
+  return { value: out };
+}
+
+function cardStyleValue(raw) {
+  if (raw == null || raw === '') return { value: null };
+  let style = raw;
+  if (typeof style === 'string') {
+    try { style = JSON.parse(style); } catch { return { error: 'Card style is not valid.' }; }
+  }
+  if (!style || typeof style !== 'object' || Array.isArray(style)) return { error: 'Card style is not valid.' };
+
+  const textRules = {
+    font: { type: 'font' },
+    size: { type: 'int', min: 50, max: 250, name: 'size (%)' },
+    color: { type: 'color' },
+    x: { type: 'int', min: -50, max: 50, name: 'move left / right' },
+    y: { type: 'int', min: -50, max: 50, name: 'move up / down' },
+  };
+  const cardRules = {
+    font: { type: 'font' },
+    size: { type: 'int', min: 50, max: 250, name: 'size (%)' },
+    border_w: { type: 'int', min: 0, max: 8, name: 'border width (px)' },
+    border_color: { type: 'color' },
+  };
+
+  const clean = {};
+  const card = styleFields(style.card, 'Card', cardRules);
+  if (card.error) return { error: card.error };
+  if (Object.keys(card.value).length) clean.card = card.value;
+
+  for (const language of STYLE_LANGUAGES) {
+    if (style[language] == null) continue;
+    if (typeof style[language] !== 'object' || Array.isArray(style[language])) return { error: 'Card style is not valid.' };
+    const entry = {};
+    for (const part of ['name', 'price']) {
+      const result = styleFields(style[language][part], `${language.toUpperCase()} ${part}`, textRules);
+      if (result.error) return { error: result.error };
+      if (Object.keys(result.value).length) entry[part] = result.value;
+    }
+    if (Object.keys(entry).length) clean[language] = entry;
+  }
+  return { value: Object.keys(clean).length ? clean : null };
 }
 
 function menuItemValues(body = {}) {
@@ -109,6 +184,12 @@ function menuItemValues(body = {}) {
     values[field] = value;
   }
   if ('includes_meal' in body) values.includes_meal = body.includes_meal === true;
+  // font / size / color / position per language and the card border (see cardStyleValue above)
+  if ('card_style' in body) {
+    const style = cardStyleValue(body.card_style);
+    if (style.error) return { error: style.error };
+    values.card_style = style.value;
+  }
   if ('card_color' in body) {
     const color = typeof body.card_color === 'string' ? body.card_color.trim() : '';
     if (color && !/^#[0-9a-f]{6}$/i.test(color)) return { error: 'Card color must be a six-digit hex color.' };
