@@ -437,7 +437,7 @@
         </div>
         <p class="field-hint" data-ui="displayOrderHint">Dishes are listed on the menu page in this order (1 first). Each number can be used by one dish only. Empty on a new dish = added at the end.</p>
         <p class="order-warning" id="displayOrderWarning" role="alert" hidden></p>
-        <p class="order-note" data-ui="displayOrderNote">Note: every dish needs its own display order number. If the number you type is already used by another dish, a red warning appears here and the dish cannot be saved until you choose a different number (or clear the box to put it at the end).</p>
+        <p class="order-note" data-ui="displayOrderNote">Note: every dish needs its own display order number. If the number you type is already used by another dish, a red warning appears here and the dish cannot be saved until you choose a different number (or clear the box to put it at the end). For a new dish the next free number is filled in for you; you can change it.</p>
         <div class="language-switcher" role="group" aria-label="Menu item translation language" data-ui-aria-label="itemTranslationLanguage">
           <button type="button" data-language="en" aria-pressed="true">English</button>
           <button type="button" data-language="ar" aria-pressed="false">العربية</button>
@@ -767,25 +767,25 @@ Object.keys(VIDEO_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[
 // Display order note and warning (Menu items form), merged into each language above.
 const ORDER_ADMIN_STRINGS = {
   en: {
-    displayOrderNote:'Note: every dish needs its own display order number. If the number you type is already used by another dish, a red warning appears here and the dish cannot be saved until you choose a different number (or clear the box to put it at the end).',
+    displayOrderNote:'Note: every dish needs its own display order number. If the number you type is already used by another dish, a red warning appears here and the dish cannot be saved until you choose a different number (or clear the box to put it at the end). For a new dish the next free number is filled in for you; you can change it.',
     displayOrderTaken:'Warning: display order {number} is already used by "{name}". Use a separate number for this dish{free}.',
     displayOrderFree:' (next free number: {free})',
     displayOrderBlocked:'Choose a display order number that no other dish uses.',
   },
   ar: {
-    displayOrderNote:'ملاحظة: لكل صنف رقم ترتيب عرض خاص به. إذا كان الرقم الذي تكتبه مستخدماً لصنف آخر يظهر تحذير أحمر هنا ولا يمكن حفظ الصنف حتى تختار رقماً مختلفاً (أو تترك الخانة فارغة ليُضاف في النهاية).',
+    displayOrderNote:'ملاحظة: لكل صنف رقم ترتيب عرض خاص به. إذا كان الرقم الذي تكتبه مستخدماً لصنف آخر يظهر تحذير أحمر هنا ولا يمكن حفظ الصنف حتى تختار رقماً مختلفاً (أو تترك الخانة فارغة ليُضاف في النهاية). عند إضافة صنف جديد يُملأ الرقم المتاح التالي تلقائياً ويمكنك تغييره.',
     displayOrderTaken:'تحذير: ترتيب العرض {number} مستخدم بالفعل للصنف "{name}". استخدم رقماً مختلفاً لهذا الصنف{free}.',
     displayOrderFree:' (أقرب رقم متاح: {free})',
     displayOrderBlocked:'اختر رقم ترتيب عرض لا يستخدمه صنف آخر.',
   },
   ur: {
-    displayOrderNote:'نوٹ: ہر ڈش کا اپنا ڈسپلے ترتیب نمبر ہونا چاہیے۔ اگر آپ کا لکھا نمبر کسی اور ڈش کے پاس ہے تو یہاں سرخ تنبیہ آئے گی اور جب تک الگ نمبر منتخب نہ کریں (یا خانہ خالی چھوڑ دیں تاکہ ڈش آخر میں آئے) ڈش محفوظ نہیں ہوگی۔',
+    displayOrderNote:'نوٹ: ہر ڈش کا اپنا ڈسپلے ترتیب نمبر ہونا چاہیے۔ اگر آپ کا لکھا نمبر کسی اور ڈش کے پاس ہے تو یہاں سرخ تنبیہ آئے گی اور جب تک الگ نمبر منتخب نہ کریں (یا خانہ خالی چھوڑ دیں تاکہ ڈش آخر میں آئے) ڈش محفوظ نہیں ہوگی۔ نئی ڈش کے لیے اگلا خالی نمبر خود بخود بھر دیا جاتا ہے؛ آپ اسے بدل سکتے ہیں۔',
     displayOrderTaken:'تنبیہ: ڈسپلے ترتیب {number} پہلے سے "{name}" کے پاس ہے۔ اس ڈش کے لیے الگ نمبر استعمال کریں{free}۔',
     displayOrderFree:' (اگلا خالی نمبر: {free})',
     displayOrderBlocked:'ایسا ڈسپلے ترتیب نمبر منتخب کریں جو کسی اور ڈش کے پاس نہ ہو۔',
   },
   zh: {
-    displayOrderNote:'注意：每道菜都需要自己的显示顺序数字。如果输入的数字已被其他菜品使用，这里会出现红色警告，在换成不同的数字（或清空输入框让它排在最后）之前无法保存。',
+    displayOrderNote:'注意：每道菜都需要自己的显示顺序数字。如果输入的数字已被其他菜品使用，这里会出现红色警告，在换成不同的数字（或清空输入框让它排在最后）之前无法保存。新菜品会自动填入下一个可用数字，你可以修改。',
     displayOrderTaken:'警告：显示顺序 {number} 已被“{name}”使用。请为这道菜使用不同的数字{free}。',
     displayOrderFree:'（下一个可用数字：{free}）',
     displayOrderBlocked:'请选择没有被其他菜品使用的显示顺序数字。',
@@ -1707,6 +1707,7 @@ async function loadMenu(){
     menuItems = menuResult.items || [];
     renderCategoryOptions();
     renderMenu();
+    autoFillDisplayOrder();   // the list is fresh, so the next free number is right
   }catch(error){
     records.innerHTML = `<div class="empty">${adminText('failedLoadMenuItems')}</div>`;
   }
@@ -1887,6 +1888,17 @@ function displayOrderClash(){
   const editingId = document.getElementById('itemId').value;
   return menuItems.find(item => item.display_order != null && Number(item.display_order) === number && String(item.id) !== String(editingId)) || null;
 }
+// New dish: fill in the next display order number (highest used + 1) so it goes to the end of the list. The admin can change it.
+// Only done on a new dish whose box is empty or still holds the number filled in here; an edited dish is never touched.
+let autoDisplayOrder = '';
+function autoFillDisplayOrder(){
+  const input = document.getElementById('itemDisplayOrder');
+  if(!input || document.getElementById('itemId').value) return;
+  if(input.value !== '' && input.value !== autoDisplayOrder) return;
+  const used = menuItems.map(item => Number(item.display_order)).filter(Number.isInteger);
+  autoDisplayOrder = String((used.length ? Math.max(...used) : 0) + 1);
+  input.value = autoDisplayOrder;
+}
 function refreshDisplayOrderWarning(){
   const input = document.getElementById('itemDisplayOrder');
   const warning = document.getElementById('displayOrderWarning');
@@ -1990,6 +2002,7 @@ function resetItemForm(){
   updateCardPreview('itemBgPreview', '');
   updateCardPreview('itemFoodPreview', '');
   updateImagePreview('');
+  autoFillDisplayOrder();
   updateLiveMenuPreview();
   setFormNote('itemNote', '');
 }
