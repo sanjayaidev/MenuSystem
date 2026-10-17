@@ -114,9 +114,9 @@
   #itemForm .language-fields{grid-template-columns:1fr;}
   .item-live-preview{grid-column:2; grid-row:1; position:sticky; top:16px; min-width:0;}
   .item-live-preview h3{margin:0 0 10px; color:var(--muted); font-size:12px; font-weight:650;}
-  .live-preview-card{--preview-paper:#f6f1e6;--preview-edge:#e9e0cd;position:relative; width:100%; aspect-ratio:2.5 / 1; overflow:hidden; background:radial-gradient(120% 120% at 25% 30%,#3a2d24 0%,#2a211b 60%,#1d1612 100%); color:#2b2622;}
+  .live-preview-card{--preview-paper:#f6f1e6;--preview-edge:#e9e0cd;position:relative; width:100%; aspect-ratio:var(--pv-card-ratio,2.5) / 1; overflow:hidden; background:radial-gradient(120% 120% at 25% 30%,#3a2d24 0%,#2a211b 60%,#1d1612 100%); color:#2b2622;}
   .live-preview-bg{position:absolute; inset:0 auto 0 0; z-index:0; width:calc(100% - var(--preview-card-w,66.6667%) + 1px); height:100%; object-fit:cover; object-position:var(--preview-bg-x,50%) var(--preview-bg-y,50%); transform:scale(var(--preview-bg-scale,1));}
-  .live-preview-paper{position:absolute; inset:auto 0 auto auto; top:calc((100% - var(--preview-card-h,100%)) / 2); height:var(--preview-card-h,100%); z-index:1; display:flex; width:var(--preview-card-w,66.6667%); flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:8px 8px 18px 22%; text-align:center; background:radial-gradient(120% 90% at 50% 40%,#fbf8f0 0%,var(--preview-paper) 55%,var(--preview-edge) 100%);}
+  .live-preview-paper{position:absolute; inset:auto 0 auto auto; top:calc((100% - var(--preview-card-h,100%)) / 2); height:var(--preview-card-h,100%); z-index:1; display:flex; width:var(--preview-card-w,66.6667%); flex-direction:column; align-items:center; justify-content:center; gap:calc(var(--pv-card-gap,24) * .1 * var(--preview-u,4px)); padding:calc(var(--pv-padding-top,4) * var(--preview-u,4px)) calc(var(--pv-padding-side,3) * var(--preview-u,4px)) calc(var(--pv-padding-bottom,11) * var(--preview-u,4px)) calc(var(--pv-food-overlap,20%) + 2%); text-align:center; border-radius:var(--pv-radius,0px); background:radial-gradient(120% 90% at 50% 40%,#fbf8f0 0%,var(--preview-paper) 55%,var(--preview-edge) 100%);}
   .live-preview-paper small{color:#b8975a; font-size:7px; font-weight:700;}
   /* --pv-* are set from the "Text style" and card boxes by updateLiveMenuPreview() (unset = the normal look) */
   .live-preview-paper::before{content:""; position:absolute; inset:5px; border:var(--pv-border-w,1px) solid var(--pv-border-color,rgba(184,151,90,.55)); pointer-events:none;}
@@ -134,9 +134,9 @@
   .order-warning[hidden]{display:none;}
   .order-note{margin:8px 0 0; padding:8px 10px; border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:6px; color:var(--muted); font-size:12px; line-height:1.5;}
   input.order-clash{border-color:var(--red) !important;}
-  .live-preview-food{position:absolute; inset:5% auto 5% 0; z-index:2; display:flex; width:calc(100% - var(--preview-card-w,66.6667%) + 20%); align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(calc(var(--preview-food-scale,1) * var(--preview-food-width,1)), var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
+  .live-preview-food{position:absolute; top:calc((100% - var(--pv-food-height,90%)) / 2); height:var(--pv-food-height,90%); left:0; z-index:2; display:flex; width:calc(100% - var(--preview-card-w,66.6667%) + var(--pv-food-overlap,20%)); align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(calc(var(--preview-food-scale,1) * var(--preview-food-width,1)), var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
   .live-preview-food img{display:block; width:auto; height:100%; max-width:100%; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));}
-  .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; background:var(--gold); color:#1a1408; font-size:calc(8px + 2pt); font-weight:700; transform:translate(calc(var(--preview-add-x,0) * var(--preview-u,4px)), calc(var(--preview-add-y,0) * .4 * var(--preview-u,4px))) scale(var(--preview-add-scale,1)); transform-origin:right bottom;}
+  .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; border-radius:var(--pv-add-radius,0px); background:var(--pv-add-bg,#e3b23c); color:var(--pv-add-color,#1a1408); font-size:calc((8px + 2pt) * var(--pv-add-font-scale,1)); font-weight:700; transform:translate(calc(var(--preview-add-x,0) * var(--preview-u,4px)), calc(var(--preview-add-y,0) * .4 * var(--preview-u,4px))) scale(var(--preview-add-scale,1)); transform-origin:right bottom;}
   .live-preview-paper,.live-preview-food{container-type:inline-size;}
   .form-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
   .form-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));}
@@ -326,6 +326,18 @@
 
     <section class="admin-panel" id="designPanel" hidden>
       <div class="panel-title"><h2>Menu design</h2></div>
+      <form class="manager-form" id="brandingForm" novalidate>
+        <h3 style="margin:0 0 6px;">Site logo</h3>
+        <p class="form-note" style="margin:0 0 12px;">Shown in the homepage and menu header. Leave the URL empty to use the built-in logo.</p>
+        <img id="brandLogoPreview" src="images/rhclogo.png" alt="Current site logo" style="display:block; width:100%; max-width:320px; max-height:120px; object-fit:contain; margin-bottom:12px;">
+        <div class="image-tools">
+          <label>Logo image (PNG, JPEG, WebP or GIF, max 5 MB)<input id="brandLogoFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+          <button class="action-btn" id="brandLogoUpload" type="button" disabled>Upload logo</button>
+        </div>
+        <label>Logo image URL<input id="brandLogoUrl" type="url" maxlength="2000" placeholder="https://..."></label>
+        <div class="form-actions"><button class="action-btn primary" id="brandLogoSave" type="submit">Save logo</button><button class="action-btn" id="brandLogoReset" type="button">Use built-in logo</button><span class="form-note" id="brandLogoNote" role="status"></span></div>
+      </form>
+
       <form class="manager-form" id="designForm" novalidate>
         <div class="form-grid compact">
           <label>Font style<select id="designFontStyle" name="font_style"><option value="cinzel">Cinzel</option><option value="cormorant">Cormorant Garamond</option><option value="georgia">Georgia</option><option value="arial">Arial</option><option value="custom">Uploaded font</option></select></label>
@@ -338,6 +350,17 @@
         </div>
         <p class="form-note" id="designFontStatus" role="status"></p>
         <div class="form-actions"><button class="action-btn primary" id="designSave" type="submit">Save design</button><span class="form-note" id="designNote" role="status"></span></div>
+      </form>
+
+      <form class="manager-form" id="globalCardDesignForm" novalidate style="margin-top:22px;">
+        <h3 style="margin:0 0 6px;">Global menu card design</h3>
+        <p class="form-note" style="margin:0 0 12px;">Applied to every menu item, including the Add to cart button, food image height, and card spacing. Item-specific edits can be reset to these settings.</p>
+        <div class="form-grid compact" id="globalCardGeometry"></div>
+        <h3 style="margin:22px 0 6px;">Card surface and spacing</h3>
+        <div class="form-grid compact style-grid" id="globalCardSurface"></div>
+        <h3 style="margin:22px 0 6px;">Add to cart button</h3>
+        <div class="form-grid compact" id="globalCardButton"></div>
+        <div class="form-actions"><button class="action-btn primary" id="globalCardSave" type="submit">Apply global card design</button><button class="action-btn" id="globalCardReset" type="button">Reset global to original defaults</button><span class="form-note" id="globalCardNote" role="status"></span></div>
       </form>
 
       <form class="manager-form" id="langForm" novalidate style="margin-top:22px;">
@@ -366,6 +389,18 @@
         <div class="form-actions"><button class="action-btn primary" id="langSave" type="submit">Save language settings</button><span class="form-note" id="langNote" role="status"></span></div>
       </form>
 
+      <form class="manager-form" id="globalTextStyleForm" novalidate style="margin-top:22px;">
+        <h3 style="margin:0 0 6px;">Global dish text style</h3>
+        <p class="form-note" style="margin:0 0 12px;">These name and price styles are applied to every menu item. You can still make individual changes in Menu items.</p>
+        <div class="language-switcher" role="group" aria-label="Global text style language">
+          <button type="button" data-language="en" aria-pressed="true">English</button>
+          <button type="button" data-language="ar" aria-pressed="false">العربية</button>
+          <button type="button" data-language="zh" aria-pressed="false">中文</button>
+        </div>
+        <div id="globalTextStyleBoxes"></div>
+        <div class="form-actions"><button class="action-btn primary" id="globalTextStyleSave" type="submit">Apply to all menu items</button><button class="action-btn" id="globalTextStyleReset" type="button">Reset global text style</button><span class="form-note" id="globalTextStyleNote" role="status"></span></div>
+      </form>
+
       <form class="manager-form" id="styleForm" novalidate style="margin-top:22px;">
         <h3 style="margin:0 0 6px;">Category boxes: outline</h3>
         <p class="form-note" style="margin:0 0 12px;">The category boxes are the row at the top of the menu page (Beef Meal, Chicken Meal ...). Tick the box, choose any color and thickness. Untick it to go back to the normal thin grey line.</p>
@@ -375,6 +410,8 @@
         <div class="form-grid compact">
           <label>Outline color<input id="chipOutlineColor" type="color" value="#e3b23c"></label>
           <label>Outline thickness (px, 1 to 4)<input id="chipOutlineWidth" type="number" min="1" max="4" step="1" value="1"></label>
+          <label>Fill color<input id="chipFillColor" type="color" value="#1c1a18"></label>
+          <label>Selected fill color<input id="chipActiveColor" type="color" value="#e3b23c"></label>
         </div>
 
         <h3 style="margin:22px 0 6px;">Bold text</h3>
@@ -387,7 +424,7 @@
           <label><input type="checkbox" id="bold_description"> <span>Dish description (pop-up)</span></label>
           <label><input type="checkbox" id="bold_includes"> <span>"This meal automatically includes" text (pop-up)</span></label>
         </div>
-        <div class="form-actions"><button class="action-btn primary" id="styleSave" type="submit">Save style settings</button><span class="form-note" id="styleNote" role="status"></span></div>
+        <div class="form-actions"><button class="action-btn primary" id="styleSave" type="submit">Save style settings</button><button class="action-btn" id="styleReset" type="button">Reset category colors</button><span class="form-note" id="styleNote" role="status"></span></div>
       </form>
     </section>
 
@@ -476,6 +513,7 @@
             <label>Width only (%)<input name="food_width" type="number" min="50" max="150" step="1" value="100"></label>
             <label>Move left / right (%)<input name="food_x" type="number" min="-50" max="50" step="1" value="0"></label>
             <label>Move up / down (%)<input name="food_y" type="number" min="-50" max="50" step="1" value="0"></label>
+            <label>Height (%)<input type="number" data-cs="card.food_height" min="50" max="100" step="1" placeholder="90"></label>
           </div>
           <p class="field-hint">Size makes the whole dish bigger or smaller. Width only makes the dish wider or thinner and does not change its height. 100 = normal. For moving, a plus number goes right or down, a minus number goes left or up, 0 = normal place.</p>
         </fieldset>
@@ -511,7 +549,7 @@
           <summary data-ui="plainPhotoSummary">Plain product photo URL (optional, fills itself from the Food PNG)</summary>
           <div class="image-tools"><label><span data-ui="imageUrl">Image URL</span><input name="image_path" id="itemImageUrl" type="url" placeholder="https://..."></label></div>
         </details>
-        <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit" data-ui="createMenuItem">Create menu item</button><button class="action-btn" id="itemCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
+        <div class="form-actions"><button class="action-btn primary" id="itemSubmit" type="submit" data-ui="createMenuItem">Create menu item</button><button class="action-btn" id="itemResetDesign" type="button">Reset card to global</button><button class="action-btn" id="itemCancel" type="button" hidden data-ui="cancelEdit">Cancel edit</button><span class="form-note" id="itemNote" role="status"></span></div>
         </div>
         <aside class="item-live-preview" aria-label="Live menu card preview">
           <h3>Live menu preview</h3>
@@ -1326,9 +1364,77 @@ function showDesignSettings(design){
   document.getElementById('designFontSizeValue').textContent = `${design.font_size || 14} px`;
   document.getElementById('designFontColor').value = design.font_color || '#2b2622';
   document.getElementById('designFontStatus').textContent = design.font_url ? 'Custom font uploaded.' : 'No custom font uploaded.';
+  showBrandSettings(design);
+  showGlobalCardSettings(design);
   showLanguageSettings(design);
+  showGlobalTextStyleSettings(design);
   showStyleSettings(design);
 }
+
+function showBrandSettings(design){
+  const url = design.logo_url || '';
+  document.getElementById('brandLogoUrl').value = url;
+  document.getElementById('brandLogoPreview').src = url || 'images/rhclogo.png';
+}
+
+const brandLogoFile = document.getElementById('brandLogoFile');
+brandLogoFile.addEventListener('change', () => {
+  document.getElementById('brandLogoUpload').disabled = !brandLogoFile.files.length;
+});
+document.getElementById('brandLogoUrl').addEventListener('input', event => {
+  document.getElementById('brandLogoPreview').src = event.currentTarget.value.trim() || 'images/rhclogo.png';
+});
+document.getElementById('brandLogoUpload').addEventListener('click', async event => {
+  const file = brandLogoFile.files[0];
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024){ setFormNote('brandLogoNote', 'Logo must be smaller than 5 MB.', true); return; }
+  const button = event.currentTarget;
+  button.disabled = true;
+  setFormNote('brandLogoNote', 'Uploading logo...');
+  try{
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not read the logo image.'));
+      reader.readAsDataURL(file);
+    });
+    const result = await adminRequest('/images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: dataUrl,
+    });
+    document.getElementById('brandLogoUrl').value = result.url;
+    document.getElementById('brandLogoPreview').src = result.url;
+    setFormNote('brandLogoNote', 'Uploaded. Save the logo to publish it.');
+  }catch(error){
+    setFormNote('brandLogoNote', error.message || 'Could not upload the logo.', true);
+  }finally{
+    button.disabled = !brandLogoFile.files.length;
+  }
+});
+document.getElementById('brandingForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('brandLogoSave');
+  button.disabled = true;
+  setFormNote('brandLogoNote', 'Saving...');
+  try{
+    const result = await adminRequest('/design/branding', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logo_url: document.getElementById('brandLogoUrl').value.trim() }),
+    });
+    showBrandSettings(result.design);
+    setFormNote('brandLogoNote', 'Logo saved. Refresh the public pages to see it.');
+  }catch(error){
+    setFormNote('brandLogoNote', error.message || 'Could not save the logo.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+document.getElementById('brandLogoReset').addEventListener('click', () => {
+  document.getElementById('brandLogoUrl').value = '';
+  document.getElementById('brandingForm').requestSubmit();
+});
 
 /* ---------- language font / size and the "includes" text ---------- */
 const LANG_CODES = ['en', 'ar', 'ur', 'zh'];
@@ -1386,6 +1492,8 @@ function showStyleSettings(design){
   document.getElementById('chipOutlineOn').checked = Boolean(color);
   document.getElementById('chipOutlineColor').value = color || '#e3b23c';
   document.getElementById('chipOutlineWidth').value = Number(design.chip_outline_width) || 1;
+  document.getElementById('chipFillColor').value = /^#[0-9a-f]{6}$/i.test(design.chip_fill_color || '') ? design.chip_fill_color : '#1c1a18';
+  document.getElementById('chipActiveColor').value = /^#[0-9a-f]{6}$/i.test(design.chip_active_color || '') ? design.chip_active_color : '#e3b23c';
   for(const key of BOLD_KEYS){
     const saved = (design.bold || {})[key];
     document.getElementById(`bold_${key}`).checked = typeof saved === 'boolean' ? saved : BOLD_DEFAULTS[key];
@@ -1401,6 +1509,8 @@ document.getElementById('styleForm').addEventListener('submit', async event => {
     const payload = {
       chip_outline_color: document.getElementById('chipOutlineOn').checked ? document.getElementById('chipOutlineColor').value : '',
       chip_outline_width: Number(document.getElementById('chipOutlineWidth').value),
+      chip_fill_color: document.getElementById('chipFillColor').value,
+      chip_active_color: document.getElementById('chipActiveColor').value,
       bold: {},
     };
     for(const key of BOLD_KEYS) payload.bold[key] = document.getElementById(`bold_${key}`).checked;
@@ -1416,6 +1526,15 @@ document.getElementById('styleForm').addEventListener('submit', async event => {
   }finally{
     button.disabled = false;
   }
+});
+
+document.getElementById('styleReset').addEventListener('click', () => {
+  document.getElementById('chipOutlineOn').checked = false;
+  document.getElementById('chipOutlineColor').value = '#e3b23c';
+  document.getElementById('chipOutlineWidth').value = 1;
+  document.getElementById('chipFillColor').value = '#1c1a18';
+  document.getElementById('chipActiveColor').value = '#e3b23c';
+  document.getElementById('styleForm').requestSubmit();
 });
 
 async function loadDesign(){
@@ -1694,12 +1813,16 @@ async function loadMenu(){
   const records = document.getElementById('menuRecords');
   records.innerHTML = `<div class="empty">${adminText('loadingMenuItems')}</div>`;
   try{
-    const [categoryResult, menuResult] = await Promise.all([
+    const [categoryResult, menuResult, designResult] = await Promise.all([
       adminRequest('/categories'),
       adminRequest('/menu'),
+      adminRequest('/design'),
     ]);
+    showGlobalCardSettings(designResult.design || {});
+    showGlobalTextStyleSettings(designResult.design || {});
     categories = categoryResult.categories || [];
     menuItems = menuResult.items || [];
+    if(!document.getElementById('itemId').value) fillItemStyleWithGlobal();
     renderCategoryOptions();
     renderMenu();
     autoFillDisplayOrder();   // the list is fresh, so the next free number is right
@@ -1806,6 +1929,23 @@ const STYLE_FONT_STACKS = {   // same stacks as the menu page, for the live prev
 };
 const STYLE_LANGUAGES = [['en', 'English'], ['ar', 'العربية'], ['zh', '中文']];
 const STYLE_COLOR_DEFAULTS = { name: '#2b2622', price: '#5b4a2c', border: '#b8975a' };
+const GLOBAL_CARD_DEFAULTS = {
+  aspect_ratio: 2.5,
+  layout: {
+    food_scale: 100, food_width: 100, food_x: 0, food_y: 0,
+    bg_x: 50, bg_y: 50, bg_scale: 100,
+    card_width: 67, card_height: 100, card_color: '#f6f1e6',
+    add_scale: 100, add_x: 0, add_y: 0,
+  },
+  card: {
+    font: '', size: 100, border_w: 1, border_color: '#b8975a',
+    food_height: 90, food_overlap: 20, row_gap: 14, card_gap: 24,
+    padding_top: 4, padding_side: 3, padding_bottom: 11, radius: 0,
+    add_bg: '#e3b23c', add_color: '#1a1408', add_radius: 0, add_font_scale: 100,
+  },
+};
+let currentGlobalCardDesign = JSON.parse(JSON.stringify(GLOBAL_CARD_DEFAULTS));
+let currentGlobalTextStyle = {};
 
 function styleFontField(path){
   return `<label>Font<select data-cs="${path}">${STYLE_FONTS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></label>`;
@@ -1816,24 +1956,215 @@ function styleNumberField(path, label, min, max, placeholder){
 function styleColorField(path, label, fallback){
   return `<label>${label}<span class="style-color"><input type="color" data-cs="${path}" data-empty="1" value="${fallback}"><button type="button" data-cs-reset="${path}" data-cs-default="${fallback}">Normal</button></span></label>`;
 }
-function buildTextStyleBoxes(){
-  document.getElementById('cardStyleControls').innerHTML =
-    styleFontField('card.font') + styleNumberField('card.size', 'Size (%)', 50, 250, '100') +
-    styleNumberField('card.border_w', 'Border width (px)', 0, 8, '1') + styleColorField('card.border_color', 'Border color', STYLE_COLOR_DEFAULTS.border);
-  const part = (code, key, title) => `<p class="style-part">${title}</p>` +
+function globalColorField(path, label, value){
+  return `<label>${label}<input type="color" data-cs="${path}" value="${value}"></label>`;
+}
+function globalLayoutField(path, label, min, max, value, step = 1){
+  return `<label>${label}<input type="number" data-global-layout="${path}" min="${min}" max="${max}" step="${step}" value="${value}"></label>`;
+}
+function buildGlobalCardControls(){
+  const layout = GLOBAL_CARD_DEFAULTS.layout;
+  document.getElementById('globalCardGeometry').innerHTML =
+    globalLayoutField('aspect_ratio', 'Card width-to-height ratio', 1.5, 4, GLOBAL_CARD_DEFAULTS.aspect_ratio, 0.1) +
+    globalLayoutField('food_scale', 'Food size (%)', 50, 150, layout.food_scale) +
+    globalLayoutField('food_width', 'Food width (%)', 50, 150, layout.food_width) +
+    globalLayoutField('food_height', 'Food height (%)', 50, 100, GLOBAL_CARD_DEFAULTS.card.food_height) +
+    globalLayoutField('food_x', 'Food move left / right (%)', -50, 50, layout.food_x) +
+    globalLayoutField('food_y', 'Food move up / down (%)', -50, 50, layout.food_y) +
+    globalLayoutField('bg_scale', 'Background image size (%)', 100, 200, layout.bg_scale) +
+    globalLayoutField('bg_x', 'Background image left / right (0-100)', 0, 100, layout.bg_x) +
+    globalLayoutField('bg_y', 'Background image up / down (0-100)', 0, 100, layout.bg_y) +
+    globalLayoutField('card_width', 'Text card width (%)', 40, 85, layout.card_width) +
+    globalLayoutField('card_height', 'Text card height (%)', 60, 100, layout.card_height) +
+    globalColorField('layout.card_color', 'Text card color', layout.card_color) +
+    globalLayoutField('add_scale', 'Add to cart size (%)', 50, 150, layout.add_scale) +
+    globalLayoutField('add_x', 'Add to cart move left / right (%)', -50, 50, layout.add_x) +
+    globalLayoutField('add_y', 'Add to cart move up / down (%)', -50, 50, layout.add_y);
+
+  const card = GLOBAL_CARD_DEFAULTS.card;
+  document.getElementById('globalCardSurface').innerHTML =
+    styleFontField('card.font') + styleNumberField('card.size', 'Text scale (%)', 50, 250, String(card.size)) +
+    styleNumberField('card.border_w', 'Outline width (px)', 0, 8, String(card.border_w)) + globalColorField('card.border_color', 'Outline color', card.border_color) +
+    globalLayoutField('card.food_overlap', 'Food overlap onto text card (%)', 0, 40, card.food_overlap) +
+    globalLayoutField('card.row_gap', 'Gap between menu cards (px)', 0, 40, card.row_gap) +
+    globalLayoutField('card.card_gap', 'Name and price gap (0.1% units)', 0, 100, card.card_gap) +
+    globalLayoutField('card.padding_top', 'Text card top padding (%)', 0, 15, card.padding_top) +
+    globalLayoutField('card.padding_side', 'Text card side padding (%)', 0, 15, card.padding_side) +
+    globalLayoutField('card.padding_bottom', 'Text card bottom padding (%)', 0, 20, card.padding_bottom) +
+    globalLayoutField('card.radius', 'Text card corner radius (px)', 0, 24, card.radius);
+
+  document.getElementById('globalCardButton').innerHTML =
+    globalColorField('card.add_bg', 'Button fill color', card.add_bg) +
+    globalColorField('card.add_color', 'Button text color', card.add_color) +
+    globalLayoutField('card.add_radius', 'Button corner radius (px)', 0, 24, card.add_radius) +
+    globalLayoutField('card.add_font_scale', 'Button text size (%)', 50, 200, card.add_font_scale);
+}
+buildGlobalCardControls();
+
+function showGlobalCardSettings(design){
+  currentGlobalCardDesign = JSON.parse(JSON.stringify(design.global_card_design || GLOBAL_CARD_DEFAULTS));
+  const form = document.getElementById('globalCardDesignForm');
+  form.querySelectorAll('[data-global-layout]').forEach(input => {
+    const keys = input.dataset.globalLayout.split('.');
+    const value = keys.reduce((node, key) => node?.[key], currentGlobalCardDesign);
+    input.value = value ?? '';
+  });
+  form.querySelectorAll('[data-cs]').forEach(input => {
+    const value = input.dataset.cs.split('.').reduce((node, key) => node?.[key], currentGlobalCardDesign);
+    if(input.type === 'color') input.value = value || input.value;
+    else input.value = value ?? '';
+  });
+}
+
+function collectGlobalCardDesign(){
+  const design = { aspect_ratio: 2.5, layout: {}, card: {} };
+  const form = document.getElementById('globalCardDesignForm');
+  form.querySelectorAll('[data-global-layout]').forEach(input => {
+    const path = input.dataset.globalLayout.split('.');
+    const value = input.value === '' ? NaN : Number(input.value);
+    if(!Number.isFinite(value)) throw new Error(`${input.labels[0]?.textContent || 'A setting'} is required.`);
+    if(path.length === 1 && path[0] === 'aspect_ratio') design.aspect_ratio = value;
+    else {
+      let target = design;
+      path.slice(0, -1).forEach(key => { target = target[key] || (target[key] = {}); });
+      target[path[path.length - 1]] = value;
+    }
+  });
+  form.querySelectorAll('[data-cs]').forEach(input => {
+    const path = input.dataset.cs.split('.');
+    let target = design;
+    path.slice(0, -1).forEach(key => { target = target[key] || (target[key] = {}); });
+    target[path[path.length - 1]] = input.value.trim();
+  });
+  return design;
+}
+
+document.getElementById('globalCardDesignForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('globalCardSave');
+  button.disabled = true;
+  setFormNote('globalCardNote', 'Applying to all menu items...');
+  try{
+    const result = await adminRequest('/design/global-card', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ global_card_design: collectGlobalCardDesign() }),
+    });
+    showGlobalCardSettings(result.design);
+    setFormNote('globalCardNote', 'Global card design applied to all menu items.');
+  }catch(error){
+    setFormNote('globalCardNote', error.message || 'Could not apply the global card design.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+document.getElementById('globalCardReset').addEventListener('click', () => {
+  if(!window.confirm('Reset the global card design and apply the original defaults to every menu item?')) return;
+  showGlobalCardSettings({ global_card_design: GLOBAL_CARD_DEFAULTS });
+  document.getElementById('globalCardDesignForm').requestSubmit();
+});
+function textStylePart(code, key, title){
+  return `<p class="style-part">${title}</p>` +
     styleFontField(`${code}.${key}.font`) + styleNumberField(`${code}.${key}.size`, 'Size (%)', 50, 250, '100') +
     styleColorField(`${code}.${key}.color`, 'Color', STYLE_COLOR_DEFAULTS[key]) +
     styleNumberField(`${code}.${key}.x`, 'Move left / right (%)', -50, 50, key === 'price' ? 'fallback' : '0') +
     styleNumberField(`${code}.${key}.y`, 'Move up / down (%)', -50, 50, key === 'price' ? 'fallback' : '0');
+}
+function buildTextStyleBoxes(){
+  document.getElementById('cardStyleControls').innerHTML =
+    styleFontField('card.font') + styleNumberField('card.size', 'Size (%)', 50, 250, '100') +
+    styleNumberField('card.border_w', 'Border width (px)', 0, 8, '1') + styleColorField('card.border_color', 'Border color', STYLE_COLOR_DEFAULTS.border) +
+    styleNumberField('card.food_overlap', 'Food overlap (%)', 0, 40, '20') +
+    styleNumberField('card.row_gap', 'Gap between cards (px)', 0, 40, '14') +
+    styleNumberField('card.card_gap', 'Name and price gap (0.1% units)', 0, 100, '24') +
+    styleNumberField('card.padding_top', 'Text card top padding (%)', 0, 15, '4') +
+    styleNumberField('card.padding_side', 'Text card side padding (%)', 0, 15, '3') +
+    styleNumberField('card.padding_bottom', 'Text card bottom padding (%)', 0, 20, '11') +
+    styleNumberField('card.radius', 'Text card corner radius (px)', 0, 24, '0') +
+    styleColorField('card.add_bg', 'Add to cart fill', '#e3b23c') +
+    styleColorField('card.add_color', 'Add to cart text color', '#1a1408') +
+    styleNumberField('card.add_radius', 'Add to cart corner radius (px)', 0, 24, '0') +
+    styleNumberField('card.add_font_scale', 'Add to cart text size (%)', 50, 200, '100');
   document.getElementById('textStyleBoxes').innerHTML = STYLE_LANGUAGES.map(([code, label]) => `
     <fieldset class="layout-group" data-language-panel="${code}"${code === 'en' ? '' : ' hidden'}>
       <legend>Text style: ${label}</legend>
-      <div class="form-grid compact style-grid">${part(code, 'name', 'Food name')}${part(code, 'price', 'Food price')}</div>
+      <div class="form-grid compact style-grid">${textStylePart(code, 'name', 'Food name')}${textStylePart(code, 'price', 'Food price')}</div>
       <p class="field-hint">These settings apply only when the menu is shown in ${label}; use the language buttons above to switch. Size 100 = normal. Plus numbers move right or down, minus numbers move left or up.
         Color: pick one, or press Normal to go back to the menu's own color. Empty box or Normal = the normal look.</p>
     </fieldset>`).join('');
 }
 buildTextStyleBoxes();
+
+function buildGlobalTextStyleBoxes(){
+  document.getElementById('globalTextStyleBoxes').innerHTML = STYLE_LANGUAGES.map(([code, label]) => `
+    <fieldset class="layout-group" data-language-panel="${code}"${code === 'en' ? '' : ' hidden'}>
+      <legend>${label}</legend>
+      <div class="form-grid compact style-grid">${textStylePart(code, 'name', 'Food name')}${textStylePart(code, 'price', 'Food price')}</div>
+      <p class="field-hint">Applied to every item when the menu is shown in ${label}. Empty box or Normal removes that setting from every item.</p>
+    </fieldset>`).join('');
+}
+buildGlobalTextStyleBoxes();
+
+function showGlobalTextStyleSettings(design){
+  const style = design.global_text_style || {};
+  const form = document.getElementById('globalTextStyleForm');
+  form.querySelectorAll('[data-cs]').forEach(input => {
+    const value = input.dataset.cs.split('.').reduce((node, key) => (node && typeof node === 'object' ? node[key] : undefined), style);
+    if(input.type === 'color'){
+      const reset = form.querySelector(`[data-cs-reset="${input.dataset.cs}"]`);
+      if(typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)){ input.value = value; input.removeAttribute('data-empty'); }
+      else { input.value = reset.dataset.csDefault; input.setAttribute('data-empty', '1'); }
+    } else {
+      input.value = value == null ? '' : value;
+    }
+  });
+}
+
+document.getElementById('globalTextStyleForm').addEventListener('input', event => {
+  if(event.target.matches('input[type="color"][data-cs]')) event.target.removeAttribute('data-empty');
+});
+document.getElementById('globalTextStyleForm').addEventListener('click', event => {
+  const reset = event.target.closest('[data-cs-reset]');
+  if(!reset) return;
+  const input = event.currentTarget.querySelector(`input[data-cs="${reset.dataset.csReset}"]`);
+  input.value = reset.dataset.csDefault;
+  input.setAttribute('data-empty', '1');
+});
+document.getElementById('globalTextStyleForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = document.getElementById('globalTextStyleSave');
+  button.disabled = true;
+  setFormNote('globalTextStyleNote', 'Applying...');
+  try{
+    const style = {};
+    form.querySelectorAll('[data-cs]').forEach(input => {
+      if(input.type === 'color' && input.getAttribute('data-empty') === '1') return;
+      const value = input.value.trim();
+      if(value === '') return;
+      const keys = input.dataset.cs.split('.');
+      let target = style;
+      keys.slice(0, -1).forEach(key => { target = (target[key] = target[key] || {}); });
+      target[keys[keys.length - 1]] = input.type === 'number' ? Number(value) : value;
+    });
+    const result = await adminRequest('/design/global-text-style', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ global_text_style: style }),
+    });
+    showGlobalTextStyleSettings(result.design);
+    setFormNote('globalTextStyleNote', 'Applied to all menu items.');
+  }catch(error){
+    setFormNote('globalTextStyleNote', error.message || 'Could not apply the global text style.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+document.getElementById('globalTextStyleReset').addEventListener('click', () => {
+  if(!window.confirm('Reset global name and price styling for every menu item?')) return;
+  showGlobalTextStyleSettings({ global_text_style: {} });
+  document.getElementById('globalTextStyleForm').requestSubmit();
+});
 
 document.getElementById('itemForm').addEventListener('input', event => {
   if(event.target.matches('input[type="color"][data-cs]')) event.target.removeAttribute('data-empty');
@@ -1934,6 +2265,7 @@ function updateLiveMenuPreview(){
 
   const card = document.getElementById('liveMenuCard');
   const cardColor = /^#[0-9a-f]{6}$/i.test(field('card_color')?.value || '') ? field('card_color').value : '#f6f1e6';
+  card.style.setProperty('--pv-card-ratio', String(currentGlobalCardDesign.aspect_ratio || 2.5));
   const percent = (name, fallback, min, max) => {
     const raw = field(name)?.value;
     const value = raw === '' || raw == null ? fallback : Number(raw);
@@ -1969,6 +2301,17 @@ function updateLiveMenuPreview(){
   setVar('--pv-size', cardStyle.size != null ? cardStyle.size / 100 : null);
   setVar('--pv-border-w', cardStyle.border_w != null ? `${cardStyle.border_w}px` : null);
   setVar('--pv-border-color', cardStyle.border_color);
+  setVar('--pv-food-height', cardStyle.food_height != null ? `${cardStyle.food_height}%` : null);
+  setVar('--pv-food-overlap', cardStyle.food_overlap != null ? `${cardStyle.food_overlap}%` : null);
+  setVar('--pv-card-gap', cardStyle.card_gap);
+  setVar('--pv-padding-top', cardStyle.padding_top);
+  setVar('--pv-padding-side', cardStyle.padding_side);
+  setVar('--pv-padding-bottom', cardStyle.padding_bottom);
+  setVar('--pv-radius', cardStyle.radius != null ? `${cardStyle.radius}px` : null);
+  setVar('--pv-add-bg', cardStyle.add_bg);
+  setVar('--pv-add-color', cardStyle.add_color);
+  setVar('--pv-add-radius', cardStyle.add_radius != null ? `${cardStyle.add_radius}px` : null);
+  setVar('--pv-add-font-scale', cardStyle.add_font_scale != null ? cardStyle.add_font_scale / 100 : null);
   const languageStyle = style[activeLanguage] || {};
   for(const part of ['name', 'price']){
     const rule = languageStyle[part] || {};
@@ -1981,12 +2324,25 @@ function updateLiveMenuPreview(){
   refreshDisplayOrderWarning();
 }
 
+function fillItemStyleWithGlobal(){
+  const form = document.getElementById('itemForm');
+  for(const [field, value] of Object.entries(currentGlobalCardDesign.layout || {})){
+    const input = form.querySelector(`[name="${field}"]`);
+    if(input) input.value = value;
+  }
+  const style = JSON.parse(JSON.stringify(currentGlobalTextStyle || {}));
+  style.card = { ...(style.card || {}), ...(currentGlobalCardDesign.card || {}) };
+  fillCardStyle(style);
+  updateLiveMenuPreview();
+}
+
 function resetItemForm(){
   const form = document.getElementById('itemForm');
   form.reset();
   setActiveLanguage(form, 'en');
   document.getElementById('itemId').value = '';
   fillCardStyle(null);
+  fillItemStyleWithGlobal();
   renderCategoryOptions();
   document.getElementById('itemFormTitle').textContent = adminText('newMenuItem');
   document.getElementById('itemSubmit').textContent = adminText('createMenuItem');
@@ -2043,6 +2399,10 @@ document.getElementById('itemForm').addEventListener('submit', async event => {
 });
 
 document.getElementById('itemCancel').addEventListener('click', resetItemForm);
+document.getElementById('itemResetDesign').addEventListener('click', () => {
+  fillItemStyleWithGlobal();
+  setFormNote('itemNote', 'Card reset to global settings. Save this item to keep the changes.');
+});
 document.getElementById('menuRecords').addEventListener('click', async event => {
   const button = event.target.closest('[data-menu-action]');
   if(!button) return;

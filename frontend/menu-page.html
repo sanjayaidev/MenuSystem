@@ -147,11 +147,11 @@
   }
   .cat-chip{
     flex:0 0 auto; scroll-snap-align:start; white-space:nowrap; cursor:pointer;
-    background:var(--surface); color:var(--text); border:var(--chip-line-w,1px) solid var(--chip-line,var(--line)); border-radius:10px;
+    background:var(--chip-fill,var(--surface)); color:var(--text); border:var(--chip-line-w,1px) solid var(--chip-line,var(--line)); border-radius:10px;
     padding:10px 14px; font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); font-weight:var(--bold-categories,600); -webkit-tap-highlight-color:transparent;
     transition:background .15s ease, color .15s ease, border-color .15s ease;
   }
-  .cat-chip.active{background:var(--gold); color:#1a1408; border-color:var(--chip-line,var(--gold));}
+  .cat-chip.active{background:var(--chip-active-fill,var(--gold)); color:#1a1408; border-color:var(--chip-line,var(--gold));}
   .cat-chip:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
   .offer-banner{order:2; display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:8px 16px 10px; padding:0; overflow:hidden; background:var(--gold); color:#1a1408;}
   .offer-banner-copy{grid-row:2; min-width:0; padding:14px 16px;}
@@ -175,7 +175,7 @@
     --card-w:66.6667%;     /* layer 2: how much of the box the card covers */
     --food-overlap:20%;    /* layer 3: how far the food PNG reaches over the card */
     --paper:#f6f1e6; --paper-edge:#e9e0cd; --ornament:#b8975a; --ink:#2b2622;
-    position:relative; display:block; width:100%; aspect-ratio:2.5 / 1; margin:0 0 14px; overflow:hidden;
+    position:relative; display:block; width:100%; aspect-ratio:var(--menu-card-ratio,2.5) / 1; margin:0 0 var(--cs-row-gap,14px); overflow:hidden;
     background:radial-gradient(120% 120% at 25% 30%, #3a2d24 0%, #2a211b 60%, #1d1612 100%);  /* shown until/unless a background image is set: same colour on every card */
     color:var(--ink);
   }
@@ -188,9 +188,10 @@
   .row .card{
     position:absolute; inset-block-start:calc((100% - var(--card-h,100%)) / 2); inset-inline-end:0; z-index:1; width:var(--card-w); height:var(--card-h,100%);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:calc(2.4 * var(--u)); text-align:center;
-    padding:calc(4 * var(--u)) calc(3 * var(--u)) calc(11 * var(--u));
-    padding-inline-start:calc(var(--food-overlap) + 1.5 * var(--u));   /* keep the text clear of the food PNG */
+    gap:calc(var(--cs-card-gap,24) * .1 * var(--u)); text-align:center;
+    padding:calc(var(--cs-padding-top,4) * var(--u)) calc(var(--cs-padding-side,3) * var(--u)) calc(var(--cs-padding-bottom,11) * var(--u));
+    padding-inline-start:calc(var(--cs-food-overlap,var(--food-overlap)) + 1.5 * var(--u));   /* keep the text clear of the food PNG */
+    border-radius:var(--cs-radius,0px);
     background:
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .25  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
       radial-gradient(120% 90% at 50% 40%, #fbf8f0 0%, var(--paper) 55%, var(--paper-edge) 100%);
@@ -231,7 +232,7 @@
   /* layer 3: the box is card-edge + overlap wide, the PNG sits against its card-side edge, taps pass through to .open */
   .row .food{
     position:absolute; z-index:2; pointer-events:none;
-    inset-block:5%; inset-inline-start:0; width:calc(100% - var(--card-w) + var(--food-overlap));
+    inset-block-start:calc((100% - var(--cs-food-height,90%)) / 2); inset-inline-start:0; width:calc(100% - var(--card-w) + var(--food-overlap)); height:var(--cs-food-height,90%);
     display:flex; align-items:flex-end; justify-content:flex-end;
     transform:translate(var(--food-x,0%),var(--food-y,0%)) scale(calc(var(--food-scale,1) * var(--food-width,1)), var(--food-scale,1)); transform-origin:bottom right;
   }
@@ -255,9 +256,9 @@
   .row .add{
     position:absolute; inset-inline-end:calc(2.4 * var(--u)); bottom:calc(2.4 * var(--u)); z-index:4;
     display:flex; align-items:center; gap:calc(1.4 * var(--u)); border:0; cursor:pointer;
-    background:var(--gold); color:#1a1408;
+    background:var(--cs-add-bg,var(--gold)); color:var(--cs-add-color,#1a1408); border-radius:var(--cs-add-radius,0px);
     padding:max(9px, calc(1.3 * var(--u))) max(10px, calc(2.2 * var(--u)));
-    font-family:var(--cs-font,inherit); font-weight:var(--bold-add,600); font-size:calc(max(11px, calc(1.9 * var(--u) + 2pt)) + var(--lang-add,0px)); line-height:1;
+    font-family:var(--cs-font,inherit); font-weight:var(--bold-add,600); font-size:calc((max(11px, calc(1.9 * var(--u) + 2pt)) + var(--lang-add,0px)) * var(--cs-add-font-scale,1)); line-height:1;
     box-shadow:0 calc(.3 * var(--u)) calc(1 * var(--u)) rgba(0,0,0,.3);
     /* Admin: Add to cart button - size, move left / right, move up / down (0 = the normal place) */
     transform:translate(calc(var(--add-x,0) * var(--dir,1) * var(--u)), calc(var(--add-y,0) * .4 * var(--u))) scale(var(--add-scale,1)); transform-origin:right bottom;
@@ -938,9 +939,12 @@ let VIDEO_MANIFEST = { heroUrl:null, heroPosterUrl:null };
 
 async function loadMenuDesign(){
   try{
-    const response = await fetch(`${API_BASE}/api/design`, { cache:'no-store' });
-    if(!response.ok) return;
-    const { design = {} } = await response.json();
+    let design = window.__MENU_SSR__?.design;
+    if(!design){
+      const response = await fetch(`${API_BASE}/api/design`, { cache:'no-store' });
+      if(!response.ok) return;
+      design = (await response.json()).design || {};
+    }
     MENU_FOOD_BG_URL = safeImgUrl(design.food_bg_url) || '';
     const families = {
       cinzel: "'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif",
@@ -963,6 +967,17 @@ async function loadMenuDesign(){
     root.setProperty('--menu-font-family', family);
     root.setProperty('--menu-font-scale', String((Number(design.font_size) || 14) / 4.375));
     if(/^#[0-9a-f]{6}$/i.test(design.font_color || '')) root.setProperty('--menu-font-color', design.font_color);
+    const logoUrl = safeImgUrl(design.logo_url);
+    const logo = document.getElementById('logoImg');
+    if(logo){
+      logo.src = logoUrl || 'images/rhclogo.png';
+      logo.style.display = '';
+      document.getElementById('logoFallback').style.display = 'none';
+    }
+    const aspectRatio = Number(design.global_card_design?.aspect_ratio);
+    if(Number.isFinite(aspectRatio) && aspectRatio >= 1.5 && aspectRatio <= 4) root.setProperty('--menu-card-ratio', String(aspectRatio));
+    if(/^#[0-9a-f]{6}$/i.test(design.chip_fill_color || '')) root.setProperty('--chip-fill', design.chip_fill_color);
+    if(/^#[0-9a-f]{6}$/i.test(design.chip_active_color || '')) root.setProperty('--chip-active-fill', design.chip_active_color);
     // Admin > Menu design > Category boxes and bold text
     if(/^#[0-9a-f]{6}$/i.test(design.chip_outline_color || '')){
       root.setProperty('--chip-line', design.chip_outline_color);
@@ -1010,6 +1025,26 @@ function cardStyleVars(style, code){
   const borderW = int(card.border_w, 0, 8);
   if(borderW != null) out.push(`--cs-border-w:${borderW}px`);
   if(color(card.border_color)) out.push(`--cs-border-color:${card.border_color}`);
+  const foodHeight = int(card.food_height, 50, 100);
+  if(foodHeight != null) out.push(`--cs-food-height:${foodHeight}%`);
+  const foodOverlap = int(card.food_overlap, 0, 40);
+  if(foodOverlap != null) out.push(`--cs-food-overlap:${foodOverlap}%`);
+  const rowGap = int(card.row_gap, 0, 40);
+  if(rowGap != null) out.push(`--cs-row-gap:${rowGap}px`);
+  const cardGap = int(card.card_gap, 0, 100);
+  if(cardGap != null) out.push(`--cs-card-gap:${cardGap}`);
+  for(const [field, minimum, maximum, cssVar, unit] of [
+    ['padding_top', 0, 15, '--cs-padding-top', ''], ['padding_side', 0, 15, '--cs-padding-side', ''],
+    ['padding_bottom', 0, 20, '--cs-padding-bottom', ''], ['radius', 0, 24, '--cs-radius', 'px'],
+    ['add_radius', 0, 24, '--cs-add-radius', 'px'],
+  ]){
+    const value = int(card[field], minimum, maximum);
+    if(value != null) out.push(`${cssVar}:${value}${unit}`);
+  }
+  if(color(card.add_bg)) out.push(`--cs-add-bg:${card.add_bg}`);
+  if(color(card.add_color)) out.push(`--cs-add-color:${card.add_color}`);
+  const addFontScale = int(card.add_font_scale, 50, 200);
+  if(addFontScale != null) out.push(`--cs-add-font-scale:${addFontScale / 100}`);
   const mine = style[code] || {};
   for(const part of ['name', 'price']){
     const rule = mine[part] || {};
@@ -1562,15 +1597,21 @@ document.addEventListener('keydown', (e)=>{
 /* ---------- load categories + menu items from the real backend ---------- */
 async function loadMenuData(){
   try{
-    const [catsRes, itemsRes] = await Promise.all([
-      fetch(`${API_BASE}/api/categories`),
-      fetch(`${API_BASE}/api/menu`),
-    ]);
-    if(!catsRes.ok) throw new Error(`GET /api/categories failed (${catsRes.status})`);
-    if(!itemsRes.ok) throw new Error(`GET /api/menu failed (${itemsRes.status})`);
-
-    const cats = await catsRes.json();
-    const items = await itemsRes.json();
+    let cats;
+    let items;
+    if(window.__MENU_SSR__){
+      cats = window.__MENU_SSR__.categories || [];
+      items = window.__MENU_SSR__.items || [];
+    }else{
+      const [catsRes, itemsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/categories`),
+        fetch(`${API_BASE}/api/menu`),
+      ]);
+      if(!catsRes.ok) throw new Error(`GET /api/categories failed (${catsRes.status})`);
+      if(!itemsRes.ok) throw new Error(`GET /api/menu failed (${itemsRes.status})`);
+      cats = await catsRes.json();
+      items = await itemsRes.json();
+    }
 
     CATS = cats.map(c => ({
       key: c.key,
@@ -2230,6 +2271,7 @@ Payment: confirmed (simulated)`;
  (async function init(){
 //~   await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
   await Promise.all([loadMenuData(), loadMenuDesign(), loadConfig(), loadContact()]);   // SPECIAL-PAUSED: loadSpecialData() left out
+  delete window.__MENU_SSR__;
   if(authToken){
     await loadCartFromServer();
   }else{

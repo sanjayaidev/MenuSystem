@@ -1012,6 +1012,20 @@ async function loadConfig(){
   }
 }
 
+async function loadBranding(){
+  try{
+    const response = await fetch(`${API_BASE}/api/design`, { cache:'no-store' });
+    if(!response.ok) return;
+    const { design = {} } = await response.json();
+    const logo = document.getElementById('logoImg');
+    const fallback = document.getElementById('logoFallback');
+    const url = typeof design.logo_url === 'string' && /^https?:\/\//i.test(design.logo_url) ? design.logo_url : 'images/rhclogo.png';
+    logo.src = url;
+    logo.style.display = '';
+    fallback.style.display = 'none';
+  }catch(error){ console.warn('Could not load site branding:', error); }
+}
+
 /* ---------- contact details (call button) ---------- */
 // Editable from the admin "Contact" tab; served by GET /api/contact.
 let CONTACT = { phone:'', address:'' };
@@ -1654,7 +1668,7 @@ Payment: confirmed (simulated)`;
 }
 
 (async function init(){
-  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);
+  await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact(), loadBranding()]);
   if(authToken){
     await loadCartFromServer();
   }else{

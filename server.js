@@ -17,6 +17,7 @@ const contactRoutes = require('./routes/contact');
 const musicRoutes = require('./routes/music');
 const posterRoutes = require('./routes/poster');
 const designRoutes = require('./routes/design');
+const { renderMenuPage } = require('./routes/menu-page-ssr');
 
 const app = express();
 
@@ -62,17 +63,20 @@ app.use(express.json());
 // straight into the HTML so there is no flash of the default image. Must be registered before
 // express.static so /menu-page.html (used by the landing page buttons) is served this way too.
 const MENU_PAGE_FILE = path.join(__dirname, 'frontend', 'menu-page.html');
-const DEFAULT_POSTER_TAG = 'src="images/page2img.jpeg"';
 let menuPageHtml = null;
 
 async function sendMenuPage(req, res) {
+  res.set('Cache-Control', 'no-cache');
   try {
     if (menuPageHtml === null) menuPageHtml = await fs.promises.readFile(MENU_PAGE_FILE, 'utf8');
-    const posterUrl = await posterRoutes.getPosterUrl();
-    const html = posterUrl
-      ? menuPageHtml.replace(DEFAULT_POSTER_TAG, `src="${posterUrl.replace(/"/g, '&quot;')}"`)
-      : menuPageHtml;
-    res.set('Cache-Control', 'no-cache');
+    const [posterUrl, menuData, design] = await Promise.all([
+      posterRoutes.getPosterUrl(),
+      menuRoutes.getInitialData(),
+      designRoutes.getPublicDesign(),
+    ]);
+    const requestedLanguage = String(req.query.lang || '').toLowerCase();
+    const language = ['en', 'ar', 'ur', 'zh'].includes(requestedLanguage) ? requestedLanguage : 'en';
+    const html = renderMenuPage(menuPageHtml, { ...menuData, design, language, posterUrl });
     res.type('html').send(html);
   } catch (error) {
     console.error('Could not serve the menu page:', error.message);

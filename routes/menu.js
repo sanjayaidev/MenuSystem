@@ -72,4 +72,17 @@ router.get('/menu/:id', async (req, res) => {
   res.json(data);
 });
 
+router.getInitialData = async function getInitialData() {
+  const [categories, menu] = await Promise.all([
+    supabase.from('categories').select('*').order('sort_order', { ascending: true }),
+    supabase.from('menu_items')
+      .select('*, categories(key, label_en, label_ar, label_ur, label_zh)')
+      .eq('is_available', true)
+      .order('popularity', { ascending: false }),
+  ]);
+  if (categories.error) throw categories.error;
+  if (menu.error) throw menu.error;
+  return { categories: categories.data || [], items: menu.data || [] };
+};
+
 module.exports = router;

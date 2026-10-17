@@ -100,6 +100,18 @@ function cardStyleValue(raw) {
     size: { type: 'int', min: 50, max: 250, name: 'size (%)' },
     border_w: { type: 'int', min: 0, max: 8, name: 'border width (px)' },
     border_color: { type: 'color' },
+    food_height: { type: 'int', min: 50, max: 100, name: 'food height (%)' },
+    food_overlap: { type: 'int', min: 0, max: 40, name: 'food overlap (%)' },
+    row_gap: { type: 'int', min: 0, max: 40, name: 'gap between cards (px)' },
+    card_gap: { type: 'int', min: 0, max: 100, name: 'name and price gap' },
+    padding_top: { type: 'int', min: 0, max: 15, name: 'top padding (%)' },
+    padding_side: { type: 'int', min: 0, max: 15, name: 'side padding (%)' },
+    padding_bottom: { type: 'int', min: 0, max: 20, name: 'bottom padding (%)' },
+    radius: { type: 'int', min: 0, max: 24, name: 'corner radius (px)' },
+    add_bg: { type: 'color' },
+    add_color: { type: 'color' },
+    add_radius: { type: 'int', min: 0, max: 24, name: 'button corner radius (px)' },
+    add_font_scale: { type: 'int', min: 50, max: 200, name: 'button text size (%)' },
   };
 
   const clean = {};
@@ -211,6 +223,33 @@ function menuItemValues(body = {}) {
   return { values };
 }
 
+async function applyGlobalTextStyleToNewItem(values) {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'menu_design')
+    .maybeSingle();
+  if (error) throw error;
+  const globalStyle = data?.value?.global_text_style;
+  if (!globalStyle || typeof globalStyle !== 'object' || Array.isArray(globalStyle) || !Object.keys(globalStyle).length) return;
+
+  const itemStyle = values.card_style || {};
+  const merged = { ...globalStyle };
+  for (const language of ['en', 'ar', 'zh']) {
+    const itemLanguage = itemStyle[language];
+    if (!itemLanguage || typeof itemLanguage !== 'object') continue;
+    merged[language] = { ...(globalStyle[language] || {}) };
+    for (const part of ['name', 'price']) {
+      if (!itemLanguage[part] || typeof itemLanguage[part] !== 'object') continue;
+      merged[language][part] = { ...(globalStyle[language]?.[part] || {}), ...itemLanguage[part] };
+    }
+  }
+  for (const [key, value] of Object.entries(itemStyle)) {
+    if (!['en', 'ar', 'zh'].includes(key)) merged[key] = value;
+  }
+  values.card_style = merged;
+}
+
 // Every route below requires a signed-in Supabase user whose
 // profiles.is_admin = true (see middleware/auth.js).
 router.use(requireAdmin);
@@ -310,6 +349,7 @@ router.post('/menu', asyncHandler(async (req, res) => {
       if (conflict) return res.status(409).json({ error: conflict });
     }
   }
+  await applyGlobalTextStyleToNewItem(result.values);
   const { data, error } = await supabase
     .from('menu_items')
     .insert(result.values)

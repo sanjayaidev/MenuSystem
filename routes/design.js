@@ -12,7 +12,36 @@ const FONT_TYPES = { '.ttf': 'font/ttf', '.otf': 'font/otf' };
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_FONT_BYTES } });
 const LANGUAGES = ['en', 'ar', 'ur', 'zh'];
 const LANG_FONTS = ['', 'poppins', 'naskh', 'nastaliq', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
+const ITEM_STYLE_LANGUAGES = ['en', 'ar', 'zh'];
+const ITEM_STYLE_FONTS = ['poppins', 'naskh', 'nastaliq', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
 const MAX_INCLUDES_LENGTH = 300;
+const DEFAULT_GLOBAL_CARD_DESIGN = {
+  aspect_ratio: 2.5,
+  layout: {
+    food_scale: 100, food_width: 100, food_x: 0, food_y: 0,
+    bg_x: 50, bg_y: 50, bg_scale: 100,
+    card_width: 67, card_height: 100, card_color: '#f6f1e6',
+    add_scale: 100, add_x: 0, add_y: 0,
+  },
+  card: {
+    font: '', size: 100, border_w: 1, border_color: '#b8975a',
+    food_height: 90, food_overlap: 20, row_gap: 14, card_gap: 24,
+    padding_top: 4, padding_side: 3, padding_bottom: 11, radius: 0,
+    add_bg: '#e3b23c', add_color: '#1a1408', add_radius: 0, add_font_scale: 100,
+  },
+};
+const GLOBAL_CARD_LAYOUT_RULES = {
+  food_scale: [50, 150], food_width: [50, 150], food_x: [-50, 50], food_y: [-50, 50],
+  bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200],
+  card_width: [40, 85], card_height: [60, 100],
+  add_scale: [50, 150], add_x: [-50, 50], add_y: [-50, 50],
+};
+const GLOBAL_CARD_NUMBER_RULES = {
+  size: [50, 250], border_w: [0, 8], food_height: [50, 100], food_overlap: [0, 40],
+  row_gap: [0, 40], card_gap: [0, 100], padding_top: [0, 15], padding_side: [0, 15],
+  padding_bottom: [0, 20], radius: [0, 24], add_radius: [0, 24], add_font_scale: [50, 200],
+};
+const GLOBAL_CARD_DESIGN_FIELDS = Object.keys(DEFAULT_GLOBAL_CARD_DESIGN.card);
 // size_add = extra px added to every font size on the menu page for that language; font '' = the built-in font for the language.
 // Arabic starts 2 px bigger (13/10/2026 request).
 const DEFAULT_LANG_STYLE = {
@@ -24,11 +53,15 @@ const DEFAULT_LANG_STYLE = {
 const DEFAULTS = {
   font_style: 'cinzel', font_size: 14, font_color: '#2b2622', font_path: '', font_url: '',
   lang_style: DEFAULT_LANG_STYLE,
+  global_text_style: {},
+  global_card_design: DEFAULT_GLOBAL_CARD_DESIGN,
+  logo_url: '',
   // empty = the translated text built into the menu page ("Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water")
   includes_text: { en: '', ar: '', ur: '', zh: '' },
   // 16/10/2026: outline around the category boxes ('' = the normal thin grey line) and bold on / off per text.
   // bold = {} means nothing was saved yet, so the menu page keeps its original look.
   chip_outline_color: '', chip_outline_width: 1,
+  chip_fill_color: '#1c1a18', chip_active_color: '#e3b23c',
   bold: {},
 };
 const BOLD_KEYS = ['name', 'price', 'add_to_cart', 'categories', 'description', 'includes'];
@@ -48,9 +81,160 @@ async function writeDesign(value) {
   if (error) throw error;
 }
 
+router.getPublicDesign = async function getPublicDesign() {
+  const { font_path, ...design } = await readDesign();
+  return design;
+};
+
+function globalTextStyleValue(raw) {
+  if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Global text style is not valid.' };
+  const clean = {};
+  for (const language of ITEM_STYLE_LANGUAGES) {
+    const languageStyle = raw[language];
+    if (languageStyle == null) continue;
+    if (typeof languageStyle !== 'object' || Array.isArray(languageStyle)) return { error: 'Global text style is not valid.' };
+    const languageValue = {};
+    for (const part of ['name', 'price']) {
+      const rule = languageStyle[part];
+      if (rule == null) continue;
+      if (typeof rule !== 'object' || Array.isArray(rule)) return { error: 'Global text style is not valid.' };
+      const partValue = {};
+      for (const [field, value] of Object.entries(rule)) {
+        if (!['font', 'size', 'color', 'x', 'y'].includes(field) || value == null || value === '') continue;
+        if (field === 'font') {
+          if (typeof value !== 'string' || !ITEM_STYLE_FONTS.includes(value)) return { error: `${language.toUpperCase()} ${part}: choose a valid font.` };
+          partValue.font = value;
+        } else if (field === 'color') {
+          if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value)) return { error: `${language.toUpperCase()} ${part}: choose a valid color.` };
+          partValue.color = value.toLowerCase();
+        } else {
+          const limits = field === 'size' ? [50, 250] : [-50, 50];
+          const number = Number(value);
+          if (!Number.isInteger(number) || number < limits[0] || number > limits[1]) {
+            return { error: `${language.toUpperCase()} ${part}: ${field} must be a whole number between ${limits[0]} and ${limits[1]}.` };
+          }
+          partValue[field] = number;
+        }
+      }
+      if (Object.keys(partValue).length) languageValue[part] = partValue;
+    }
+    if (Object.keys(languageValue).length) clean[language] = languageValue;
+  }
+  return { value: clean };
+}
+
+function globalCardDesignValue(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Global card design is not valid.' };
+  const layout = { ...DEFAULT_GLOBAL_CARD_DESIGN.layout };
+  for (const [field, limits] of Object.entries(GLOBAL_CARD_LAYOUT_RULES)) {
+    const value = Number(raw.layout?.[field]);
+    if (!Number.isInteger(value) || value < limits[0] || value > limits[1]) {
+      return { error: `${field} must be a whole number between ${limits[0]} and ${limits[1]}.` };
+    }
+    layout[field] = value;
+  }
+  const cardColor = raw.layout?.card_color;
+  if (typeof cardColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(cardColor)) {
+    return { error: 'Choose a valid card color.' };
+  }
+  layout.card_color = cardColor.toLowerCase();
+
+  const aspectRatio = Number(raw.aspect_ratio);
+  if (!Number.isFinite(aspectRatio) || aspectRatio < 1.5 || aspectRatio > 4) {
+    return { error: 'Card aspect ratio must be between 1.5 and 4.' };
+  }
+  const card = { ...DEFAULT_GLOBAL_CARD_DESIGN.card };
+  card.font = typeof raw.card?.font === 'string' ? raw.card.font : '';
+  if (card.font && !ITEM_STYLE_FONTS.includes(card.font)) return { error: 'Choose a valid card font.' };
+  for (const [field, limits] of Object.entries(GLOBAL_CARD_NUMBER_RULES)) {
+    const value = Number(raw.card?.[field]);
+    if (!Number.isInteger(value) || value < limits[0] || value > limits[1]) {
+      return { error: `${field} must be a whole number between ${limits[0]} and ${limits[1]}.` };
+    }
+    card[field] = value;
+  }
+  for (const field of ['border_color', 'add_bg', 'add_color']) {
+    const value = raw.card?.[field];
+    if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value)) return { error: `Choose a valid ${field.replace('_', ' ')}.` };
+    card[field] = value.toLowerCase();
+  }
+  return { value: { aspect_ratio: Math.round(aspectRatio * 10) / 10, layout, card } };
+}
+
+async function applyGlobalCardDesign(cardDesign) {
+  const pageSize = 100;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data: items, error } = await supabase
+      .from('menu_items')
+      .select('id, card_style')
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    if (!items.length) break;
+
+    const results = await Promise.all(items.map(async item => {
+      const style = item.card_style && typeof item.card_style === 'object' && !Array.isArray(item.card_style)
+        ? JSON.parse(JSON.stringify(item.card_style))
+        : {};
+      const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
+      for (const field of GLOBAL_CARD_DESIGN_FIELDS) delete card[field];
+      for (const [field, value] of Object.entries(cardDesign.card)) {
+        if (field !== 'font' || value) card[field] = value;
+      }
+      style.card = card;
+      const { error: updateError } = await supabase.from('menu_items').update({
+        ...cardDesign.layout,
+        card_style: style,
+      }).eq('id', item.id);
+      return updateError;
+    }));
+    const updateError = results.find(Boolean);
+    if (updateError) throw updateError;
+    if (items.length < pageSize) break;
+  }
+}
+
+async function applyGlobalTextStyle(globalStyle) {
+  const pageSize = 100;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data: items, error } = await supabase
+      .from('menu_items')
+      .select('id, card_style')
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    if (!items.length) break;
+
+    const results = await Promise.all(items.map(async item => {
+      const style = item.card_style && typeof item.card_style === 'object' && !Array.isArray(item.card_style)
+        ? JSON.parse(JSON.stringify(item.card_style))
+        : {};
+      for (const language of ITEM_STYLE_LANGUAGES) {
+        const languageStyle = style[language] && typeof style[language] === 'object' ? style[language] : {};
+        for (const part of ['name', 'price']) {
+          const partStyle = languageStyle[part] && typeof languageStyle[part] === 'object' ? { ...languageStyle[part] } : {};
+          for (const field of ['font', 'size', 'color', 'x', 'y']) delete partStyle[field];
+          Object.assign(partStyle, globalStyle[language]?.[part] || {});
+          if (Object.keys(partStyle).length) languageStyle[part] = partStyle;
+          else delete languageStyle[part];
+        }
+        if (Object.keys(languageStyle).length) style[language] = languageStyle;
+        else delete style[language];
+      }
+      const { error: updateError } = await supabase.from('menu_items').update({
+        card_style: Object.keys(style).length ? style : null,
+      }).eq('id', item.id);
+      return updateError;
+    }));
+    const updateError = results.find(Boolean);
+    if (updateError) throw updateError;
+    if (items.length < pageSize) break;
+  }
+}
+
 router.get('/design', async (req, res) => {
   try {
-    const { font_path, ...design } = await readDesign();
+    const design = await router.getPublicDesign();
     res.set('Cache-Control', 'no-store').json({ design });
   } catch (error) {
     console.error('Could not read menu design settings:', error.message);
@@ -127,9 +311,63 @@ router.put('/admin/design/languages', requireAdmin, async (req, res) => {
   }
 });
 
+router.put('/admin/design/global-text-style', requireAdmin, async (req, res) => {
+  const result = globalTextStyleValue(req.body?.global_text_style);
+  if (result.error) return res.status(400).json({ error: result.error });
+  try {
+    const design = await readDesign();
+    await applyGlobalTextStyle(result.value);
+    design.global_text_style = result.value;
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not apply global dish text style:', error.message);
+    const message = /card_style/.test(`${error.message || ''} ${error.details || ''}`)
+      ? 'The database has no card_style column yet. Run db/01_tables.sql in the Supabase SQL Editor, then apply the global style again.'
+      : 'Could not apply the global text style to all menu items.';
+    res.status(500).json({ error: message });
+  }
+});
+
+router.put('/admin/design/global-card', requireAdmin, async (req, res) => {
+  const result = globalCardDesignValue(req.body?.global_card_design);
+  if (result.error) return res.status(400).json({ error: result.error });
+  try {
+    const design = await readDesign();
+    await applyGlobalCardDesign(result.value);
+    design.global_card_design = result.value;
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not apply global card design:', error.message);
+    const message = /card_style/.test(`${error.message || ''} ${error.details || ''}`)
+      ? 'The database has no card_style column yet. Run db/01_tables.sql in the Supabase SQL Editor, then apply the global card design again.'
+      : 'Could not apply the global card design to all menu items.';
+    res.status(500).json({ error: message });
+  }
+});
+
+router.put('/admin/design/branding', requireAdmin, async (req, res) => {
+  const logoUrl = typeof req.body?.logo_url === 'string' ? req.body.logo_url.trim() : '';
+  if (logoUrl && (logoUrl.length > 2000 || !/^https?:\/\//i.test(logoUrl))) {
+    return res.status(400).json({ error: 'Logo must be a valid http:// or https:// image URL.' });
+  }
+  try {
+    const design = await readDesign();
+    design.logo_url = logoUrl;
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not save site logo:', error.message);
+    res.status(500).json({ error: 'Could not save the site logo.' });
+  }
+});
+
 // Category box outline (any colour) and bold text on / off.
 router.put('/admin/design/style', requireAdmin, async (req, res) => {
   const color = typeof req.body?.chip_outline_color === 'string' ? req.body.chip_outline_color.trim() : '';
+  const fillColor = typeof req.body?.chip_fill_color === 'string' ? req.body.chip_fill_color.trim() : '#1c1a18';
+  const activeColor = typeof req.body?.chip_active_color === 'string' ? req.body.chip_active_color.trim() : '#e3b23c';
   const width = Number(req.body?.chip_outline_width);
   if (color && !/^#[0-9a-f]{6}$/i.test(color)) {
     return res.status(400).json({ error: 'Choose a valid outline color.' });
@@ -137,11 +375,20 @@ router.put('/admin/design/style', requireAdmin, async (req, res) => {
   if (!Number.isInteger(width) || width < 1 || width > 4) {
     return res.status(400).json({ error: 'Outline thickness must be a whole number from 1 to 4 px.' });
   }
+  if (!/^#[0-9a-f]{6}$/i.test(fillColor) || !/^#[0-9a-f]{6}$/i.test(activeColor)) {
+    return res.status(400).json({ error: 'Choose valid category fill colors.' });
+  }
   const bold = {};
   for (const key of BOLD_KEYS) bold[key] = req.body?.bold?.[key] === true;
   try {
     const design = await readDesign();
-    Object.assign(design, { chip_outline_color: color, chip_outline_width: width, bold });
+    Object.assign(design, {
+      chip_outline_color: color,
+      chip_outline_width: width,
+      chip_fill_color: fillColor.toLowerCase(),
+      chip_active_color: activeColor.toLowerCase(),
+      bold,
+    });
     await writeDesign(design);
     res.json({ design });
   } catch (error) {
