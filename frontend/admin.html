@@ -1990,20 +1990,20 @@ function buildGlobalCardControls(){
   const layout = GLOBAL_CARD_DEFAULTS.layout;
   document.getElementById('globalCardGeometry').innerHTML =
     globalLayoutField('aspect_ratio', 'Card width-to-height ratio', 1.5, 4, GLOBAL_CARD_DEFAULTS.aspect_ratio, 0.1) +
-    globalLayoutField('food_scale', 'Food size (%)', 50, 150, layout.food_scale) +
-    globalLayoutField('food_width', 'Food width (%)', 50, 150, layout.food_width) +
-    globalLayoutField('food_height', 'Food height (%)', 50, 100, GLOBAL_CARD_DEFAULTS.card.food_height) +
-    globalLayoutField('food_x', 'Food move left / right (%)', -50, 50, layout.food_x) +
-    globalLayoutField('food_y', 'Food move up / down (%)', -50, 50, layout.food_y) +
-    globalLayoutField('bg_scale', 'Background image size (%)', 100, 200, layout.bg_scale) +
-    globalLayoutField('bg_x', 'Background image left / right (0-100)', 0, 100, layout.bg_x) +
-    globalLayoutField('bg_y', 'Background image up / down (0-100)', 0, 100, layout.bg_y) +
-    globalLayoutField('card_width', 'Text card width (%)', 40, 85, layout.card_width) +
-    globalLayoutField('card_height', 'Text card height (%)', 60, 100, layout.card_height) +
+    globalLayoutField('layout.food_scale', 'Food size (%)', 50, 150, layout.food_scale) +
+    globalLayoutField('layout.food_width', 'Food width (%)', 50, 150, layout.food_width) +
+    globalLayoutField('card.food_height', 'Food height (%)', 50, 100, GLOBAL_CARD_DEFAULTS.card.food_height) +
+    globalLayoutField('layout.food_x', 'Food move left / right (%)', -50, 50, layout.food_x) +
+    globalLayoutField('layout.food_y', 'Food move up / down (%)', -50, 50, layout.food_y) +
+    globalLayoutField('layout.bg_scale', 'Background image size (%)', 100, 200, layout.bg_scale) +
+    globalLayoutField('layout.bg_x', 'Background image left / right (0-100)', 0, 100, layout.bg_x) +
+    globalLayoutField('layout.bg_y', 'Background image up / down (0-100)', 0, 100, layout.bg_y) +
+    globalLayoutField('layout.card_width', 'Text card width (%)', 40, 85, layout.card_width) +
+    globalLayoutField('layout.card_height', 'Text card height (%)', 60, 100, layout.card_height) +
     globalColorField('layout.card_color', 'Text card color', layout.card_color) +
-    globalLayoutField('add_scale', 'Add to cart size (%)', 50, 150, layout.add_scale) +
-    globalLayoutField('add_x', 'Add to cart move left / right (%)', -50, 50, layout.add_x) +
-    globalLayoutField('add_y', 'Add to cart move up / down (%)', -50, 50, layout.add_y);
+    globalLayoutField('layout.add_scale', 'Add to cart size (%)', 50, 150, layout.add_scale) +
+    globalLayoutField('layout.add_x', 'Add to cart move left / right (%)', -50, 50, layout.add_x) +
+    globalLayoutField('layout.add_y', 'Add to cart move up / down (%)', -50, 50, layout.add_y);
 
   const card = GLOBAL_CARD_DEFAULTS.card;
   document.getElementById('globalCardSurface').innerHTML =
@@ -3018,7 +3018,7 @@ document.getElementById('musicCards').addEventListener('change', async event => 
 function contactErrorText(message){
   const known = [
     ['valid phone number', 'cdInvalidPhone'],
-    ['Address is required', 'cdInvalidAddress'],
+    ['Enter an address or a map link', 'cdInvalidAddress'],
     ['site_settings table is missing', 'cdTableMissing'],
   ];
   const hit = known.find(([text]) => (message || '').includes(text));
