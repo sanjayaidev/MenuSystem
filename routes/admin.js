@@ -359,6 +359,140 @@ router.post('/menu', asyncHandler(async (req, res) => {
   res.status(201).json({ item: data });
 }));
 
+const MENU_STYLE_LAYOUT_RULES = {
+  background: { bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200] },
+  'white-card': { card_width: [40, 85], card_height: [60, 100] },
+  price: { price_x: [-50, 50], price_y: [-50, 50] },
+};
+const WHITE_CARD_STYLE_FIELDS = ['border_w', 'border_color', 'food_overlap', 'row_gap', 'card_gap', 'padding_top', 'padding_side', 'padding_bottom', 'radius'];
+
+function menuItemStyleObject(raw) {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return JSON.parse(JSON.stringify(raw));
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch { /* malformed legacy style: start with an empty style */ }
+  }
+  return {};
+}
+
+function replaceStyleFields(target, source, fields) {
+  for (const field of fields) delete target[field];
+  for (const field of fields) {
+    if (source && source[field] != null && source[field] !== '') target[field] = source[field];
+  }
+}
+
+function menuStyleApplyValues(section, language, design) {
+  const layout = {};
+  const style = {};
+  const allowedLayout = MENU_STYLE_LAYOUT_RULES[section] || {};
+  for (const [field, limits] of Object.entries(allowedLayout)) {
+    const value = Number(design?.[field]);
+    if (!Number.isInteger(value) || value < limits[0] || value > limits[1]) {
+      return { error: `${field} must be a whole number between ${limits[0]} and ${limits[1]}.` };
+    }
+    layout[field] = value;
+  }
+
+  if (section === 'white-card') {
+    const color = design?.card_color;
+    if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) return { error: 'Choose a valid white card color.' };
+    layout.card_color = color.toLowerCase();
+    const candidate = { card: {} };
+    for (const field of WHITE_CARD_STYLE_FIELDS) candidate.card[field] = design?.card_style?.card?.[field];
+    const result = cardStyleValue(candidate);
+    if (result.error) return { error: result.error };
+    style.card = result.value?.card || {};
+  } else if (section === 'overall-font') {
+    const candidate = { card: { font: design?.card_style?.card?.font, size: design?.card_style?.card?.size } };
+    const result = cardStyleValue(candidate);
+    if (result.error) return { error: result.error };
+    style.card = result.value?.card || {};
+  } else if (section === 'name' || section === 'price') {
+    if (!STYLE_LANGUAGES.includes(language)) return { error: 'Choose a valid text language.' };
+    const candidate = { [language]: { [section]: design?.card_style?.[language]?.[section] || {} } };
+    const result = cardStyleValue(candidate);
+    if (result.error) return { error: result.error };
+    style[language] = result.value?.[language]?.[section] || {};
+  } else if (section !== 'background') {
+    return { error: 'Choose a valid formatting section.' };
+  }
+  return { value: { layout, style } };
+}
+
+async function applyMenuStyleToOtherItems(sourceId, section, language, values) {
+  const pageSize = 100;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data: items, error } = await supabase
+      .from('menu_items')
+      .select(section === 'background' ? 'id' : 'id, card_style')
+      .neq('id', sourceId)
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    if (!items.length) break;
+
+    const results = await Promise.all(items.map(async item => {
+      const update = { ...values.layout };
+      if (Object.keys(values.style).length) {
+        const style = menuItemStyleObject(item.card_style);
+        if (section === 'white-card') {
+          const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
+          replaceStyleFields(card, values.style.card, WHITE_CARD_STYLE_FIELDS);
+          if (Object.keys(card).length) style.card = card;
+          else delete style.card;
+        } else if (section === 'overall-font') {
+          const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
+          replaceStyleFields(card, values.style.card, ['font', 'size']);
+          if (Object.keys(card).length) style.card = card;
+          else delete style.card;
+        } else {
+          const languageStyle = style[language] && typeof style[language] === 'object' ? { ...style[language] } : {};
+          const sectionStyle = values.style[language][section];
+          if (Object.keys(sectionStyle).length) languageStyle[section] = sectionStyle;
+          else delete languageStyle[section];
+          if (Object.keys(languageStyle).length) style[language] = languageStyle;
+          else delete style[language];
+        }
+        update.card_style = Object.keys(style).length ? style : null;
+      }
+      const { error: updateError } = await supabase.from('menu_items').update(update).eq('id', item.id);
+      return updateError;
+    }));
+    const updateError = results.find(Boolean);
+    if (updateError) throw updateError;
+    if (items.length < pageSize) break;
+  }
+}
+
+// Copy one formatting group from the current item to every other menu item.
+router.put('/menu/apply-style', asyncHandler(async (req, res) => {
+  const sourceId = req.body?.source_id;
+  const section = req.body?.section;
+  const language = req.body?.language;
+  if (sourceId == null || sourceId === '') return res.status(400).json({ error: 'Save or select a menu item first.' });
+  const result = menuStyleApplyValues(section, language, req.body?.design || {});
+  if (result.error) return res.status(400).json({ error: result.error });
+
+  const { data: source, error: sourceError } = await supabase.from('menu_items').select('id').eq('id', sourceId).maybeSingle();
+  if (sourceError) return databaseError(res, sourceError, 'Could not find the menu item to copy.');
+  if (!source) return res.status(404).json({ error: 'Save this menu item before applying its formatting to all.' });
+  try {
+    const { count, error } = await supabase.from('menu_items').select('id', { count: 'exact', head: true }).neq('id', sourceId);
+    if (error) throw error;
+    await applyMenuStyleToOtherItems(sourceId, section, language, result.value);
+    res.json({ updated: count || 0 });
+  } catch (error) {
+    console.error('Could not apply menu item formatting:', error.message);
+    const message = /card_style/.test(`${error.message || ''} ${error.details || ''}`)
+      ? 'The database has no card_style column yet. Run db/01_tables.sql in the Supabase SQL Editor, then apply the formatting again.'
+      : 'Could not apply the formatting to all menu items.';
+    res.status(500).json({ error: message });
+  }
+}));
+
 // PATCH /api/admin/menu/:id
 router.patch('/menu/:id', asyncHandler(async (req, res) => {
   const result = menuItemValues(req.body);

@@ -524,6 +524,10 @@
             <label>Card color<input name="card_color" type="color" value="#f6f1e6"></label>
           </div>
           <div class="form-grid compact style-grid" id="cardStyleControls"></div>
+          <p class="field-hint">White card formatting includes its size, color, border, overlap, spacing, padding, and corners. The dish names, prices, and Add to cart styling are not copied.</p>
+          <div class="form-actions"><button class="action-btn" type="button" data-apply-style="white-card">Apply white card formatting to all</button><span class="form-note" id="applyWhiteCardNote" role="status"></span></div>
+          <p class="field-hint">Overall font copies the card-wide font and text scale (including English) to every other item. It does not copy the name or price-specific settings.</p>
+          <div class="form-actions"><button class="action-btn" type="button" data-apply-style="overall-font">Apply overall font style to all</button><span class="form-note" id="applyOverallFontNote" role="status"></span></div>
           <p class="field-hint">A bigger width makes the white card wider and leaves less room for the picture on the left. 67 = normal. Height 100 = the card covers the full height.
             Font sets the starting font for the name, price and Add to cart button. Size (100 = normal) scales the name and price; each language's name and price Size multiplies this scale. Border width 0 hides the line inside the card. Empty = the normal look.</p>
         </fieldset>
@@ -544,6 +548,8 @@
             <label>Move up / down (0 to 100)<input name="bg_y" type="number" min="0" max="100" step="1" value="50"></label>
           </div>
           <p class="field-hint">Only the strip of the picture that is not covered by the white card can be seen. 100 = normal size, 50 = centered.</p>
+          <p class="field-hint">Apply copies only this background picture's size and position. Each menu item keeps its own background photo.</p>
+          <div class="form-actions"><button class="action-btn" type="button" data-apply-style="background">Apply background formatting to all</button><span class="form-note" id="applyBackgroundNote" role="status"></span></div>
         </fieldset>
         <details class="image-advanced">
           <summary data-ui="plainPhotoSummary">Plain product photo URL (optional, fills itself from the Food PNG)</summary>
@@ -2089,6 +2095,10 @@ function buildTextStyleBoxes(){
     <fieldset class="layout-group" data-language-panel="${code}"${code === 'en' ? '' : ' hidden'}>
       <legend>Text style: ${label}</legend>
       <div class="form-grid compact style-grid">${textStylePart(code, 'name', 'Food name')}${textStylePart(code, 'price', 'Food price')}</div>
+      <p class="field-hint">Apply copies only this language's food-name font, size, color, and position to every other item.</p>
+      <div class="form-actions"><button class="action-btn" type="button" data-apply-style="name" data-apply-language="${code}">Apply food name design to all</button><span class="form-note" id="applyName${code}Note" role="status"></span></div>
+      <p class="field-hint">Apply copies this language's food-price design and position to every other item. It does not change the actual price.</p>
+      <div class="form-actions"><button class="action-btn" type="button" data-apply-style="price" data-apply-language="${code}">Apply food price design to all</button><span class="form-note" id="applyPrice${code}Note" role="status"></span></div>
       <p class="field-hint">These settings apply only when the menu is shown in ${label}; use the language buttons above to switch. Size 100 = normal. Plus numbers move right or down, minus numbers move left or up.
         Color: pick one, or press Normal to go back to the menu's own color. Empty box or Normal = the normal look.</p>
     </fieldset>`).join('');
@@ -2171,11 +2181,15 @@ document.getElementById('itemForm').addEventListener('input', event => {
 });
 document.getElementById('itemForm').addEventListener('click', event => {
   const reset = event.target.closest('[data-cs-reset]');
-  if(!reset) return;
-  const input = document.querySelector(`#itemForm input[data-cs="${reset.dataset.csReset}"]`);
-  input.value = reset.dataset.csDefault;
-  input.setAttribute('data-empty', '1');
-  updateLiveMenuPreview();
+  if(reset){
+    const input = document.querySelector(`#itemForm input[data-cs="${reset.dataset.csReset}"]`);
+    input.value = reset.dataset.csDefault;
+    input.setAttribute('data-empty', '1');
+    updateLiveMenuPreview();
+    return;
+  }
+  const applyButton = event.target.closest('[data-apply-style]');
+  if(applyButton) applyItemStyleToAll(applyButton);
 });
 
 // the form's style boxes -> one object (null when everything is empty)
@@ -2191,6 +2205,47 @@ function collectCardStyle(){
     target[keys[keys.length - 1]] = input.type === 'number' ? Number(value) : value;
   });
   return Object.keys(style).length ? style : null;
+}
+async function applyItemStyleToAll(button){
+  const section = button.dataset.applyStyle;
+  const language = button.dataset.applyLanguage || '';
+  const noteId = section === 'white-card' ? 'applyWhiteCardNote'
+    : section === 'overall-font' ? 'applyOverallFontNote'
+      : section === 'background' ? 'applyBackgroundNote'
+        : `apply${section === 'name' ? 'Name' : 'Price'}${language}Note`;
+  const note = document.getElementById(noteId);
+  const sourceId = document.getElementById('itemId').value;
+  if(!sourceId){ setFormNote(noteId, 'Save this menu item before applying its formatting to all.'); return; }
+
+  const labels = {
+    background: 'background size and position', 'white-card': 'white card formatting',
+    'overall-font': 'overall font and text scale', name: `${language.toUpperCase()} food-name design`, price: `${language.toUpperCase()} food-price design and position`,
+  };
+  const otherCount = Math.max(0, menuItems.length - 1);
+  if(!window.confirm(`Apply this item's ${labels[section]} to all ${otherCount} other menu items? Only this formatting section changes; other formatting, food photos, item names and actual prices remain unchanged.`)) return;
+
+  const form = document.getElementById('itemForm');
+  const field = name => form.elements.namedItem(name);
+  const design = {
+    bg_x: Number(field('bg_x').value), bg_y: Number(field('bg_y').value), bg_scale: Number(field('bg_scale').value),
+    card_width: Number(field('card_width').value), card_height: Number(field('card_height').value), card_color: field('card_color').value,
+    price_x: Number(field('price_x').value), price_y: Number(field('price_y').value),
+    card_style: collectCardStyle() || {},
+  };
+  button.disabled = true;
+  setFormNote(noteId, 'Applying to other menu items...');
+  try{
+    const result = await adminRequest('/menu/apply-style', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_id: sourceId, section, language, design }),
+    });
+    setFormNote(noteId, `Applied to ${result.updated} other menu item${result.updated === 1 ? '' : 's'}.`);
+    await loadMenu();
+  }catch(error){
+    setFormNote(noteId, error.message || 'Could not apply this formatting to all menu items.', true);
+  }finally{
+    button.disabled = false;
+  }
 }
 // a saved object -> the form's style boxes (null = all empty)
 function fillCardStyle(style){
