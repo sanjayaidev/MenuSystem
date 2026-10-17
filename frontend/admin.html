@@ -189,7 +189,13 @@
   .translate-bar .action-btn.done{border-color:var(--green); color:var(--green);}
   .records{display:grid; gap:8px;}
   .record{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:7px;}
+  .record.is-dragging{opacity:.45;}
+  .record.drop-before{border-top:2px solid var(--gold);}
+  .record.drop-after{border-bottom:2px solid var(--gold);}
   .record-main{display:flex; align-items:center; gap:12px; min-width:0;}
+  .drag-handle{flex:0 0 32px; width:32px; height:36px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--muted); font:inherit; font-size:18px; cursor:grab; touch-action:none;}
+  .drag-handle:active{cursor:grabbing;}
+  .drag-handle:disabled{opacity:.4; cursor:not-allowed;}
   .record-copy{min-width:0;}
   .record-copy strong{display:block; overflow-wrap:anywhere; font-size:14px;}
   .record-copy small{display:block; margin-top:3px; color:var(--muted); overflow-wrap:anywhere;}
@@ -568,6 +574,7 @@
         </aside>
       </form>
       <div class="toolbar"><span class="count" id="menuResultCount"></span><input class="search-input" id="menuSearch" type="search" placeholder="Search menu items" data-ui-placeholder="searchMenuItems"></div>
+      <p class="field-hint" id="menuReorderNote" role="status"></p>
       <div class="records" id="menuRecords"></div>
     </section>
   </div>
@@ -596,6 +603,8 @@ const ADMIN_UI_STRINGS = {
     cardBgImage:'Card background image (layer 1)', foodPngImage:'Food PNG, transparent (layer 3)',
     foodPngHint:'This is the dish picture everywhere: menu card, details page and cart.', plainPhotoSummary:'Plain product photo URL (optional, fills itself from the Food PNG)',
     saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', searchOrders:'Search order no. or phone', edit:'Edit', delete:'Delete',
+    menuReorderHint:'Drag the grip to reorder all menu items. Clear search to enable dragging.', menuReorderSearch:'Clear search to reorder menu items.',
+    savingMenuOrder:'Saving menu order…', menuOrderSaved:'Menu order saved.', dragMenuItem:'Drag to reorder',
     all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', completed:'Completed', cancelled:'Cancelled',
     orderCount:'{count} orders', orderCountOne:'1 order', paid:'Paid', unpaid:'Unpaid',
     contact:'Contact', items:'Items', deliveryAddressLine:'Delivery — {address}', pickup:'Pickup', subtotal:'Subtotal', total:'Total', payment:'Payment',
@@ -641,6 +650,8 @@ const ADMIN_UI_STRINGS = {
     cardBgImage:'صورة خلفية البطاقة (الطبقة 1)', foodPngImage:'صورة الطعام PNG شفافة (الطبقة 3)',
     foodPngHint:'هذه صورة الطبق في كل مكان: بطاقة القائمة وصفحة التفاصيل والسلة.', plainPhotoSummary:'رابط صورة عادية للمنتج (اختياري، يُملأ تلقائياً من صورة PNG)',
     saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', searchOrders:'بحث برقم الطلب أو الهاتف', edit:'تعديل', delete:'حذف',
+    menuReorderHint:'اسحب المقبض لإعادة ترتيب جميع الأصناف. امسح البحث لتفعيل السحب.', menuReorderSearch:'امسح البحث لإعادة ترتيب الأصناف.',
+    savingMenuOrder:'جارٍ حفظ ترتيب القائمة…', menuOrderSaved:'تم حفظ ترتيب القائمة.', dragMenuItem:'اسحب لإعادة الترتيب',
     all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', completed:'مكتمل', cancelled:'ملغي',
     orderCount:'عدد الطلبات: {count}', orderCountOne:'طلب واحد', paid:'مدفوع', unpaid:'غير مدفوع',
     contact:'التواصل', items:'الأصناف', deliveryAddressLine:'توصيل — {address}', pickup:'استلام', subtotal:'المجموع الفرعي', total:'الإجمالي', payment:'الدفع',
@@ -686,6 +697,8 @@ const ADMIN_UI_STRINGS = {
     cardBgImage:'کارڈ کی پس منظر تصویر (پرت 1)', foodPngImage:'کھانے کی شفاف PNG تصویر (پرت 3)',
     foodPngHint:'یہ ہر جگہ ڈش کی تصویر ہے: مینو کارڈ، تفصیل کا صفحہ اور کارٹ۔', plainPhotoSummary:'سادہ پروڈکٹ تصویر کا لنک (اختیاری، PNG سے خود بھر جاتا ہے)',
     saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', searchOrders:'آرڈر نمبر یا فون سے تلاش کریں', edit:'ترمیم', delete:'حذف',
+    menuReorderHint:'تمام مینو آئٹمز کی ترتیب بدلنے کے لیے ہینڈل کھینچیں۔ ڈریگ فعال کرنے کے لیے تلاش صاف کریں۔', menuReorderSearch:'آئٹمز کی ترتیب بدلنے کے لیے تلاش صاف کریں۔',
+    savingMenuOrder:'مینو کی ترتیب محفوظ ہو رہی ہے…', menuOrderSaved:'مینو کی ترتیب محفوظ ہو گئی۔', dragMenuItem:'ترتیب بدلنے کے لیے کھینچیں',
     all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', completed:'مکمل', cancelled:'منسوخ',
     orderCount:'آرڈرز: {count}', orderCountOne:'ایک آرڈر', paid:'ادا شدہ', unpaid:'غیر ادا شدہ',
     contact:'رابطہ', items:'آئٹمز', deliveryAddressLine:'ڈیلیوری — {address}', pickup:'پک اَپ', subtotal:'ذیلی مجموعہ', total:'کل', payment:'ادائیگی',
@@ -731,6 +744,8 @@ const ADMIN_UI_STRINGS = {
     cardBgImage:'卡片背景图（第 1 层）', foodPngImage:'食物透明 PNG（第 3 层）',
     foodPngHint:'这是菜品在各处使用的图片：菜单卡片、详情页和购物车。', plainPhotoSummary:'普通商品图片链接（可选，自动取自食物 PNG）',
     saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', searchOrders:'按订单号或电话搜索', edit:'编辑', delete:'删除',
+    menuReorderHint:'拖动手柄可调整所有菜单商品顺序。清除搜索后即可拖动。', menuReorderSearch:'清除搜索后即可调整商品顺序。',
+    savingMenuOrder:'正在保存菜单顺序…', menuOrderSaved:'菜单顺序已保存。', dragMenuItem:'拖动以调整顺序',
     all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', completed:'已完成', cancelled:'已取消',
     orderCount:'共 {count} 个订单', orderCountOne:'1 个订单', paid:'已付款', unpaid:'未付款',
     contact:'联系方式', items:'商品', deliveryAddressLine:'配送 — {address}', pickup:'自取', subtotal:'小计', total:'总计', payment:'付款',
@@ -1855,6 +1870,8 @@ function renderMenu(){
   );
   document.getElementById('menuResultCount').textContent = adminText('shownCount', { count: filtered.length });
   refreshDisplayOrderWarning();   // the dish list changed, so a typed number may now clash (or no longer clash)
+  const canReorder = !query;
+  document.getElementById('menuReorderNote').textContent = adminText(canReorder ? 'menuReorderHint' : 'menuReorderSearch');
   const records = document.getElementById('menuRecords');
   if(!filtered.length){
     records.innerHTML = `<div class="empty">${adminText(menuItems.length ? 'noMatchingMenuItems' : 'noMenuItems')}</div>`;
@@ -1869,8 +1886,9 @@ function renderMenu(){
   records.innerHTML = filtered.map(item => {
     const imageUrl = (typeof item.food_png_url === 'string' && item.food_png_url.trim()) || (typeof item.image_path === 'string' ? item.image_path.trim() : '');
     return `
-      <div class="record">
+      <div class="record" data-id="${escapeHtml(item.id)}">
         <div class="record-main">
+          <button class="drag-handle" type="button" data-menu-drag data-id="${escapeHtml(item.id)}" aria-label="${adminText('dragMenuItem')}" title="${adminText('dragMenuItem')}" draggable="${canReorder}" ${canReorder ? '' : 'disabled'}>⋮⋮</button>
           <img class="record-thumb" src="${escapeHtml(imageUrl || 'images/food.png')}" alt="${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en || adminText('menuItemAlt'))}">
           <div class="record-copy">
             <strong>${item.display_order != null ? `<span class="record-badge">#${escapeHtml(item.display_order)}</span> ` : ''}${escapeHtml(item[`name_${adminUiLanguage}`] || item.name_en)}</strong>
@@ -2498,6 +2516,56 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
   }finally{
     button.disabled = false;
   }
+});
+
+let draggedMenuItemId = '';
+let menuOrderBeforeDrag = [];
+const menuRecords = document.getElementById('menuRecords');
+menuRecords.addEventListener('dragstart', event => {
+  const handle = event.target.closest('[data-menu-drag]');
+  if(!handle || document.getElementById('menuSearch').value.trim()) return event.preventDefault();
+  draggedMenuItemId = handle.dataset.id;
+  menuOrderBeforeDrag = [...menuRecords.querySelectorAll('.record')].map(record => record.dataset.id);
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', draggedMenuItemId);
+  handle.closest('.record').classList.add('is-dragging');
+});
+menuRecords.addEventListener('dragover', event => {
+  if(!draggedMenuItemId) return;
+  const target = event.target.closest('.record');
+  const dragged = [...menuRecords.querySelectorAll('.record')].find(record => record.dataset.id === draggedMenuItemId);
+  if(!target || target === dragged) return;
+  event.preventDefault();
+  menuRecords.querySelectorAll('.record').forEach(record => record.classList.remove('drop-before', 'drop-after'));
+  const before = event.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+  target.classList.add(before ? 'drop-before' : 'drop-after');
+  menuRecords.insertBefore(dragged, before ? target : target.nextElementSibling);
+});
+menuRecords.addEventListener('drop', async event => {
+  if(!draggedMenuItemId) return;
+  event.preventDefault();
+  const itemIds = [...menuRecords.querySelectorAll('.record')].map(record => record.dataset.id);
+  if(itemIds.length === menuOrderBeforeDrag.length && itemIds.some((id, index) => id !== menuOrderBeforeDrag[index])){
+    const note = document.getElementById('menuReorderNote');
+    note.textContent = adminText('savingMenuOrder');
+    try{
+      await adminRequest('/menu/reorder', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_ids: itemIds }),
+      });
+      menuItems = menuItems.map(item => ({ ...item, display_order: itemIds.indexOf(String(item.id)) + 1 }));
+      renderMenu();
+      note.textContent = adminText('menuOrderSaved');
+    }catch(error){
+      await loadMenu();
+      document.getElementById('menuReorderNote').textContent = error.message || adminText('failedSave');
+    }
+  }
+});
+menuRecords.addEventListener('dragend', () => {
+  draggedMenuItemId = '';
+  menuOrderBeforeDrag = [];
+  menuRecords.querySelectorAll('.record').forEach(record => record.classList.remove('is-dragging', 'drop-before', 'drop-after'));
 });
 
 document.getElementById('menuSearch').addEventListener('input', renderMenu);

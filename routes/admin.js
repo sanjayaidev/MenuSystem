@@ -322,6 +322,40 @@ router.get('/menu', asyncHandler(async (req, res) => {
   res.json({ items: data });
 }));
 
+// PUT /api/admin/menu/reorder — replace the complete menu order.
+router.put('/menu/reorder', asyncHandler(async (req, res) => {
+  const itemIds = req.body?.item_ids;
+  if (!Array.isArray(itemIds) || itemIds.some(id => !['string', 'number'].includes(typeof id) || String(id).trim() === '')) {
+    return res.status(400).json({ error: 'Provide the complete menu item ID list.' });
+  }
+
+  const { data: items, error: loadError } = await supabase.from('menu_items').select('id, display_order');
+  if (loadError) return databaseError(res, loadError, 'Failed to load menu items for reordering.');
+  const submittedIds = itemIds.map(String);
+  const submittedSet = new Set(submittedIds);
+  const currentIds = new Set((items || []).map(item => String(item.id)));
+  if (submittedSet.size !== submittedIds.length || submittedSet.size !== currentIds.size ||
+      submittedIds.some(id => !currentIds.has(id))) {
+    return res.status(409).json({ error: 'The menu changed. Reload the menu and try reordering again.' });
+  }
+  if (submittedIds.length > 9999) return res.status(400).json({ error: 'Menu order supports up to 9999 items.' });
+
+  const currentMax = (items || []).reduce((max, item) => Math.max(max, Number(item.display_order) || 0), 0);
+  const temporaryStart = currentMax + submittedIds.length + 1;
+  const temporaryResults = await Promise.all(submittedIds.map((id, index) =>
+    supabase.from('menu_items').update({ display_order: temporaryStart + index }).eq('id', id)
+  ));
+  const temporaryError = temporaryResults.find(result => result.error)?.error;
+  if (temporaryError) return databaseError(res, temporaryError, 'Failed to prepare menu item order.');
+
+  const orderResults = await Promise.all(submittedIds.map((id, index) =>
+    supabase.from('menu_items').update({ display_order: index + 1 }).eq('id', id)
+  ));
+  const orderError = orderResults.find(result => result.error)?.error;
+  if (orderError) return databaseError(res, orderError, 'Failed to save menu item order.');
+  res.json({ ok: true });
+}));
+
 // Display order must be unique: tell the admin which dish already holds the number.
 async function displayOrderConflict(value, excludeId) {
   if (value == null) return null;
