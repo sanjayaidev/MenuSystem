@@ -449,7 +449,7 @@ function menuStyleApplyValues(section, language, design) {
     const candidate = { [language]: { [section]: design?.card_style?.[language]?.[section] || {} } };
     const result = cardStyleValue(candidate);
     if (result.error) return { error: result.error };
-    style[language] = result.value?.[language]?.[section] || {};
+    style[language] = { [section]: result.value?.[language]?.[section] || {} };
   } else if (section !== 'background') {
     return { error: 'Choose a valid formatting section.' };
   }

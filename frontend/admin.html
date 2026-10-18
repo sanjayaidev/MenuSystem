@@ -1367,7 +1367,9 @@ async function adminRequest(path, options = {}){
       const reason = message.replace(/^Image upload failed\.?\s*/, '').trim();
       throw new Error(`${adminText('imageUploadFailed')}${reason ? ' ' + reason : ''}`);
     }
-    throw new Error(adminText(key, { status: response.status }));
+    const text = adminText(key, { status: response.status });
+    // unrecognised errors: keep the generic text but also show the server's own reason
+    throw new Error(key === 'requestFailed' && message ? `${text} ${message}` : text);
   }
   return result;
 }
