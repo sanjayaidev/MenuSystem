@@ -202,22 +202,24 @@
   .row .corner.bl{bottom:calc(1.1 * var(--u)); left:calc(1.1 * var(--u)); transform:scaleY(-1);}
   .row .corner.br{bottom:calc(1.1 * var(--u)); right:calc(1.1 * var(--u)); transform:scale(-1,-1);}
   .row .flourish{width:calc(11 * var(--u)); height:auto; color:var(--ornament);}
-  /* Name and price are two separate layers inside the card, each anchored on its own, so a long / wrapped name can never push the price.
-     .name-layer : flourish + name, centred in the space left of the food PNG, above the price / button strip.
-     .price-layer: the price, pinned to the bottom, on the food side of the card (start edge; mirrored in RTL).
-     Admin move left / right / up / down (--cs-name-x/-y, --cs-price-x/-y) is still applied on .name / .price as an offset from these anchors. */
+  /* Name and price are two separate layers on top of the card, each anchored on its own, so a long / wrapped name can never push the price.
+     Both layers cover exactly the card box (same width, same paddings, same food clearance as before), so saved positions keep their meaning:
+     .name-layer : flourish + name, centred in the card (same spot as before, whatever the number of lines).
+     .price-layer: the price, centred across the card at a fixed height (about where it sat under a two-line name).
+     Admin move left / right / up / down (--cs-name-x/-y, --cs-price-x/-y) is applied on .name / .price as an offset from these anchors. */
+  .row .text-layers{position:absolute; inset-block-start:calc((100% - var(--card-h,100%)) / 2); inset-inline:0; height:var(--card-h,100%); z-index:1; pointer-events:none;}
+  .row .name-layer, .row .price-layer{
+    position:absolute; inset-inline-start:calc(100% - var(--card-w)); inset-inline-end:0; text-align:center;
+    padding-inline-start:calc(var(--cs-food-overlap,var(--food-overlap)) + 1.5 * var(--u));   /* keep the text clear of the food PNG */
+    padding-inline-end:calc(var(--cs-padding-side,3) * var(--u));
+  }
   .row .name-layer{
-    position:absolute; inset:0; z-index:1; pointer-events:none;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:calc(var(--cs-card-gap,24) * .1 * var(--u)); text-align:center;
-    padding:calc(var(--cs-padding-top,4) * var(--u)) calc(var(--cs-padding-side,3) * var(--u)) calc(var(--cs-padding-bottom,11) * var(--u));
-    padding-inline-start:calc(var(--cs-food-overlap,var(--food-overlap)) + 1.5 * var(--u));
+    inset-block:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:calc(var(--cs-card-gap,24) * .1 * var(--u));
+    padding-block-start:calc(var(--cs-padding-top,4) * var(--u));
+    padding-block-end:calc((var(--cs-padding-bottom,11) + 7.4) * var(--u));
   }
-  .row .price-layer{
-    position:absolute; z-index:1; pointer-events:none;
-    inset-inline-start:calc(var(--cs-food-overlap,var(--food-overlap)) + 1.5 * var(--u));
-    inset-block-end:calc(3.2 * var(--u));
-  }
+  .row .price-layer{inset-block-start:calc(24.6 * var(--u)); transform:translateY(-50%);}   /* anchored by its centre, so the price size never moves it */
   /* Per-dish text style (Admin > Menu items): --cs-name-* / --cs-price-* are set on the card for the language being shown,
      --cs-font / --cs-size come from the card box. Unset = exactly the look this page had before. */
   .row .name{
@@ -283,7 +285,7 @@
   .row .add b{font-weight:var(--bold-add,700);}
 
   @media (max-width:420px){
-    .row .name-layer{gap:calc(2 * var(--u)); padding-bottom:calc(12 * var(--u));}
+    .row .name-layer{gap:calc(2 * var(--u)); padding-block-end:calc(19.4 * var(--u));}
   }
   /* small phones: the price is already shown above the button, so keep the button short enough to clear the food PNG */
   html[lang="ur"] .row .add b{display:none;}   /* the Urdu label is long: same treatment at every width */
@@ -1364,6 +1366,8 @@ function render(){
       ${bgUrl ? `<img class="bg" src="${escapeHtml(bgUrl)}" alt="" loading="lazy" decoding="async">` : ''}
       <div class="card">
         ${corner('tl')}${corner('tr')}${corner('bl')}${corner('br')}
+      </div>
+      <div class="text-layers">
         <div class="name-layer">
           <svg class="flourish" viewBox="0 0 120 24" aria-hidden="true"><use href="#rh-flourish"/></svg>
           <h3 class="name">${escapeHtml(name)}</h3>
