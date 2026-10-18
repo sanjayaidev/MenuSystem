@@ -397,6 +397,7 @@ const MENU_STYLE_LAYOUT_RULES = {
   background: { bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200] },
   'white-card': { card_width: [40, 85], card_height: [60, 100] },
   price: { price_x: [-50, 50], price_y: [-50, 50] },
+  'add-to-cart': { add_scale: [50, 150], add_x: [-50, 50], add_y: [-50, 50] },
 };
 const WHITE_CARD_STYLE_FIELDS = ['border_w', 'border_color', 'food_overlap', 'row_gap', 'card_gap', 'padding_top', 'padding_side', 'padding_bottom', 'radius'];
 const ADD_TO_CART_STYLE_FIELDS = ['add_bg', 'add_color', 'add_radius', 'add_font_scale'];
