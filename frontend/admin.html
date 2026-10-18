@@ -1673,7 +1673,12 @@ function validateAdminForm(form){
   if(!invalidField) return true;
   const languagePanel = invalidField.closest('[data-language-panel]');
   if(languagePanel) setActiveLanguage(form, languagePanel.dataset.languagePanel);
-  invalidField.reportValidity();
+  const label = invalidField.closest('label');
+  const fieldName = label?.querySelector('span')?.textContent.trim() || label?.textContent.trim() || invalidField.name || 'This field';
+  window.alert(invalidField.validity.valueMissing
+    ? `${fieldName} is required.`
+    : `${fieldName}: ${invalidField.validationMessage}`);
+  invalidField.focus();
   return false;
 }
 
@@ -2521,7 +2526,7 @@ document.getElementById('menuRecords').addEventListener('click', async event => 
 
   if(button.dataset.menuAction === 'edit'){
     document.getElementById('itemId').value = item.id;
-    renderCategoryOptions(item.category_id);
+    renderCategoryOptions(item.category_id ?? item.categories?.id);
     for(const field of ['price', 'calories', 'rating', 'popularity', 'display_order', 'image_path', 'bg_image_url', 'food_png_url', 'food_scale', 'food_width', 'food_x', 'food_y', 'bg_x', 'bg_y', 'bg_scale', 'card_color', 'card_width', 'card_height', 'price_x', 'price_y', 'add_scale', 'add_x', 'add_y', 'name_en', 'name_ar', 'name_ur', 'name_zh', 'description_en', 'description_ar', 'description_ur', 'description_zh']){
       const input = document.querySelector(`#itemForm [name="${field}"]`);
       input.value = item[field] ?? (field === 'card_color' ? '#f6f1e6' : (ITEM_LAYOUT_DEFAULTS[field] ?? ''));   // empty in the database = the normal look, shown as its normal number
