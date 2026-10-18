@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <title>Red House Catering</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:wght@600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
 <!-- first frame of the hero shows instantly; the menu page is fetched in the background -->
 <link rel="preload" as="image" href="demo/hero-poster.jpg">
 <link rel="prefetch" href="menu-page.html">
@@ -92,8 +92,9 @@
 
   /* B — text (supplied by the client; Arabic + English as in the layout) */
   .sec-b{flex:0 0 7%; min-height:0; overflow:hidden; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; padding:0 6%; line-height:1.15;}
-  .sec-b .b-ar{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-weight:700; color:var(--gold); font-size:calc(var(--fw)*.05);}
-  .sec-b .b-en{font-weight:600; color:var(--gold); letter-spacing:.06em; font-size:calc(var(--fw)*.027); text-transform:uppercase;}
+  .sec-b .b-ar{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-weight:700; color:var(--tag-color,var(--gold)); font-size:calc(var(--fw)*.05*var(--tag-size,1));}
+  .sec-b .b-en{font-weight:600; color:var(--tag-color,var(--gold)); letter-spacing:.06em; font-size:calc(var(--fw)*.027*var(--tag-size,1)); text-transform:uppercase;}
+  .sec-b[hidden]{display:none;}
 
   /* C — autoplay video, first frame is the poster */
   .sec-c{position:relative; flex:1 1 auto; min-height:0; background:#000;}
@@ -102,16 +103,20 @@
   /* D — menu pills: their own black strip BELOW the video (never over it) */
   .sec-d{flex:0 0 10%; min-height:0; display:flex; align-items:center; background:#000;}
   .pills{width:100%; display:flex; gap:2.5%; padding:0 5%;}
+  /* Look of the buttons is editable in Admin -> Homepage; the --pill-* variables are set by the script below.
+     Every fallback after the comma is the original design. */
   .pill{
     flex:1 1 0; min-width:0; display:flex; align-items:center; justify-content:center; text-decoration:none;
-    height:calc(var(--fw)*.115); border-radius:999px; font-weight:700; color:var(--gold);
-    background:rgba(0,0,0,.72); border:1px solid rgba(227,178,60,.55);
-    font-size:calc(var(--fw)*.05); -webkit-tap-highlight-color:transparent;
+    height:calc(var(--fw)*.115*var(--pill-h,1));
+    border-radius:calc(var(--fw)*.115*var(--pill-h,1)*var(--pill-r,.5));
+    font-weight:var(--pill-weight,700); color:var(--pill-text,var(--gold));
+    background:var(--pill-fill,rgba(0,0,0,.72));
+    border:var(--pill-bw,1px) solid var(--pill-line,rgba(227,178,60,.55));
+    font-size:calc(var(--fw)*.05*var(--pill-fs,1)); -webkit-tap-highlight-color:transparent;
     transition:background .15s ease,color .15s ease;
   }
-  .pill:first-child{background:var(--gold); color:#1a1408; border-color:var(--gold);}
-  .pill:active{background:var(--gold); color:#1a1408;}
-  .pill[data-lang="ar"]{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-size:calc(var(--fw)*.058);}
+  .pill:first-child,.pill:active{background:var(--pill-active-fill,var(--gold)); color:var(--pill-active-text,#1a1408); border-color:var(--pill-active-fill,var(--gold));}
+  .pill[data-lang="ar"]{font-family:'Noto Naskh Arabic','Poppins',sans-serif; font-size:calc(var(--fw)*.058*var(--pill-fs,1));}
   .pill[data-lang="zh"]{font-family:'Noto Sans SC','Poppins',sans-serif;}
 </style>
 </head>
@@ -122,9 +127,9 @@
   <header class="sec-a"><img id="logoImg" src="images/rhclogo.png" alt="Red House Catering"></header>
 
   <!-- B: text -->
-  <section class="sec-b" aria-label="Cuisine">
-    <span class="b-ar" lang="ar" dir="rtl">المطبخ الصيني</span>
-    <span class="b-en">Chinese Cuisine</span>
+  <section class="sec-b" id="tagline" aria-label="Cuisine">
+    <span class="b-ar" id="taglineAr" lang="ar" dir="rtl">المطبخ الصيني</span>
+    <span class="b-en" id="taglineEn">Chinese Cuisine</span>
   </section>
 
   <!-- C: 4-second autoplay loop. No scrub, no scroll control. -->
@@ -174,14 +179,78 @@
 </main>
 
 <script>
+/* Admin -> Menu design (logo) and Admin -> Homepage (text under the logo + button look). Anything missing keeps the built-in look. */
+var HEX = /^#[0-9a-f]{6}$/i;
+var PILL_STACKS = {
+  poppins:"'Poppins',sans-serif", naskh:"'Noto Naskh Arabic','Poppins',sans-serif", 'sans-sc':"'Noto Sans SC','Poppins',sans-serif",
+  cinzel:"'Cinzel','Cormorant Garamond',Georgia,serif", cormorant:"'Cormorant Garamond',Georgia,serif",
+  georgia:"Georgia,'Times New Roman',serif", arial:"Arial,Helvetica,sans-serif", custom:"'MenuCustom',serif"
+};
+var PILL_FALLBACK = { en:"'Poppins',sans-serif", ar:"'Noto Naskh Arabic','Poppins',sans-serif", zh:"'Noto Sans SC','Poppins',sans-serif" };
+function hexToRgba(hex, alpha){
+  var n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
+}
+function applyHomepage(design){
+  var hp = design && design.homepage;
+  if(!hp) return;
+  var frame = document.querySelector('.frame');
+
+  var t = hp.tagline;
+  if(t){
+    var box = document.getElementById('tagline');
+    if(t.show === false) box.hidden = true;
+    if(typeof t.ar === 'string') document.getElementById('taglineAr').textContent = t.ar;
+    if(typeof t.en === 'string') document.getElementById('taglineEn').textContent = t.en;
+    if(HEX.test(t.color || '')) frame.style.setProperty('--tag-color', t.color);
+    if(Number(t.size) > 0) frame.style.setProperty('--tag-size', Number(t.size) / 100);
+  }
+
+  var labels = hp.labels;
+  if(labels){
+    document.querySelectorAll('.pill').forEach(function(a){
+      var text = labels[a.dataset.lang];
+      if(typeof text === 'string' && text.trim()) a.textContent = text.trim();
+    });
+  }
+
+  var p = hp.pills;
+  if(p){
+    var set = function(name, value){ frame.style.setProperty(name, value); };
+    if(Number(p.size) > 0) set('--pill-fs', Number(p.size) / 100);
+    if(Number(p.height) > 0) set('--pill-h', Number(p.height) / 100);
+    if(p.bold === false) set('--pill-weight', 500);
+    if(HEX.test(p.text_color || '')) set('--pill-text', p.text_color);
+    if(HEX.test(p.fill_color || '')) set('--pill-fill', hexToRgba(p.fill_color, Math.min(100, Math.max(0, Number(p.fill_opacity))) / 100));
+    if(HEX.test(p.outline_color || '')) set('--pill-line', p.outline_color);
+    if(Number.isFinite(Number(p.outline_width))) set('--pill-bw', Number(p.outline_width) + 'px');
+    if(Number.isFinite(Number(p.radius))) set('--pill-r', Number(p.radius) / 100);
+    if(HEX.test(p.active_fill || '')) set('--pill-active-fill', p.active_fill);
+    if(HEX.test(p.active_text || '')) set('--pill-active-text', p.active_text);
+
+    var useCustom = p.font === 'custom' && typeof design.font_url === 'string' && /^https?:\/\//i.test(design.font_url);
+    if(useCustom){
+      var face = new FontFace('MenuCustom', 'url("' + design.font_url.replace(/["\\]/g, '') + '")');
+      face.load().then(function(f){ document.fonts.add(f); }).catch(function(){});
+    }
+    if(p.font && PILL_STACKS[p.font]){
+      document.querySelectorAll('.pill').forEach(function(a){
+        a.style.fontFamily = PILL_STACKS[p.font] + ',' + PILL_FALLBACK[a.dataset.lang];   // the language's own font stays as fallback for missing glyphs
+      });
+    }
+  }
+}
+
 fetch('/api/design', { cache:'no-store' }).then(function(response){
   if(!response.ok) return null;
   return response.json();
 }).then(function(result){
+  var design = result && result.design;
   var logo = document.getElementById('logoImg');
-  var url = result && result.design && result.design.logo_url;
+  var url = design && design.logo_url;
   if(typeof url === 'string' && /^https?:\/\//i.test(url)) logo.src = url;
-}).catch(function(){ /* Keep the built-in logo if design settings are unavailable. */ });
+  applyHomepage(design);
+}).catch(function(){ /* Keep the built-in logo and look if design settings are unavailable. */ });
 
 /* remember the chosen language so the menu page opens in it (also passed as ?lang=) */
 document.querySelectorAll('.pill').forEach(function(a){

@@ -66,10 +66,39 @@ const DEFAULTS = {
 };
 const BOLD_KEYS = ['name', 'price', 'add_to_cart', 'categories', 'description', 'includes'];
 
+// Landing page (index.html): the text under the logo and the look of the MENU / المنيو / 菜单 buttons ("pills").
+// outline_color '' = the original soft gold outline. font '' = the built-in font of each button's language.
+const HOMEPAGE_FONTS = ['', 'poppins', 'naskh', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
+const DEFAULT_HOMEPAGE = {
+  tagline: { show: true, ar: 'المطبخ الصيني', en: 'Chinese Cuisine', color: '#e3b23c', size: 100 },
+  pills: {
+    font: '', size: 100, height: 100, bold: true, text_color: '#e3b23c',
+    fill_color: '#000000', fill_opacity: 72,
+    outline_color: '', outline_width: 1, radius: 50,
+    active_fill: '#e3b23c', active_text: '#1a1408',
+  },
+  labels: { en: 'MENU', ar: 'المنيو', zh: '菜单' },
+};
+const HOMEPAGE_PILL_NUMBERS = {
+  size: [50, 150], height: [60, 115], fill_opacity: [0, 100], outline_width: [0, 6], radius: [0, 50],
+};
+const HOMEPAGE_PILL_COLORS = ['text_color', 'fill_color', 'active_fill', 'active_text'];
+const HOMEPAGE_TEXT_MAX = 60;
+const HOMEPAGE_LABEL_MAX = 20;
+
 async function readDesign() {
   const { data, error } = await supabase.from('site_settings').select('value').eq('key', SETTINGS_KEY).maybeSingle();
   if (error) throw error;
-  return { ...DEFAULTS, ...(data?.value || {}) };
+  const value = data?.value || {};
+  return {
+    ...DEFAULTS,
+    ...value,
+    homepage: {
+      tagline: { ...DEFAULT_HOMEPAGE.tagline, ...(value.homepage?.tagline || {}) },
+      pills: { ...DEFAULT_HOMEPAGE.pills, ...(value.homepage?.pills || {}) },
+      labels: { ...DEFAULT_HOMEPAGE.labels, ...(value.homepage?.labels || {}) },
+    },
+  };
 }
 
 async function writeDesign(value) {
@@ -394,6 +423,74 @@ router.put('/admin/design/style', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Could not save style settings:', error.message);
     res.status(500).json({ error: 'Could not save the style settings.' });
+  }
+});
+
+function homepageValue(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Homepage settings are not valid.' };
+  const hex = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+
+  const t = raw.tagline || {};
+  const tagline = { ...DEFAULT_HOMEPAGE.tagline, show: t.show !== false };
+  for (const field of ['ar', 'en']) {
+    if (typeof t[field] !== 'string') return { error: 'The text under the logo must be text.' };
+    const text = t[field].trim();
+    if (text.length > HOMEPAGE_TEXT_MAX) return { error: `The ${field === 'ar' ? 'Arabic' : 'English'} text is too long (max ${HOMEPAGE_TEXT_MAX} characters).` };
+    tagline[field] = text;
+  }
+  if (!hex(t.color)) return { error: 'Choose a valid text color for the text under the logo.' };
+  tagline.color = t.color.toLowerCase();
+  const tagSize = Number(t.size);
+  if (!Number.isInteger(tagSize) || tagSize < 50 || tagSize > 200) return { error: 'Text size under the logo must be a whole number from 50 to 200 %.' };
+  tagline.size = tagSize;
+
+  const p = raw.pills || {};
+  const pills = { ...DEFAULT_HOMEPAGE.pills };
+  const font = typeof p.font === 'string' ? p.font : '';
+  if (!HOMEPAGE_FONTS.includes(font)) return { error: 'Choose a valid button font.' };
+  pills.font = font;
+  pills.bold = p.bold !== false;
+  for (const [field, limits] of Object.entries(HOMEPAGE_PILL_NUMBERS)) {
+    const value = Number(p[field]);
+    if (!Number.isInteger(value) || value < limits[0] || value > limits[1]) {
+      return { error: `Button ${field.replace('_', ' ')} must be a whole number from ${limits[0]} to ${limits[1]}.` };
+    }
+    pills[field] = value;
+  }
+  for (const field of HOMEPAGE_PILL_COLORS) {
+    if (!hex(p[field])) return { error: `Choose a valid button ${field.replace('_', ' ')}.` };
+    pills[field] = p[field].toLowerCase();
+  }
+  const outline = typeof p.outline_color === 'string' ? p.outline_color.trim() : '';
+  if (outline && !hex(outline)) return { error: 'Choose a valid button outline color.' };
+  pills.outline_color = outline.toLowerCase();
+
+  // Button texts. An empty box means "use the original word".
+  const labels = { ...DEFAULT_HOMEPAGE.labels };
+  for (const language of ['en', 'ar', 'zh']) {
+    const text = raw.labels?.[language];
+    if (text != null && typeof text !== 'string') return { error: 'Button texts must be text.' };
+    const trimmed = (text || '').trim();
+    if (trimmed.length > HOMEPAGE_LABEL_MAX) return { error: `The ${language.toUpperCase()} button text is too long (max ${HOMEPAGE_LABEL_MAX} characters).` };
+    if (trimmed) labels[language] = trimmed;
+  }
+  return { value: { tagline, pills, labels } };
+}
+
+router.put('/admin/design/homepage', requireAdmin, async (req, res) => {
+  const result = homepageValue(req.body?.homepage);
+  if (result.error) return res.status(400).json({ error: result.error });
+  try {
+    const design = await readDesign();
+    if (result.value.pills.font === 'custom' && !design.font_url) {
+      return res.status(400).json({ error: 'Upload a custom font first (Menu design > Custom font file).' });
+    }
+    design.homepage = result.value;
+    await writeDesign(design);
+    res.json({ design });
+  } catch (error) {
+    console.error('Could not save homepage settings:', error.message);
+    res.status(500).json({ error: 'Could not save the homepage settings.' });
   }
 });
 

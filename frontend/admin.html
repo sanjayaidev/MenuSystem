@@ -286,6 +286,7 @@
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
       <button class="admin-tab" data-panel="designPanel" type="button">Menu design</button>
+      <button class="admin-tab" data-panel="homepagePanel" type="button">Homepage</button>
       <button class="admin-tab" data-panel="bannerPanel" type="button" data-ui="banner">Banner</button>
       <button class="admin-tab" data-panel="posterPanel" type="button" data-ui="posterTab">Menu poster</button>
       <button class="admin-tab" data-panel="musicPanel" type="button" data-ui="musicTab">Music</button>
@@ -456,6 +457,56 @@
           <label><input type="checkbox" id="bold_includes"> <span>"This meal automatically includes" text (pop-up)</span></label>
         </div>
         <div class="form-actions"><button class="action-btn primary" id="styleSave" type="submit">Save style settings</button><button class="action-btn" id="styleReset" type="button">Reset category colors</button><span class="form-note" id="styleNote" role="status"></span></div>
+      </form>
+    </section>
+
+    <section class="admin-panel" id="homepagePanel" hidden>
+      <div class="panel-title"><h2>Homepage</h2></div>
+      <form class="manager-form" id="homepageForm" novalidate>
+        <h3 style="margin:0 0 6px;">Text under the logo</h3>
+        <p class="form-note" style="margin:0 0 12px;">The two lines between the logo and the video on the first page. Leave a line empty to hide just that line.</p>
+        <div class="check-fields" style="margin-top:0;">
+          <label><input type="checkbox" id="hpTagShow"> <span>Show this text</span></label>
+        </div>
+        <div class="form-grid compact">
+          <label>Arabic line<input id="hpTagAr" type="text" maxlength="60" dir="rtl" placeholder="المطبخ الصيني"></label>
+          <label>English line<input id="hpTagEn" type="text" maxlength="60" placeholder="Chinese Cuisine"></label>
+          <label>Text color<input id="hpTagColor" type="color" value="#e3b23c"></label>
+          <label>Text size (% of normal, 50 to 200)<input id="hpTagSize" type="number" min="50" max="200" step="5" value="100"></label>
+        </div>
+
+        <h3 style="margin:22px 0 6px;">Menu buttons</h3>
+        <p class="form-note" style="margin:0 0 12px;">The three language buttons (MENU, المنيو, 菜单) under the video. The first button is always the highlighted one.</p>
+        <div class="form-grid compact">
+          <label>English button text<input id="hpLabelEn" type="text" maxlength="20" placeholder="MENU"></label>
+          <label>Arabic button text<input id="hpLabelAr" type="text" maxlength="20" dir="rtl" placeholder="المنيو"></label>
+          <label>Chinese button text<input id="hpLabelZh" type="text" maxlength="20" placeholder="菜单"></label>
+        </div>
+        <div class="form-grid compact" style="margin-top:12px;">
+          <label>Font<select id="hpPillFont"></select></label>
+          <label>Font size (% of normal, 50 to 150)<input id="hpPillSize" type="number" min="50" max="150" step="5" value="100"></label>
+          <label>Button height (% of normal, 60 to 115)<input id="hpPillHeight" type="number" min="60" max="115" step="5" value="100"></label>
+          <label>Corner roundness (0 square, 50 full pill)<input id="hpPillRadius" type="number" min="0" max="50" step="1" value="50"></label>
+          <label>Text color<input id="hpPillText" type="color" value="#e3b23c"></label>
+          <label>Fill color<input id="hpPillFill" type="color" value="#000000"></label>
+          <label>Fill strength (% , 0 see-through to 100)<input id="hpPillOpacity" type="number" min="0" max="100" step="1" value="72"></label>
+          <label>Outline thickness (px, 0 to 6)<input id="hpPillOutlineW" type="number" min="0" max="6" step="1" value="1"></label>
+          <label>Outline color<input id="hpPillOutline" type="color" value="#e3b23c"></label>
+          <label>Highlighted button fill<input id="hpPillActiveFill" type="color" value="#e3b23c"></label>
+          <label>Highlighted button text<input id="hpPillActiveText" type="color" value="#1a1408"></label>
+        </div>
+        <div class="check-fields">
+          <label><input type="checkbox" id="hpPillOutlineOn"> <span>Use my outline color (untick for the original soft gold outline)</span></label>
+          <label><input type="checkbox" id="hpPillBold"> <span>Bold text</span></label>
+        </div>
+
+        <p class="form-note" style="margin:16px 0 8px;">Preview (approximate)</p>
+        <div id="hpPreview" style="background:#000; padding:14px; border:1px solid var(--line); border-radius:8px; max-width:420px;">
+          <div id="hpPreviewTag" style="text-align:right; line-height:1.2; margin-bottom:12px;"><div id="hpPreviewAr" dir="rtl" style="font-family:'Noto Naskh Arabic',sans-serif; font-weight:700;"></div><div id="hpPreviewEn" style="font-weight:600; letter-spacing:.06em; text-transform:uppercase;"></div></div>
+          <div style="display:flex; gap:8px;"><span class="hp-pill" id="hpPrevEn" data-first="1"></span><span class="hp-pill" id="hpPrevAr" style="font-family:'Noto Naskh Arabic',sans-serif;"></span><span class="hp-pill" id="hpPrevZh" style="font-family:'Noto Sans SC',sans-serif;"></span></div>
+        </div>
+
+        <div class="form-actions"><button class="action-btn primary" id="hpSave" type="submit">Save homepage</button><button class="action-btn" id="hpReset" type="button">Reset to original look</button><span class="form-note" id="hpNote" role="status"></span></div>
       </form>
     </section>
 
@@ -1359,6 +1410,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'bannerPanel') loadBanner();
     if(tab.dataset.panel === 'posterPanel') loadPoster();
     if(tab.dataset.panel === 'designPanel') loadDesign();
+    if(tab.dataset.panel === 'homepagePanel') loadHomepage();
     if(tab.dataset.panel === 'musicPanel') loadMusic();
     if(tab.dataset.panel === 'contactPanel') loadContact();
   });
@@ -1592,6 +1644,130 @@ document.getElementById('styleReset').addEventListener('click', () => {
   document.getElementById('chipFillColor').value = '#1c1a18';
   document.getElementById('chipActiveColor').value = '#e3b23c';
   document.getElementById('styleForm').requestSubmit();
+});
+
+/* ---------- Homepage tab: text under the logo + menu button look (saved in menu_design.homepage) ---------- */
+const HP_DEFAULTS = {
+  tagline: { show:true, ar:'المطبخ الصيني', en:'Chinese Cuisine', color:'#e3b23c', size:100 },
+  pills: { font:'', size:100, height:100, bold:true, text_color:'#e3b23c', fill_color:'#000000', fill_opacity:72,
+           outline_color:'', outline_width:1, radius:50, active_fill:'#e3b23c', active_text:'#1a1408' },
+  labels: { en:'MENU', ar:'المنيو', zh:'菜单' },
+};
+const HP_FONT_OPTIONS = [
+  ['', 'Default (each language\'s own font)'], ['poppins', 'Poppins'], ['cinzel', 'Cinzel (serif capitals)'], ['cormorant', 'Cormorant Garamond'],
+  ['georgia', 'Georgia'], ['arial', 'Arial'], ['naskh', 'Noto Naskh (Arabic)'], ['sans-sc', 'Noto Sans SC (Chinese)'], ['custom', 'Uploaded custom font'],
+];
+const HP_FONT_STACKS = {
+  poppins: "'Poppins',sans-serif", naskh: "'Noto Naskh Arabic','Poppins',sans-serif", 'sans-sc': "'Noto Sans SC','Poppins',sans-serif",
+  cinzel: "'Cinzel','Cormorant Garamond',Georgia,serif", cormorant: "'Cormorant Garamond',Georgia,serif",
+  georgia: "Georgia,'Times New Roman',serif", arial: "Arial,Helvetica,sans-serif", custom: "'MenuCustom',serif",
+};
+const hpEl = id => document.getElementById(id);
+const hpHex = value => /^#[0-9a-f]{6}$/i.test(value || '');
+
+function hpRead(){
+  return {
+    tagline: {
+      show: hpEl('hpTagShow').checked, ar: hpEl('hpTagAr').value.trim(), en: hpEl('hpTagEn').value.trim(),
+      color: hpEl('hpTagColor').value, size: Number(hpEl('hpTagSize').value),
+    },
+    pills: {
+      font: hpEl('hpPillFont').value, size: Number(hpEl('hpPillSize').value), height: Number(hpEl('hpPillHeight').value),
+      bold: hpEl('hpPillBold').checked, text_color: hpEl('hpPillText').value,
+      fill_color: hpEl('hpPillFill').value, fill_opacity: Number(hpEl('hpPillOpacity').value),
+      outline_color: hpEl('hpPillOutlineOn').checked ? hpEl('hpPillOutline').value : '',
+      outline_width: Number(hpEl('hpPillOutlineW').value), radius: Number(hpEl('hpPillRadius').value),
+      active_fill: hpEl('hpPillActiveFill').value, active_text: hpEl('hpPillActiveText').value,
+    },
+    labels: { en: hpEl('hpLabelEn').value.trim(), ar: hpEl('hpLabelAr').value.trim(), zh: hpEl('hpLabelZh').value.trim() },
+  };
+}
+
+function hpShow(saved){
+  const t = { ...HP_DEFAULTS.tagline, ...(saved?.tagline || {}) };
+  const p = { ...HP_DEFAULTS.pills, ...(saved?.pills || {}) };
+  const l = { ...HP_DEFAULTS.labels, ...(saved?.labels || {}) };
+  hpEl('hpLabelEn').value = l.en; hpEl('hpLabelAr').value = l.ar; hpEl('hpLabelZh').value = l.zh;
+  hpEl('hpPillFont').innerHTML = HP_FONT_OPTIONS.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+  hpEl('hpTagShow').checked = t.show !== false;
+  hpEl('hpTagAr').value = t.ar; hpEl('hpTagEn').value = t.en;
+  hpEl('hpTagColor').value = hpHex(t.color) ? t.color : '#e3b23c';
+  hpEl('hpTagSize').value = t.size;
+  hpEl('hpPillFont').value = p.font || '';
+  hpEl('hpPillSize').value = p.size; hpEl('hpPillHeight').value = p.height; hpEl('hpPillRadius').value = p.radius;
+  hpEl('hpPillText').value = hpHex(p.text_color) ? p.text_color : '#e3b23c';
+  hpEl('hpPillFill').value = hpHex(p.fill_color) ? p.fill_color : '#000000';
+  hpEl('hpPillOpacity').value = p.fill_opacity;
+  hpEl('hpPillOutlineW').value = p.outline_width;
+  hpEl('hpPillOutlineOn').checked = hpHex(p.outline_color);
+  hpEl('hpPillOutline').value = hpHex(p.outline_color) ? p.outline_color : '#e3b23c';
+  hpEl('hpPillActiveFill').value = hpHex(p.active_fill) ? p.active_fill : '#e3b23c';
+  hpEl('hpPillActiveText').value = hpHex(p.active_text) ? p.active_text : '#1a1408';
+  hpEl('hpPillBold').checked = p.bold !== false;
+  hpPreview();
+}
+
+function hpPreview(){
+  const { tagline: t, pills: p, labels: l } = hpRead();
+  hpEl('hpPrevEn').textContent = l.en || HP_DEFAULTS.labels.en;
+  hpEl('hpPrevAr').textContent = l.ar || HP_DEFAULTS.labels.ar;
+  hpEl('hpPrevZh').textContent = l.zh || HP_DEFAULTS.labels.zh;
+  const box = hpEl('hpPreviewTag');
+  box.style.display = t.show ? '' : 'none';
+  box.style.color = hpHex(t.color) ? t.color : '#e3b23c';
+  hpEl('hpPreviewAr').textContent = t.ar; hpEl('hpPreviewAr').style.fontSize = `${20 * (t.size || 100) / 100}px`;
+  hpEl('hpPreviewEn').textContent = t.en; hpEl('hpPreviewEn').style.fontSize = `${11 * (t.size || 100) / 100}px`;
+  const height = 40 * (p.height || 100) / 100;
+  const rgb = hpHex(p.fill_color) ? parseInt(p.fill_color.slice(1), 16) : 0;
+  document.querySelectorAll('#hpPreview .hp-pill').forEach(pill => {
+    const first = pill.dataset.first === '1';
+    pill.style.cssText += `;flex:1 1 0; display:flex; align-items:center; justify-content:center; box-sizing:border-box;`
+      + `height:${height}px; font-size:${18 * (p.size || 100) / 100}px; font-weight:${p.bold ? 700 : 500};`
+      + `border-radius:${height * (p.radius || 0) / 100}px; border:${p.outline_width}px solid ${p.outline_color || 'rgba(227,178,60,.55)'};`
+      + `color:${first ? p.active_text : p.text_color};`
+      + `background:${first ? p.active_fill : `rgba(${rgb >> 16},${(rgb >> 8) & 255},${rgb & 255},${(p.fill_opacity || 0) / 100})`};`
+      + (first ? `border-color:${p.active_fill};` : '');
+    if(p.font && HP_FONT_STACKS[p.font]) pill.style.fontFamily = HP_FONT_STACKS[p.font];
+  });
+}
+
+hpEl('homepageForm').addEventListener('input', hpPreview);
+hpEl('homepageForm').addEventListener('change', hpPreview);
+
+async function loadHomepage(){
+  setFormNote('hpNote', 'Loading...');
+  try{
+    const result = await adminRequest('/design');
+    hpShow(result.design?.homepage);
+    setFormNote('hpNote', '');
+  }catch(error){
+    setFormNote('hpNote', error.message || 'Could not load homepage settings.', true);
+  }
+}
+
+hpEl('homepageForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = hpEl('hpSave');
+  button.disabled = true;
+  setFormNote('hpNote', 'Saving...');
+  try{
+    const result = await adminRequest('/design/homepage', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ homepage: hpRead() }),
+    });
+    hpShow(result.design.homepage);
+    setFormNote('hpNote', 'Saved. Refresh the homepage to see it.');
+  }catch(error){
+    setFormNote('hpNote', error.message || 'Could not save the homepage settings.', true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+hpEl('hpReset').addEventListener('click', () => {
+  hpShow(HP_DEFAULTS);
+  hpEl('homepageForm').requestSubmit();
 });
 
 async function loadDesign(){
