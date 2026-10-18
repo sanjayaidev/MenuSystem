@@ -50,7 +50,7 @@ function categoryValues(body = {}) {
 }
 
 // Per-dish text styles (db/01_tables.sql: menu_items.card_style, jsonb).
-//   { card: { font, size, border_w, border_color },
+//   { card: { font, size, border_w, border_color, add_bg, add_color, add_radius, add_font_scale },
 //     en|ar|zh: { name: { font, size, color, x, y }, price: { font, size, color, x, y } } }
 // Empty fields mean "the normal look", so they are dropped; an object with nothing left is stored as null.
 const STYLE_FONTS = ['poppins', 'naskh', 'nastaliq', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
@@ -399,6 +399,7 @@ const MENU_STYLE_LAYOUT_RULES = {
   price: { price_x: [-50, 50], price_y: [-50, 50] },
 };
 const WHITE_CARD_STYLE_FIELDS = ['border_w', 'border_color', 'food_overlap', 'row_gap', 'card_gap', 'padding_top', 'padding_side', 'padding_bottom', 'radius'];
+const ADD_TO_CART_STYLE_FIELDS = ['add_bg', 'add_color', 'add_radius', 'add_font_scale'];
 
 function menuItemStyleObject(raw) {
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) return JSON.parse(JSON.stringify(raw));
@@ -444,6 +445,12 @@ function menuStyleApplyValues(section, language, design) {
     const result = cardStyleValue(candidate);
     if (result.error) return { error: result.error };
     style.card = result.value?.card || {};
+  } else if (section === 'add-to-cart') {
+    const candidate = { card: {} };
+    for (const field of ADD_TO_CART_STYLE_FIELDS) candidate.card[field] = design?.card_style?.card?.[field];
+    const result = cardStyleValue(candidate);
+    if (result.error) return { error: result.error };
+    style.card = result.value?.card || {};
   } else if (section === 'name' || section === 'price') {
     if (!STYLE_LANGUAGES.includes(language)) return { error: 'Choose a valid text language.' };
     const candidate = { [language]: { [section]: design?.card_style?.[language]?.[section] || {} } };
@@ -480,6 +487,11 @@ async function applyMenuStyleToOtherItems(sourceId, section, language, values) {
         } else if (section === 'overall-font') {
           const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
           replaceStyleFields(card, values.style.card, ['font', 'size']);
+          if (Object.keys(card).length) style.card = card;
+          else delete style.card;
+        } else if (section === 'add-to-cart') {
+          const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
+          replaceStyleFields(card, values.style.card, ADD_TO_CART_STYLE_FIELDS);
           if (Object.keys(card).length) style.card = card;
           else delete style.card;
         } else {

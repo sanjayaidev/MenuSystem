@@ -622,6 +622,8 @@
             <label>Move up / down (%)<input name="add_y" type="number" min="-50" max="50" step="1" value="0"></label>
           </div>
           <p class="field-hint">Size 100 = normal, 150 = one and a half times bigger. Plus numbers move the button right or down, minus numbers move it left or up. 0 = normal place (bottom corner).</p>
+          <p class="field-hint">Apply copies the Add to cart button's fill, text color, corner radius, and text size to every other menu item. Button size and position stay unchanged.</p>
+          <div class="form-actions"><button class="action-btn" type="button" data-apply-style="add-to-cart">Apply Add to cart design to all</button><span class="form-note" id="applyAddToCartNote" role="status"></span></div>
         </fieldset>
         <fieldset class="layout-group"><legend>Background picture (the photo behind the dish)</legend>
           <div class="form-grid compact">
@@ -2447,7 +2449,8 @@ async function applyItemStyleToAll(button){
   const noteId = section === 'white-card' ? 'applyWhiteCardNote'
     : section === 'overall-font' ? 'applyOverallFontNote'
       : section === 'background' ? 'applyBackgroundNote'
-        : `apply${section === 'name' ? 'Name' : 'Price'}${language}Note`;
+        : section === 'add-to-cart' ? 'applyAddToCartNote'
+          : `apply${section === 'name' ? 'Name' : 'Price'}${language}Note`;
   const note = document.getElementById(noteId);
   const sourceId = document.getElementById('itemId').value;
   if(!sourceId){ setFormNote(noteId, 'Save this menu item before applying its formatting to all.'); return; }
@@ -2455,6 +2458,7 @@ async function applyItemStyleToAll(button){
   const labels = {
     background: 'background size and position', 'white-card': 'white card formatting',
     'overall-font': 'overall font and text scale', name: `${language.toUpperCase()} food-name design`, price: `${language.toUpperCase()} food-price design and position`,
+    'add-to-cart': 'Add to cart button design',
   };
   const otherCount = Math.max(0, menuItems.length - 1);
   if(!window.confirm(`Apply this item's ${labels[section]} to all ${otherCount} other menu items? Only this formatting section changes; other formatting, food photos, item names and actual prices remain unchanged.`)) return;
