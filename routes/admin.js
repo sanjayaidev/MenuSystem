@@ -394,12 +394,14 @@ router.post('/menu', asyncHandler(async (req, res) => {
 }));
 
 const MENU_STYLE_LAYOUT_RULES = {
+  'food-picture': { food_scale: [50, 150], food_width: [50, 150], food_x: [-50, 50], food_y: [-50, 50] },
   background: { bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200] },
   'white-card': { card_width: [40, 85], card_height: [60, 100] },
   price: { price_x: [-50, 50], price_y: [-50, 50] },
   'add-to-cart': { add_scale: [50, 150], add_x: [-50, 50], add_y: [-50, 50] },
 };
 const WHITE_CARD_STYLE_FIELDS = ['border_w', 'border_color', 'food_overlap', 'row_gap', 'card_gap', 'padding_top', 'padding_side', 'padding_bottom', 'radius'];
+const FOOD_PICTURE_STYLE_FIELDS = ['food_height'];
 const ADD_TO_CART_STYLE_FIELDS = ['add_bg', 'add_color', 'add_radius', 'add_font_scale'];
 
 function menuItemStyleObject(raw) {
@@ -432,7 +434,12 @@ function menuStyleApplyValues(section, language, design) {
     layout[field] = value;
   }
 
-  if (section === 'white-card') {
+  if (section === 'food-picture') {
+    const candidate = { card: { food_height: design?.card_style?.card?.food_height } };
+    const result = cardStyleValue(candidate);
+    if (result.error) return { error: result.error };
+    style.card = result.value?.card || {};
+  } else if (section === 'white-card') {
     const color = design?.card_color;
     if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) return { error: 'Choose a valid white card color.' };
     layout.card_color = color.toLowerCase();
@@ -480,7 +487,12 @@ async function applyMenuStyleToOtherItems(sourceId, section, language, values) {
       const update = { ...values.layout };
       if (Object.keys(values.style).length) {
         const style = menuItemStyleObject(item.card_style);
-        if (section === 'white-card') {
+        if (section === 'food-picture') {
+          const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
+          replaceStyleFields(card, values.style.card, FOOD_PICTURE_STYLE_FIELDS);
+          if (Object.keys(card).length) style.card = card;
+          else delete style.card;
+        } else if (section === 'white-card') {
           const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
           replaceStyleFields(card, values.style.card, WHITE_CARD_STYLE_FIELDS);
           if (Object.keys(card).length) style.card = card;

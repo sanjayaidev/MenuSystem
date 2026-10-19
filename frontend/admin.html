@@ -598,6 +598,8 @@
             <label>Height (%)<input type="number" data-cs="card.food_height" min="50" max="100" step="1" placeholder="90"></label>
           </div>
           <p class="field-hint">Size makes the whole dish bigger or smaller. Width only makes the dish wider or thinner and does not change its height. 100 = normal. For moving, a plus number goes right or down, a minus number goes left or up, 0 = normal place.</p>
+          <p class="field-hint" data-ui="foodPictureApplyHint">Applies only this food picture's size, width, position, and height to every other menu item.</p>
+          <div class="form-actions"><button class="action-btn" type="button" data-apply-style="food-picture" data-ui="foodPictureApplyAll">Apply food picture formatting to all</button><span class="form-note" id="applyFoodPictureNote" role="status"></span></div>
         </fieldset>
         <fieldset class="layout-group"><legend>White card (name and price)</legend>
           <div class="form-grid compact">
@@ -688,7 +690,7 @@ const ADMIN_UI_STRINGS = {
     itemTranslationLanguage:'Menu item translation language', availableToOrder:'Available to order', featuredOffer:'Featured offer',
     imageUrl:'Image URL', uploadImage:'Upload image', uploadToImgbb:'Upload', createMenuItem:'Create menu item',
     cardBgImage:'Card background image (layer 1)', foodPngImage:'Food PNG, transparent (layer 3)',
-    foodPngHint:'This is the dish picture everywhere: menu card, details page and cart.', plainPhotoSummary:'Plain product photo URL (optional, fills itself from the Food PNG)',
+    foodPngHint:'This is the dish picture everywhere: menu card, details page and cart.', foodPictureApplyHint:"Applies only this food picture's size, width, position, and height to every other menu item.", foodPictureApplyAll:'Apply food picture formatting to all', foodPictureFormatting:'food picture formatting', plainPhotoSummary:'Plain product photo URL (optional, fills itself from the Food PNG)',
     saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', searchOrders:'Search order no. or phone', edit:'Edit', delete:'Delete',
     menuReorderHint:'Drag the grip to reorder all menu items. Clear search to enable dragging.', menuReorderSearch:'Clear search to reorder menu items.',
     savingMenuOrder:'Saving menu order…', menuOrderSaved:'Menu order saved.', dragMenuItem:'Drag to reorder',
@@ -735,7 +737,7 @@ const ADMIN_UI_STRINGS = {
     itemTranslationLanguage:'لغة ترجمة الصنف', availableToOrder:'متاح للطلب', featuredOffer:'عرض مميز',
     imageUrl:'رابط الصورة', uploadImage:'رفع صورة', uploadToImgbb:'رفع', createMenuItem:'إنشاء صنف',
     cardBgImage:'صورة خلفية البطاقة (الطبقة 1)', foodPngImage:'صورة الطعام PNG شفافة (الطبقة 3)',
-    foodPngHint:'هذه صورة الطبق في كل مكان: بطاقة القائمة وصفحة التفاصيل والسلة.', plainPhotoSummary:'رابط صورة عادية للمنتج (اختياري، يُملأ تلقائياً من صورة PNG)',
+    foodPngHint:'هذه صورة الطبق في كل مكان: بطاقة القائمة وصفحة التفاصيل والسلة.', foodPictureApplyHint:'يُطبّق حجم صورة الطعام وعرضها وموضعها وارتفاعها فقط على جميع الأصناف الأخرى.', foodPictureApplyAll:'تطبيق تنسيق صورة الطعام على الكل', foodPictureFormatting:'تنسيق صورة الطعام', plainPhotoSummary:'رابط صورة عادية للمنتج (اختياري، يُملأ تلقائياً من صورة PNG)',
     saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', searchOrders:'بحث برقم الطلب أو الهاتف', edit:'تعديل', delete:'حذف',
     menuReorderHint:'اسحب المقبض لإعادة ترتيب جميع الأصناف. امسح البحث لتفعيل السحب.', menuReorderSearch:'امسح البحث لإعادة ترتيب الأصناف.',
     savingMenuOrder:'جارٍ حفظ ترتيب القائمة…', menuOrderSaved:'تم حفظ ترتيب القائمة.', dragMenuItem:'اسحب لإعادة الترتيب',
@@ -782,7 +784,7 @@ const ADMIN_UI_STRINGS = {
     itemTranslationLanguage:'مینو آئٹم کی ترجمہ زبان', availableToOrder:'آرڈر کے لیے دستیاب', featuredOffer:'نمایاں آفر',
     imageUrl:'تصویر کا URL', uploadImage:'تصویر اپ لوڈ کریں', uploadToImgbb:'اپ لوڈ', createMenuItem:'مینو آئٹم بنائیں',
     cardBgImage:'کارڈ کی پس منظر تصویر (پرت 1)', foodPngImage:'کھانے کی شفاف PNG تصویر (پرت 3)',
-    foodPngHint:'یہ ہر جگہ ڈش کی تصویر ہے: مینو کارڈ، تفصیل کا صفحہ اور کارٹ۔', plainPhotoSummary:'سادہ پروڈکٹ تصویر کا لنک (اختیاری، PNG سے خود بھر جاتا ہے)',
+    foodPngHint:'یہ ہر جگہ ڈش کی تصویر ہے: مینو کارڈ، تفصیل کا صفحہ اور کارٹ۔', foodPictureApplyHint:'صرف کھانے کی تصویر کا سائز، چوڑائی، جگہ اور اونچائی دیگر تمام مینو آئٹمز پر لاگو کریں۔', foodPictureApplyAll:'کھانے کی تصویر کی فارمیٹنگ سب پر لاگو کریں', foodPictureFormatting:'کھانے کی تصویر کی فارمیٹنگ', plainPhotoSummary:'سادہ پروڈکٹ تصویر کا لنک (اختیاری، PNG سے خود بھر جاتا ہے)',
     saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', searchOrders:'آرڈر نمبر یا فون سے تلاش کریں', edit:'ترمیم', delete:'حذف',
     menuReorderHint:'تمام مینو آئٹمز کی ترتیب بدلنے کے لیے ہینڈل کھینچیں۔ ڈریگ فعال کرنے کے لیے تلاش صاف کریں۔', menuReorderSearch:'آئٹمز کی ترتیب بدلنے کے لیے تلاش صاف کریں۔',
     savingMenuOrder:'مینو کی ترتیب محفوظ ہو رہی ہے…', menuOrderSaved:'مینو کی ترتیب محفوظ ہو گئی۔', dragMenuItem:'ترتیب بدلنے کے لیے کھینچیں',
@@ -829,7 +831,7 @@ const ADMIN_UI_STRINGS = {
     itemTranslationLanguage:'商品翻译语言', availableToOrder:'可供下单', featuredOffer:'精选优惠',
     imageUrl:'图片网址', uploadImage:'上传图片', uploadToImgbb:'上传', createMenuItem:'创建商品',
     cardBgImage:'卡片背景图（第 1 层）', foodPngImage:'食物透明 PNG（第 3 层）',
-    foodPngHint:'这是菜品在各处使用的图片：菜单卡片、详情页和购物车。', plainPhotoSummary:'普通商品图片链接（可选，自动取自食物 PNG）',
+    foodPngHint:'这是菜品在各处使用的图片：菜单卡片、详情页和购物车。', foodPictureApplyHint:'仅将食物图片的大小、宽度、位置和高度应用到其他所有菜单商品。', foodPictureApplyAll:'将食物图片格式应用到全部商品', foodPictureFormatting:'食物图片格式', plainPhotoSummary:'普通商品图片链接（可选，自动取自食物 PNG）',
     saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', searchOrders:'按订单号或电话搜索', edit:'编辑', delete:'删除',
     menuReorderHint:'拖动手柄可调整所有菜单商品顺序。清除搜索后即可拖动。', menuReorderSearch:'清除搜索后即可调整商品顺序。',
     savingMenuOrder:'正在保存菜单顺序…', menuOrderSaved:'菜单顺序已保存。', dragMenuItem:'拖动以调整顺序',
@@ -2450,6 +2452,7 @@ async function applyItemStyleToAll(button){
     : section === 'overall-font' ? 'applyOverallFontNote'
       : section === 'background' ? 'applyBackgroundNote'
         : section === 'add-to-cart' ? 'applyAddToCartNote'
+          : section === 'food-picture' ? 'applyFoodPictureNote'
           : `apply${section === 'name' ? 'Name' : 'Price'}${language}Note`;
   const note = document.getElementById(noteId);
   const sourceId = document.getElementById('itemId').value;
@@ -2458,7 +2461,7 @@ async function applyItemStyleToAll(button){
   const labels = {
     background: 'background size and position', 'white-card': 'white card formatting',
     'overall-font': 'overall font and text scale', name: `${language.toUpperCase()} food-name design`, price: `${language.toUpperCase()} food-price design and position`,
-    'add-to-cart': 'Add to cart button design',
+    'add-to-cart': 'Add to cart button design', 'food-picture': adminText('foodPictureFormatting'),
   };
   const otherCount = Math.max(0, menuItems.length - 1);
   if(!window.confirm(`Apply this item's ${labels[section]} to all ${otherCount} other menu items? Only this formatting section changes; other formatting, food photos, item names and actual prices remain unchanged.`)) return;
@@ -2466,6 +2469,8 @@ async function applyItemStyleToAll(button){
   const form = document.getElementById('itemForm');
   const field = name => form.elements.namedItem(name);
   const design = {
+    food_scale: Number(field('food_scale').value), food_width: Number(field('food_width').value),
+    food_x: Number(field('food_x').value), food_y: Number(field('food_y').value),
     bg_x: Number(field('bg_x').value), bg_y: Number(field('bg_y').value), bg_scale: Number(field('bg_scale').value),
     card_width: Number(field('card_width').value), card_height: Number(field('card_height').value), card_color: field('card_color').value,
     price_x: Number(field('price_x').value), price_y: Number(field('price_y').value),
