@@ -2067,8 +2067,9 @@ async function loadMenu(){
   }
 }
 
-function renderCategoryOptions(selectedId = ''){
+function renderCategoryOptions(selectedId){
   const select = document.getElementById('itemCategory');
+  if(selectedId == null) selectedId = select.value;
   select.innerHTML = `<option value="">${adminText('chooseCategory')}</option>` + categories.map(category =>
     `<option value="${category.id}" ${String(category.id) === String(selectedId) ? 'selected' : ''}>${escapeHtml(category[`label_${adminUiLanguage}`] || category.label_en)}</option>`
   ).join('');
@@ -2449,6 +2450,17 @@ function collectCardStyle(){
   });
   return Object.keys(style).length ? style : null;
 }
+function collectMenuItemPayload(id){
+  const form = document.getElementById('itemForm');
+  const payload = Object.fromEntries(new FormData(form).entries());
+  payload.is_available = document.getElementById('itemAvailable').checked;
+  payload.is_offer = document.getElementById('itemOffer').checked;
+  payload.includes_meal = document.getElementById('itemIncludesMeal').checked;
+  const cardStyle = collectCardStyle();
+  const hadStyle = id && menuItems.find(record => String(record.id) === String(id))?.card_style != null;
+  if(cardStyle || hadStyle) payload.card_style = cardStyle;
+  return payload;
+}
 async function applyItemStyleToAll(button){
   const section = button.dataset.applyStyle;
   const language = button.dataset.applyLanguage || '';
@@ -2468,9 +2480,16 @@ async function applyItemStyleToAll(button){
     'add-to-cart': 'Add to cart button design', 'food-picture': adminText('foodPictureFormatting'),
   };
   const otherCount = Math.max(0, menuItems.length - 1);
-  if(!window.confirm(`Apply this item's ${labels[section]} to all ${otherCount} other menu items? Only this formatting section changes; other formatting, food photos, item names and actual prices remain unchanged.`)) return;
+  if(!window.confirm(`Save all changes to this menu item, then apply its ${labels[section]} to all ${otherCount} other menu items? Only this formatting section changes on the other items; their other formatting, food photos, item names and actual prices remain unchanged.`)) return;
 
   const form = document.getElementById('itemForm');
+  if(!validateAdminForm(form)) return;
+  if(displayOrderClash()){
+    refreshDisplayOrderWarning();
+    setFormNote('itemNote', adminText('displayOrderBlocked'), true);
+    document.getElementById('itemDisplayOrder').focus();
+    return;
+  }
   const field = name => form.elements.namedItem(name);
   const cardStyle = collectCardStyle() || {};
   if(section === 'food-picture'){
@@ -2501,8 +2520,19 @@ async function applyItemStyleToAll(button){
     card_style: cardStyle,
   };
   button.disabled = true;
-  setFormNote(noteId, 'Applying to other menu items...');
+  setFormNote(noteId, 'Saving this menu item...');
   try{
+    const payload = collectMenuItemPayload(sourceId);
+    payload.card_style = cardStyle;
+    const saveResult = await adminRequest(`/menu/${encodeURIComponent(sourceId)}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    menuItems = menuItems.map(item => String(item.id) === String(sourceId)
+      ? { ...item, ...saveResult.item, categories: categories.find(category => String(category.id) === String(saveResult.item.category_id)) || item.categories }
+      : item);
+    renderMenu();
+    setFormNote(noteId, 'Applying to other menu items...');
     const result = await adminRequest('/menu/apply-style', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source_id: sourceId, section, language, design }),
@@ -2510,7 +2540,7 @@ async function applyItemStyleToAll(button){
     setFormNote(noteId, `Applied to ${result.updated} other menu item${result.updated === 1 ? '' : 's'}.`);
     await loadMenu();
   }catch(error){
-    setFormNote(noteId, error.message || 'Could not apply this formatting to all menu items.', true);
+    setFormNote(noteId, error.message || 'Could not save or apply this formatting to all menu items.', true);
   }finally{
     button.disabled = false;
   }
@@ -2677,7 +2707,7 @@ function resetItemForm(){
   document.getElementById('itemId').value = '';
   fillCardStyle(null);
   fillItemStyleWithGlobal();
-  renderCategoryOptions();
+  renderCategoryOptions('');
   document.getElementById('itemFormTitle').textContent = adminText('newMenuItem');
   document.getElementById('itemSubmit').textContent = adminText('createMenuItem');
   document.getElementById('itemCancel').hidden = true;
@@ -2704,15 +2734,7 @@ document.getElementById('itemForm').addEventListener('submit', async event => {
     document.getElementById('itemDisplayOrder').focus();
     return;
   }
-  const payload = Object.fromEntries(new FormData(form).entries());
-  payload.is_available = document.getElementById('itemAvailable').checked;
-  payload.is_offer = document.getElementById('itemOffer').checked;
-  payload.includes_meal = document.getElementById('itemIncludesMeal').checked;
-  // font / size / color / position styles. Sent only when something is set, or to clear styles this dish already had
-  // (so a database without the card_style column keeps working until the styles are used).
-  const cardStyle = collectCardStyle();
-  const hadStyle = id && menuItems.find(record => String(record.id) === String(id))?.card_style != null;
-  if(cardStyle || hadStyle) payload.card_style = cardStyle;
+  const payload = collectMenuItemPayload(id);
   const button = document.getElementById('itemSubmit');
   button.disabled = true;
   setFormNote('itemNote', id ? adminText('savingChanges') : adminText('creatingMenuItem'));
