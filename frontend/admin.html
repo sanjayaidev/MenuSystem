@@ -589,18 +589,8 @@
         </div>
         <p class="field-hint" data-ui="foodPngHint">Leave the food PNG empty to use the item image above on the menu card.</p>
         <div class="image-preview card-image-preview is-png" id="itemFoodPreview"></div>
-        <fieldset class="layout-group"><legend>Food picture</legend>
-          <div class="form-grid compact">
-            <label>Size (%)<input name="food_scale" type="number" min="50" max="150" step="1" value="100"></label>
-            <label>Width only (%)<input name="food_width" type="number" min="50" max="150" step="1" value="100"></label>
-            <label>Move left / right (%)<input name="food_x" type="number" min="-50" max="50" step="1" value="0"></label>
-            <label>Move up / down (%)<input name="food_y" type="number" min="-50" max="50" step="1" value="0"></label>
-            <label>Height (%)<input type="number" data-cs="card.food_height" min="50" max="100" step="1" placeholder="90"></label>
-          </div>
-          <p class="field-hint">Size makes the whole dish bigger or smaller. Width only makes the dish wider or thinner and does not change its height. 100 = normal. For moving, a plus number goes right or down, a minus number goes left or up, 0 = normal place.</p>
-          <p class="field-hint" data-ui="foodPictureApplyHint">Applies only this food picture's size, width, position, and height to every other menu item.</p>
-          <div class="form-actions"><button class="action-btn" type="button" data-apply-style="food-picture" data-ui="foodPictureApplyAll">Apply food picture formatting to all</button><span class="form-note" id="applyFoodPictureNote" role="status"></span></div>
-        </fieldset>
+        <input type="hidden" name="food_scale" value="100"><input type="hidden" name="food_width" value="100">
+        <input type="hidden" name="food_x" value="0"><input type="hidden" name="food_y" value="0">
         <fieldset class="layout-group"><legend>White card (name and price)</legend>
           <div class="form-grid compact">
             <label>Width (%)<input name="card_width" type="number" min="40" max="85" step="1" value="67"></label>
@@ -2159,8 +2149,8 @@ function setLivePreviewImage(image, value){
   }
 }
 
-/* ---------- Text style per language (name, price) and card font / size / border ----------
-   Saved in menu_items.card_style as { card:{font,size,border_w,border_color}, en|ar|zh:{ name:{font,size,color,x,y}, price:{...} } }.
+/* ---------- Food picture and text style per language; shared card font / size / border ----------
+   Saved in menu_items.card_style as { card:{...}, en|ar|zh:{ food:{scale,width,height,x,y}, name:{...}, price:{...} } }.
    Every control has data-cs="<path>"; an empty control means "the normal look" and is not saved. */
 const STYLE_FONTS = [
   ['', 'Normal'], ['poppins', 'Poppins'], ['cinzel', 'Cinzel (serif capitals)'], ['cormorant', 'Cormorant Garamond'], ['georgia', 'Georgia'],
@@ -2315,6 +2305,14 @@ function textStylePart(code, key, title){
     styleNumberField(`${code}.${key}.x`, 'Move left / right (%)', -50, 50, key === 'price' ? 'fallback' : '0') +
     styleNumberField(`${code}.${key}.y`, 'Move up / down (%)', -50, 50, key === 'price' ? 'fallback' : '0');
 }
+function foodStylePart(code){
+  return `<p class="style-part">Food picture</p>` +
+    styleNumberField(`${code}.food.scale`, 'Size (%)', 50, 150, '100') +
+    styleNumberField(`${code}.food.width`, 'Width only (%)', 50, 150, '100') +
+    styleNumberField(`${code}.food.height`, 'Height (%)', 50, 100, '90') +
+    styleNumberField(`${code}.food.x`, 'Move left / right (%)', -50, 50, '0') +
+    styleNumberField(`${code}.food.y`, 'Move up / down (%)', -50, 50, '0');
+}
 function buildTextStyleBoxes(){
   document.getElementById('cardStyleControls').innerHTML =
     styleFontField('card.font') + styleNumberField('card.size', 'Size (%)', 50, 250, '100') +
@@ -2332,8 +2330,10 @@ function buildTextStyleBoxes(){
     styleNumberField('card.add_font_scale', 'Add to cart text size (%)', 50, 200, '100');
   document.getElementById('textStyleBoxes').innerHTML = STYLE_LANGUAGES.map(([code, label]) => `
     <fieldset class="layout-group" data-language-panel="${code}"${code === 'en' ? '' : ' hidden'}>
-      <legend>Text style: ${label}</legend>
-      <div class="form-grid compact style-grid">${textStylePart(code, 'name', 'Food name')}${textStylePart(code, 'price', 'Food price')}</div>
+      <legend>${label} design</legend>
+      <div class="form-grid compact style-grid">${foodStylePart(code)}${textStylePart(code, 'name', 'Food name')}${textStylePart(code, 'price', 'Food price')}</div>
+      <p class="field-hint">Food picture size, width, height, and position apply only when the menu is shown in ${label}. 100 = normal size; positive movement goes right or down.</p>
+      <div class="form-actions"><button class="action-btn" type="button" data-apply-style="food-picture" data-apply-language="${code}">Apply ${label} food picture design to all</button><span class="form-note" id="applyFoodPicture${code}Note" role="status"></span></div>
       <p class="field-hint">Apply copies only this language's food-name font, size, color, and position to every other item.</p>
       <div class="form-actions"><button class="action-btn" type="button" data-apply-style="name" data-apply-language="${code}">Apply food name design to all</button><span class="form-note" id="applyName${code}Note" role="status"></span></div>
       <p class="field-hint">Apply copies this language's food-price design and position to every other item. It does not change the actual price.</p>
@@ -2452,7 +2452,7 @@ async function applyItemStyleToAll(button){
     : section === 'overall-font' ? 'applyOverallFontNote'
       : section === 'background' ? 'applyBackgroundNote'
         : section === 'add-to-cart' ? 'applyAddToCartNote'
-          : section === 'food-picture' ? 'applyFoodPictureNote'
+          : section === 'food-picture' ? `applyFoodPicture${language}Note`
           : `apply${section === 'name' ? 'Name' : 'Price'}${language}Note`;
   const note = document.getElementById(noteId);
   const sourceId = document.getElementById('itemId').value;
@@ -2468,6 +2468,25 @@ async function applyItemStyleToAll(button){
 
   const form = document.getElementById('itemForm');
   const field = name => form.elements.namedItem(name);
+  const cardStyle = collectCardStyle() || {};
+  if(section === 'food-picture'){
+    const food = cardStyle[language]?.food || {};
+    const card = cardStyle.card || {};
+    const read = (key, min, max, fallback) => {
+      const value = Number(food[key]);
+      return Number.isInteger(value) && value >= min && value <= max ? value : fallback;
+    };
+    cardStyle[language] = {
+      ...(cardStyle[language] || {}),
+      food: {
+        scale: read('scale', 50, 150, Number(field('food_scale').value) || 100),
+        width: read('width', 50, 150, Number(field('food_width').value) || 100),
+        height: read('height', 50, 100, Number(card.food_height) || currentGlobalCardDesign.card.food_height || 90),
+        x: read('x', -50, 50, Number(field('food_x').value) || 0),
+        y: read('y', -50, 50, Number(field('food_y').value) || 0),
+      },
+    };
+  }
   const design = {
     food_scale: Number(field('food_scale').value), food_width: Number(field('food_width').value),
     food_x: Number(field('food_x').value), food_y: Number(field('food_y').value),
@@ -2475,7 +2494,7 @@ async function applyItemStyleToAll(button){
     card_width: Number(field('card_width').value), card_height: Number(field('card_height').value), card_color: field('card_color').value,
     price_x: Number(field('price_x').value), price_y: Number(field('price_y').value),
     add_scale: Number(field('add_scale').value), add_x: Number(field('add_x').value), add_y: Number(field('add_y').value),
-    card_style: collectCardStyle() || {},
+    card_style: cardStyle,
   };
   button.disabled = true;
   setFormNote(noteId, 'Applying to other menu items...');
@@ -2574,8 +2593,6 @@ function updateLiveMenuPreview(){
   };
   card.style.setProperty('--preview-paper', cardColor);
   card.style.setProperty('--preview-edge', `color-mix(in srgb, ${cardColor}, #000 8%)`);
-  card.style.setProperty('--preview-food-scale', String(percent('food_scale', 100, 50, 150) / 100));
-  card.style.setProperty('--preview-food-width', String(percent('food_width', 100, 50, 150) / 100));
   card.style.setProperty('--preview-card-w', `${percent('card_width', 66.6667, 40, 85)}%`);
   card.style.setProperty('--preview-card-h', `${percent('card_height', 100, 60, 100)}%`);
   card.style.setProperty('--preview-price-x', String(percent('price_x', 0, -50, 50)));
@@ -2584,8 +2601,6 @@ function updateLiveMenuPreview(){
   card.style.setProperty('--preview-add-x', String(percent('add_x', 0, -50, 50)));
   card.style.setProperty('--preview-add-y', String(percent('add_y', 0, -50, 50)));
   card.style.setProperty('--preview-u', `${(card.clientWidth || 400) / 100}px`);   // 1 % of the preview width, so moving looks the same as on the menu page
-  card.style.setProperty('--preview-food-x', `${percent('food_x', 0, -50, 50)}%`);
-  card.style.setProperty('--preview-food-y', `${percent('food_y', 0, -50, 50)}%`);
   card.style.setProperty('--preview-bg-x', `${percent('bg_x', 50, 0, 100)}%`);
   card.style.setProperty('--preview-bg-y', `${percent('bg_y', 50, 0, 100)}%`);
   card.style.setProperty('--preview-bg-scale', String(percent('bg_scale', 100, 100, 200) / 100));
@@ -2594,6 +2609,16 @@ function updateLiveMenuPreview(){
 
   // text style: card font / size / border, plus the name and price style of the language being edited
   const style = collectCardStyle() || {};
+  const food = style[activeLanguage]?.food || {};
+  const foodPercent = (key, legacyField, fallback, min, max) => {
+    const localized = Number(food[key]);
+    if(Number.isInteger(localized) && localized >= min && localized <= max) return localized;
+    return percent(legacyField, fallback, min, max);
+  };
+  card.style.setProperty('--preview-food-scale', String(foodPercent('scale', 'food_scale', 100, 50, 150) / 100));
+  card.style.setProperty('--preview-food-width', String(foodPercent('width', 'food_width', 100, 50, 150) / 100));
+  card.style.setProperty('--preview-food-x', `${foodPercent('x', 'food_x', 0, -50, 50)}%`);
+  card.style.setProperty('--preview-food-y', `${foodPercent('y', 'food_y', 0, -50, 50)}%`);
   const setVar = (property, value) => {
     if(value == null || value === '') card.style.removeProperty(property); else card.style.setProperty(property, String(value));
   };
@@ -2602,7 +2627,8 @@ function updateLiveMenuPreview(){
   setVar('--pv-size', cardStyle.size != null ? cardStyle.size / 100 : null);
   setVar('--pv-border-w', cardStyle.border_w != null ? `${cardStyle.border_w}px` : null);
   setVar('--pv-border-color', cardStyle.border_color);
-  setVar('--pv-food-height', cardStyle.food_height != null ? `${cardStyle.food_height}%` : null);
+  const foodHeight = foodPercent('height', '', cardStyle.food_height ?? currentGlobalCardDesign.card.food_height ?? 90, 50, 100);
+  setVar('--pv-food-height', `${foodHeight}%`);
   setVar('--pv-food-overlap', cardStyle.food_overlap != null ? `${cardStyle.food_overlap}%` : null);
   setVar('--pv-card-gap', cardStyle.card_gap);
   setVar('--pv-padding-top', cardStyle.padding_top);

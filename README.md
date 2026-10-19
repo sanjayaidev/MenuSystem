@@ -52,10 +52,12 @@ An empty position uses the normal place unless the dish has an older shared pric
 
 #### Point 4: Change the dish picture and the white card
 1. **Menu items** → **Edit** next to the dish.
-2. To change the **dish picture**, use the box **Food picture**:
+2. To change the **dish picture**, select the language above the name fields, then use the **Food picture** controls in that language's design:
    - **Size (%)** makes the whole dish bigger or smaller (100 = normal).
    - **Width only (%)** makes the dish wider or thinner and does not change its height (100 = normal; the dish is stretched, so keep it near 100 for a natural look).
+   - **Height (%)** changes the visible food image height (90 = normal).
    - **Move left / right (%)** and **Move up / down (%)** move the dish (0 = normal place).
+   - Each language has independent food picture settings. Applying one language's design to all items does not change the other languages.
 3. To change the **white background with the text**, use the box **White card (name and price)**:
    - **Width (%)**: bigger = wider white card and less room for the picture on the left (67 = normal; from 40 to 85).
    - **Height (%)**: 100 = the card covers the full height (from 60 to 100).
@@ -121,7 +123,7 @@ To make **only some words** bold, type two stars before and after them, for exam
 
 **Display order warning.** Typing a display order number that another dish already has now shows a red warning right under the field (naming that dish and the next free number), outlines the box in red and stops the save. A note under the field explains the rule. The server still refuses it with 409 as before. Editing a dish never warns about its own number.
 
-**Developer notes.** `card_style` shape: `{ card:{font,size,border_w,border_color}, en|ar|zh:{ name:{font,size,color,x,y}, price:{font,size,color,x,y} } }`, validated in `routes/admin.js` (`cardStyleValue`) and re-checked in `cardStyleVars()` of `frontend/menu-page.html`, which sets `--cs-*` CSS variables on each card for the language being shown. `GET /api/menu` already returns it (`select *`). Also fixed: switching the language buttons in the dish form did not refresh the live preview (`form.id` was the hidden `id` input).
+**Developer notes.** `card_style` shape: `{ card:{font,size,border_w,border_color}, en|ar|zh:{ food:{scale,width,height,x,y}, name:{font,size,color,x,y}, price:{font,size,color,x,y} } }`, validated in `routes/admin.js` (`cardStyleValue`) and re-checked by the renderers, which set `--cs-*` CSS variables for the language being shown. Existing shared food layout columns remain fallbacks for dishes without language-specific overrides. `GET /api/menu` already returns `card_style` (`select *`). Also fixed: switching the language buttons in the dish form did not refresh the live preview (`form.id` was the hidden `id` input).
 
 ### Auto-translate (Arabic + Chinese)
 In Admin, **Menu items**, **Categories** and **Menu design → "This meal automatically includes" text** have an **Auto-translate from English (Arabic + Chinese)** button. Type the English text, press the button, and the Arabic and Chinese boxes are filled in. **Nothing is saved by the button**: read the text, fix anything wrong, then press the normal save button. If Arabic or Chinese text is already there, you are asked before it is replaced. Urdu is not translated (it is hidden in the admin).

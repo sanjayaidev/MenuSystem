@@ -1060,6 +1060,9 @@ function cardStyleVars(style, code){
   const addFontScale = int(card.add_font_scale, 50, 200);
   if(addFontScale != null) out.push(`--cs-add-font-scale:${addFontScale / 100}`);
   const mine = style[code] || {};
+  const food = mine.food || {};
+  const localizedFoodHeight = int(food.height, 50, 100);
+  if(localizedFoodHeight != null) out.push(`--cs-food-height:${localizedFoodHeight}%`);
   for(const part of ['name', 'price']){
     const rule = mine[part] || {};
     if(font(rule.font)) out.push(`--cs-${part}-font:${font(rule.font)}`);
@@ -1348,14 +1351,20 @@ function render(){
     const hasUrl = Boolean(pngUrl) || hasImageUrl(i);
     const corner = pos => `<svg class="corner ${pos}" viewBox="0 0 48 48" aria-hidden="true"><use href="#rh-corner"/></svg>`;
     const cardColor = /^#[0-9a-f]{6}$/i.test(i.cardColor) ? i.cardColor : '#f6f1e6';
-    const foodScale = Number.isFinite(i.foodScale) ? Math.min(150, Math.max(50, i.foodScale)) / 100 : 1;
-    const foodX = Number.isFinite(i.foodX) ? Math.min(50, Math.max(-50, i.foodX)) : 0;
-    const foodY = Number.isFinite(i.foodY) ? Math.min(50, Math.max(-50, i.foodY)) : 0;
+    const localizedFood = i.cardStyle?.[lang]?.food || {};
+    const foodSetting = (key, legacy, min, max, fallback) => {
+      const localized = Number(localizedFood[key]);
+      if(Number.isInteger(localized) && localized >= min && localized <= max) return localized;
+      return Number.isFinite(legacy) ? Math.min(max, Math.max(min, legacy)) : fallback;
+    };
+    const foodScale = foodSetting('scale', i.foodScale, 50, 150, 100) / 100;
+    const foodX = foodSetting('x', i.foodX, -50, 50, 0);
+    const foodY = foodSetting('y', i.foodY, -50, 50, 0);
     const bgX = Number.isFinite(i.bgX) ? Math.min(100, Math.max(0, i.bgX)) : 50;
     const bgY = Number.isFinite(i.bgY) ? Math.min(100, Math.max(0, i.bgY)) : 50;
     const bgScale = Number.isFinite(i.bgScale) ? Math.min(200, Math.max(100, i.bgScale)) / 100 : 1;
     const num = (value, min, max, fallback) => Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
-    const foodWidth = num(i.foodWidth, 50, 150, 100) / 100;
+    const foodWidth = foodSetting('width', i.foodWidth, 50, 150, 100) / 100;
     const cardWidth = num(i.cardWidth, 40, 85, 66.6667);
     const cardHeight = num(i.cardHeight, 60, 100, 100);
     const priceX = num(i.priceX, -50, 50, 0), priceY = num(i.priceY, -50, 50, 0);

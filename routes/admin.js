@@ -51,7 +51,7 @@ function categoryValues(body = {}) {
 
 // Per-dish text styles (db/01_tables.sql: menu_items.card_style, jsonb).
 //   { card: { font, size, border_w, border_color, add_bg, add_color, add_radius, add_font_scale },
-//     en|ar|zh: { name: { font, size, color, x, y }, price: { font, size, color, x, y } } }
+//     en|ar|zh: { food: { scale, width, height, x, y }, name: { font, size, color, x, y }, price: { ... } } }
 // Empty fields mean "the normal look", so they are dropped; an object with nothing left is stored as null.
 const STYLE_FONTS = ['poppins', 'naskh', 'nastaliq', 'sans-sc', 'cinzel', 'cormorant', 'georgia', 'arial', 'custom'];
 const STYLE_LANGUAGES = ['en', 'ar', 'ur', 'zh'];
@@ -95,6 +95,13 @@ function cardStyleValue(raw) {
     x: { type: 'int', min: -50, max: 50, name: 'move left / right' },
     y: { type: 'int', min: -50, max: 50, name: 'move up / down' },
   };
+  const foodRules = {
+    scale: { type: 'int', min: 50, max: 150, name: 'size (%)' },
+    width: { type: 'int', min: 50, max: 150, name: 'width (%)' },
+    height: { type: 'int', min: 50, max: 100, name: 'height (%)' },
+    x: { type: 'int', min: -50, max: 50, name: 'move left / right' },
+    y: { type: 'int', min: -50, max: 50, name: 'move up / down' },
+  };
   const cardRules = {
     font: { type: 'font' },
     size: { type: 'int', min: 50, max: 250, name: 'size (%)' },
@@ -123,8 +130,8 @@ function cardStyleValue(raw) {
     if (style[language] == null) continue;
     if (typeof style[language] !== 'object' || Array.isArray(style[language])) return { error: 'Card style is not valid.' };
     const entry = {};
-    for (const part of ['name', 'price']) {
-      const result = styleFields(style[language][part], `${language.toUpperCase()} ${part}`, textRules);
+    for (const part of ['food', 'name', 'price']) {
+      const result = styleFields(style[language][part], `${language.toUpperCase()} ${part}`, part === 'food' ? foodRules : textRules);
       if (result.error) return { error: result.error };
       if (Object.keys(result.value).length) entry[part] = result.value;
     }
@@ -239,7 +246,7 @@ async function applyGlobalTextStyleToNewItem(values) {
     const itemLanguage = itemStyle[language];
     if (!itemLanguage || typeof itemLanguage !== 'object') continue;
     merged[language] = { ...(globalStyle[language] || {}) };
-    for (const part of ['name', 'price']) {
+    for (const part of ['food', 'name', 'price']) {
       if (!itemLanguage[part] || typeof itemLanguage[part] !== 'object') continue;
       merged[language][part] = { ...(globalStyle[language]?.[part] || {}), ...itemLanguage[part] };
     }
@@ -394,14 +401,13 @@ router.post('/menu', asyncHandler(async (req, res) => {
 }));
 
 const MENU_STYLE_LAYOUT_RULES = {
-  'food-picture': { food_scale: [50, 150], food_width: [50, 150], food_x: [-50, 50], food_y: [-50, 50] },
   background: { bg_x: [0, 100], bg_y: [0, 100], bg_scale: [100, 200] },
   'white-card': { card_width: [40, 85], card_height: [60, 100] },
   price: { price_x: [-50, 50], price_y: [-50, 50] },
   'add-to-cart': { add_scale: [50, 150], add_x: [-50, 50], add_y: [-50, 50] },
 };
 const WHITE_CARD_STYLE_FIELDS = ['border_w', 'border_color', 'food_overlap', 'row_gap', 'card_gap', 'padding_top', 'padding_side', 'padding_bottom', 'radius'];
-const FOOD_PICTURE_STYLE_FIELDS = ['food_height'];
+const FOOD_PICTURE_STYLE_FIELDS = ['scale', 'width', 'height', 'x', 'y'];
 const ADD_TO_CART_STYLE_FIELDS = ['add_bg', 'add_color', 'add_radius', 'add_font_scale'];
 
 function menuItemStyleObject(raw) {
@@ -435,10 +441,11 @@ function menuStyleApplyValues(section, language, design) {
   }
 
   if (section === 'food-picture') {
-    const candidate = { card: { food_height: design?.card_style?.card?.food_height } };
+    if (!STYLE_LANGUAGES.includes(language)) return { error: 'Choose a valid food picture language.' };
+    const candidate = { [language]: { food: design?.card_style?.[language]?.food || {} } };
     const result = cardStyleValue(candidate);
     if (result.error) return { error: result.error };
-    style.card = result.value?.card || {};
+    style[language] = result.value?.[language] || {};
   } else if (section === 'white-card') {
     const color = design?.card_color;
     if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) return { error: 'Choose a valid white card color.' };
@@ -487,12 +494,7 @@ async function applyMenuStyleToOtherItems(sourceId, section, language, values) {
       const update = { ...values.layout };
       if (Object.keys(values.style).length) {
         const style = menuItemStyleObject(item.card_style);
-        if (section === 'food-picture') {
-          const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
-          replaceStyleFields(card, values.style.card, FOOD_PICTURE_STYLE_FIELDS);
-          if (Object.keys(card).length) style.card = card;
-          else delete style.card;
-        } else if (section === 'white-card') {
+        if (section === 'white-card') {
           const card = style.card && typeof style.card === 'object' ? { ...style.card } : {};
           replaceStyleFields(card, values.style.card, WHITE_CARD_STYLE_FIELDS);
           if (Object.keys(card).length) style.card = card;
@@ -509,8 +511,16 @@ async function applyMenuStyleToOtherItems(sourceId, section, language, values) {
           else delete style.card;
         } else {
           const languageStyle = style[language] && typeof style[language] === 'object' ? { ...style[language] } : {};
-          const sectionStyle = values.style[language][section];
-          if (Object.keys(sectionStyle).length) languageStyle[section] = sectionStyle;
+          const sectionStyle = section === 'food-picture'
+            ? values.style[language].food || {}
+            : values.style[language][section] || {};
+          const fields = section === 'food-picture' ? FOOD_PICTURE_STYLE_FIELDS : [];
+          if (section === 'food-picture') {
+            const food = languageStyle.food && typeof languageStyle.food === 'object' ? { ...languageStyle.food } : {};
+            replaceStyleFields(food, sectionStyle, fields);
+            if (Object.keys(food).length) languageStyle.food = food;
+            else delete languageStyle.food;
+          } else if (Object.keys(sectionStyle).length) languageStyle[section] = sectionStyle;
           else delete languageStyle[section];
           if (Object.keys(languageStyle).length) style[language] = languageStyle;
           else delete style[language];

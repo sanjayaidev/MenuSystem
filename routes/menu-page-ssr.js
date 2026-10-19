@@ -79,6 +79,9 @@ function cardStyleVars(style, language) {
   if (addFontScale !== null) set('--cs-add-font-scale', addFontScale / 100);
 
   const languageStyle = style[language] && typeof style[language] === 'object' ? style[language] : {};
+  const food = languageStyle.food && typeof languageStyle.food === 'object' ? languageStyle.food : {};
+  const foodHeight = integer(food.height, 50, 100);
+  if (foodHeight !== null) set('--cs-food-height', `${foodHeight}%`);
   for (const part of ['name', 'price']) {
     const rule = languageStyle[part] && typeof languageStyle[part] === 'object' ? languageStyle[part] : {};
     if (font(rule.font)) set(`--cs-${part}-font`, font(rule.font));
@@ -116,13 +119,19 @@ function itemMarkup(item, language, design) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
   };
-  const foodScale = item.food_scale == null ? 1 : numeric(item.food_scale, 50, 150, 100) / 100;
-  const foodX = numeric(item.food_x, -50, 50, 0);
-  const foodY = numeric(item.food_y, -50, 50, 0);
+  const foodStyle = item.card_style?.[language]?.food || {};
+  const foodSetting = (key, legacy, min, max, fallback) => {
+    const localized = Number(foodStyle[key]);
+    if (Number.isInteger(localized) && localized >= min && localized <= max) return localized;
+    return numeric(legacy, min, max, fallback);
+  };
+  const foodScale = foodSetting('scale', item.food_scale, 50, 150, 100) / 100;
+  const foodX = foodSetting('x', item.food_x, -50, 50, 0);
+  const foodY = foodSetting('y', item.food_y, -50, 50, 0);
   const bgX = numeric(item.bg_x, 0, 100, 50);
   const bgY = numeric(item.bg_y, 0, 100, 50);
   const bgScale = item.bg_scale == null ? 1 : numeric(item.bg_scale, 100, 200, 100) / 100;
-  const foodWidth = numeric(item.food_width, 50, 150, 100) / 100;
+  const foodWidth = foodSetting('width', item.food_width, 50, 150, 100) / 100;
   const cardWidth = numeric(item.card_width, 40, 85, 66.6667);
   const cardHeight = numeric(item.card_height, 60, 100, 100);
   const priceX = numeric(item.price_x, -50, 50, 0);
