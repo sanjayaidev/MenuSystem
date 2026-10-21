@@ -294,6 +294,7 @@
   <div id="dashboardView">
     <nav class="admin-nav" aria-label="Admin sections" data-ui-aria-label="adminSections">
       <button class="admin-tab active" data-panel="ordersPanel" type="button" data-ui="orders">Orders</button>
+      <button class="admin-tab" data-panel="deliverySettingsPanel" type="button" data-ui="deliveryTab">Delivery</button>
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
       <button class="admin-tab" data-panel="designPanel" type="button">Menu design</button>
@@ -311,6 +312,20 @@
       <button id="refreshBtn" style="background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer;" data-ui="refresh">Refresh</button>
     </div>
     <div id="ordersList"></div>
+    </section>
+
+    <section class="admin-panel" id="deliverySettingsPanel" hidden>
+      <div class="panel-title"><h2 data-ui="deliveryTitle">Delivery cost</h2></div>
+      <form class="manager-form" id="deliverySettingsForm" novalidate>
+        <p class="form-note" style="margin:0 0 12px;" data-ui="deliveryHint">Choose whether to charge a delivery fee and set the amount. Pickup remains free.</p>
+        <div class="check-fields" style="margin-top:0;">
+          <label><input type="checkbox" id="deliveryCostEnabled"> <span data-ui="deliveryCharge">Charge a delivery fee</span></label>
+        </div>
+        <div class="form-grid compact">
+          <label><span><span data-ui="deliveryFee">Delivery fee</span> (<span id="deliveryCurrency">SAR</span>)</span><input id="deliveryCostAmount" type="number" min="0" max="100000" step="0.01" required></label>
+        </div>
+        <div class="form-actions"><button class="action-btn primary" id="deliverySettingsSave" type="submit" data-ui="deliverySave">Save delivery settings</button><span class="form-note" id="deliverySettingsNote" role="status"></span></div>
+      </form>
     </section>
 
     <section class="admin-panel" id="categoriesPanel" hidden>
@@ -1195,6 +1210,26 @@ const POSTER_ADMIN_STRINGS = {
 };
 Object.keys(POSTER_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], POSTER_ADMIN_STRINGS[code]));
 
+const DELIVERY_ADMIN_STRINGS = {
+  en: { deliveryTab:'Delivery', deliveryTitle:'Delivery cost', deliveryHint:'Choose whether to charge a delivery fee and set the amount. Pickup remains free.',
+    deliveryCharge:'Charge a delivery fee', deliveryFee:'Delivery fee', deliverySave:'Save delivery settings',
+    deliverySaved:'Delivery settings saved.', deliverySaving:'Saving...', deliveryLoadFailed:'Could not load delivery settings.',
+    deliverySaveFailed:'Could not save delivery settings.', deliveryAmountInvalid:'Enter a non-negative amount with at most two decimal places.' },
+  ar: { deliveryTab:'التوصيل', deliveryTitle:'رسوم التوصيل', deliveryHint:'اختر ما إذا كنت تريد فرض رسوم توصيل وحدد المبلغ. الاستلام من الفرع مجاني.',
+    deliveryCharge:'فرض رسوم توصيل', deliveryFee:'رسوم التوصيل', deliverySave:'حفظ إعدادات التوصيل',
+    deliverySaved:'تم حفظ إعدادات التوصيل.', deliverySaving:'جارٍ الحفظ...', deliveryLoadFailed:'تعذّر تحميل إعدادات التوصيل.',
+    deliverySaveFailed:'تعذّر حفظ إعدادات التوصيل.', deliveryAmountInvalid:'أدخل مبلغاً غير سالب وبحد أقصى منزلتين عشريتين.' },
+  ur: { deliveryTab:'ڈیلیوری', deliveryTitle:'ڈیلیوری فیس', deliveryHint:'منتخب کریں کہ ڈیلیوری فیس لینی ہے یا نہیں، اور رقم درج کریں۔ برانچ سے پک اَپ مفت ہے۔',
+    deliveryCharge:'ڈیلیوری فیس وصول کریں', deliveryFee:'ڈیلیوری فیس', deliverySave:'ڈیلیوری کی ترتیبات محفوظ کریں',
+    deliverySaved:'ڈیلیوری کی ترتیبات محفوظ ہو گئیں۔', deliverySaving:'محفوظ ہو رہا ہے...', deliveryLoadFailed:'ڈیلیوری کی ترتیبات لوڈ نہیں ہو سکیں۔',
+    deliverySaveFailed:'ڈیلیوری کی ترتیبات محفوظ نہیں ہو سکیں۔', deliveryAmountInvalid:'صفر یا اس سے زیادہ رقم درج کریں، زیادہ سے زیادہ دو اعشاری ہندسوں کے ساتھ۔' },
+  zh: { deliveryTab:'配送', deliveryTitle:'配送费用', deliveryHint:'选择是否收取配送费并设置金额。到店自取免费。',
+    deliveryCharge:'收取配送费', deliveryFee:'配送费', deliverySave:'保存配送设置',
+    deliverySaved:'配送设置已保存。', deliverySaving:'正在保存...', deliveryLoadFailed:'无法加载配送设置。',
+    deliverySaveFailed:'无法保存配送设置。', deliveryAmountInvalid:'请输入非负金额，最多保留两位小数。' },
+};
+Object.keys(DELIVERY_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], DELIVERY_ADMIN_STRINGS[code]));
+
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
 let plainPhotoSyncedTo = '';   // Food PNG URL last copied into the plain Image URL field (see syncPlainPhoto)
@@ -1261,7 +1296,15 @@ document.getElementById('adminLanguageSelect').addEventListener('change', event 
 });
 
 function authHeaders(){ return token ? { Authorization: `Bearer ${token}` } : {}; }
-function money(n){ return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${Number(n).toFixed(2)}</span>`; }   // Saudi Riyal sign + amount (page markup only)
+let ADMIN_CURRENCY = 'SAR';
+function money(n){
+  const value = Number(n);
+  const digits = new Intl.NumberFormat('en', { style:'currency', currency:ADMIN_CURRENCY }).resolvedOptions().maximumFractionDigits;
+  const amount = new Intl.NumberFormat('en', { minimumFractionDigits:0, maximumFractionDigits:digits }).format(value);
+  return ADMIN_CURRENCY === 'SAR'
+    ? `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${amount}</span>`
+    : `<span class="money">${escapeHtml(new Intl.NumberFormat('en', { style:'currency', currency:ADMIN_CURRENCY, currencyDisplay:'code' }).format(value))}</span>`;
+}
 async function readApiJson(response){
   const body = await response.text();
   if(!body.trim()) throw new Error(`Server returned an empty response (HTTP ${response.status}).`);
@@ -1291,6 +1334,14 @@ function showDashboard(email){
   document.getElementById('whoEmail').textContent = email || '';
   renderFilters();
   loadOrders();
+  fetch(`${API_BASE}/api/config`, { cache:'no-store' })
+    .then(async response => {
+      if(!response.ok) throw new Error(`GET /api/config failed (${response.status})`);
+      const config = await response.json();
+      ADMIN_CURRENCY = config.currency || ADMIN_CURRENCY;
+      if(ordersLoaded) renderOrders(currentOrders);
+    })
+    .catch(error => console.error('Could not load currency settings:', error));
   if(autoRefreshTimer) clearInterval(autoRefreshTimer);
   autoRefreshTimer = setInterval(loadOrders, AUTO_REFRESH_MS);
 }
@@ -1508,6 +1559,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'homepagePanel') loadHomepage();
     if(tab.dataset.panel === 'musicPanel') loadMusic();
     if(tab.dataset.panel === 'contactPanel') loadContact();
+    if(tab.dataset.panel === 'deliverySettingsPanel') loadDeliverySettings();
   });
 });
 
@@ -3564,6 +3616,58 @@ document.getElementById('contactPinClear').addEventListener('click', clearPin);
   if(pin && pin !== 'invalid') setPin(pin.lat, pin.lng, { zoom: pinMap ? Math.max(pinMap.getZoom(), 17) : 17 });
   else{ if(!pin) removePinMarker(); showPinStatus(); }
 }));
+
+async function loadDeliverySettings(){
+  const button = document.getElementById('deliverySettingsSave');
+  button.disabled = true;
+  try{
+    const settings = await adminRequest('/delivery-settings');
+    ADMIN_CURRENCY = settings.currency || ADMIN_CURRENCY;
+    document.getElementById('deliveryCurrency').textContent = ADMIN_CURRENCY;
+    document.getElementById('deliveryCostEnabled').checked = settings.enabled === true;
+    document.getElementById('deliveryCostAmount').value = Number(settings.amount).toFixed(2);
+    document.getElementById('deliveryCostAmount').disabled = !settings.enabled;
+    setFormNote('deliverySettingsNote', '');
+    if(ordersLoaded) renderOrders(currentOrders);
+  }catch(error){
+    setFormNote('deliverySettingsNote', error.message || adminText('deliveryLoadFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+}
+document.getElementById('deliveryCostEnabled').addEventListener('change', event => {
+  document.getElementById('deliveryCostAmount').disabled = !event.currentTarget.checked;
+});
+document.getElementById('deliverySettingsForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('deliverySettingsSave');
+  const rawAmount = document.getElementById('deliveryCostAmount').value;
+  const amount = Number(rawAmount);
+  if(!rawAmount.trim() || !Number.isFinite(amount) || amount < 0 || amount > 100000 || Math.round(amount * 100) !== amount * 100){
+    setFormNote('deliverySettingsNote', adminText('deliveryAmountInvalid'), true);
+    return;
+  }
+  button.disabled = true;
+  setFormNote('deliverySettingsNote', adminText('deliverySaving'));
+  try{
+    const settings = await adminRequest('/delivery-settings', {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        enabled:document.getElementById('deliveryCostEnabled').checked,
+        amount,
+      }),
+    });
+    ADMIN_CURRENCY = settings.currency || ADMIN_CURRENCY;
+    document.getElementById('deliveryCurrency').textContent = ADMIN_CURRENCY;
+    document.getElementById('deliveryCostAmount').value = Number(settings.amount).toFixed(2);
+    setFormNote('deliverySettingsNote', adminText('deliverySaved'));
+  }catch(error){
+    setFormNote('deliverySettingsNote', error.message || adminText('deliverySaveFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+});
 
 async function loadContact(){
   try{

@@ -877,10 +877,11 @@ const STR = {
        checkoutTitle:'Checkout', requestType:'Request type:', customerContact:'Customer contact information:',
        fullName:'Full name:', fullNamePh:'Enter your name...', mobileNumber:'Mobile number (WhatsApp/call):',
        deliveryAddress:'Delivery address:', deliveryAddressPh:'Neighborhood, street, building/villa, apartment...',
-       paymentMethod:'Payment method:', paymentSimulated:'Secure card payment by Moyasar',
+       paymentMethod:'Payment method:', paymentProvider:'Secure card payment by Moyasar',
        payBtn:'Continue to secure payment', processingPayment:'Preparing secure payment…', paymentDone:'Payment confirmed.',
        paymentCancel:'Back to order details', paymentNotConfigured:'Online payments are not available. Please contact the restaurant.',
-       paymentFailed:'Payment was not completed. Please try again.', orderFailed:'Something went wrong. Please try again.',
+       configLoadFailed:'Could not load checkout settings. Please refresh the page and try again.',
+       paymentFailed:'Payment was not completed. Please try again.', paymentPending:'Payment is still processing. Refresh this page in a moment to check again.', orderFailed:'Something went wrong. Please try again.',
        includesTitle:'This meal automatically includes:', includesText:'Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water',
        descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
     ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
@@ -902,10 +903,11 @@ const STR = {
        checkoutTitle:'إتمام الطلب', requestType:'نوع الطلب:', customerContact:'بيانات التواصل:',
        fullName:'الاسم الكامل:', fullNamePh:'أدخل اسمك...', mobileNumber:'رقم الجوال (واتساب/اتصال):',
        deliveryAddress:'عنوان التوصيل:', deliveryAddressPh:'الحي، الشارع، رقم المبنى/الفيلا، الشقة...',
-       paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع آمن بالبطاقة عبر Moyasar',
+       paymentMethod:'طريقة الدفع:', paymentProvider:'دفع آمن بالبطاقة عبر Moyasar',
        payBtn:'المتابعة إلى الدفع الآمن', processingPayment:'جارٍ تجهيز الدفع الآمن…', paymentDone:'تم تأكيد الدفع.',
        paymentCancel:'العودة إلى تفاصيل الطلب', paymentNotConfigured:'الدفع الإلكتروني غير متاح. يرجى التواصل مع المطعم.',
-       paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
+       configLoadFailed:'تعذّر تحميل إعدادات الدفع. حدّث الصفحة وحاول مرة أخرى.',
+       paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', paymentPending:'لا تزال عملية الدفع قيد المعالجة. حدّث الصفحة بعد قليل للتحقق مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
        includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'شوربة أعشاب البحر، أرز مقلي بالبيض، نودلز، سلطة وماء',
        descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
     ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
@@ -927,10 +929,11 @@ const STR = {
        checkoutTitle:'چیک آؤٹ', requestType:'درخواست کی قسم:', customerContact:'رابطہ کی معلومات:',
        fullName:'پورا نام:', fullNamePh:'اپنا نام درج کریں...', mobileNumber:'موبائل نمبر (واٹس ایپ/کال):',
        deliveryAddress:'ڈیلیوری پتہ:', deliveryAddressPh:'محلہ، گلی، عمارت/ولا نمبر، اپارٹمنٹ...',
-       paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'Moyasar کے ذریعے محفوظ کارڈ ادائیگی',
+       paymentMethod:'ادائیگی کا طریقہ:', paymentProvider:'Moyasar کے ذریعے محفوظ کارڈ ادائیگی',
        payBtn:'محفوظ ادائیگی جاری رکھیں', processingPayment:'محفوظ ادائیگی تیار ہو رہی ہے…', paymentDone:'ادائیگی کی تصدیق ہو گئی۔',
        paymentCancel:'آرڈر کی تفصیلات پر واپس جائیں', paymentNotConfigured:'آن لائن ادائیگی دستیاب نہیں۔ براہ کرم ریسٹورنٹ سے رابطہ کریں۔',
-       paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+       configLoadFailed:'چیک آؤٹ کی ترتیبات لوڈ نہیں ہو سکیں۔ صفحہ ریفریش کرکے دوبارہ کوشش کریں۔',
+       paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', paymentPending:'ادائیگی ابھی جاری ہے۔ دوبارہ جانچنے کے لیے تھوڑی دیر بعد صفحہ ریفریش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
        includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی',
        descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
     zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
@@ -952,10 +955,11 @@ const STR = {
        checkoutTitle:'结账', requestType:'订单类型：', customerContact:'客户联系信息：',
        fullName:'姓名：', fullNamePh:'请输入您的姓名…', mobileNumber:'手机号码（WhatsApp/通话）：',
        deliveryAddress:'送货地址：', deliveryAddressPh:'小区、街道、楼栋/别墅号、公寓号…',
-       paymentMethod:'付款方式：', paymentSimulated:'通过 Moyasar 安全银行卡付款',
+       paymentMethod:'付款方式：', paymentProvider:'通过 Moyasar 安全银行卡付款',
        payBtn:'继续安全付款', processingPayment:'正在准备安全付款…', paymentDone:'付款已确认。',
        paymentCancel:'返回订单详情', paymentNotConfigured:'暂无法在线付款，请联系餐厅。',
-       paymentFailed:'付款未完成，请重试。', orderFailed:'出错了，请重试。',
+       configLoadFailed:'无法加载结账设置。请刷新页面后重试。',
+       paymentFailed:'付款未完成，请重试。', paymentPending:'付款仍在处理中。请稍后刷新此页面再次查询。', orderFailed:'出错了，请重试。',
        includesTitle:'此套餐自动包含：', includesText:'紫菜汤、蛋炒饭、面条、沙拉和水',
        descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
 };
@@ -1570,6 +1574,8 @@ document.getElementById('posterCue').addEventListener('click', ()=>{
 let CURRENCY = 'SAR';
 const API_BASE = window.location.origin;
 let DELIVERY_FEE = 20;          // overwritten by loadConfig() below
+let DELIVERY_FEE_ENABLED = true;
+let CONFIG_LOADED = false;
 let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
 let BRANCH_NAME = 'Red House Trading';
 let MOYASAR_ENABLED = false;
@@ -1582,13 +1588,16 @@ async function loadConfig(){
     if(!res.ok) throw new Error(`GET /api/config failed (${res.status})`);
     const cfg = await res.json();
     DELIVERY_FEE = Number(cfg.deliveryFee ?? DELIVERY_FEE);
+    DELIVERY_FEE_ENABLED = cfg.deliveryFeeEnabled !== false;
     CURRENCY = cfg.currency || CURRENCY;
     WHATSAPP_NUMBER = cfg.whatsappNumber || '';
     BRANCH_NAME = cfg.branchName || BRANCH_NAME;
     MOYASAR_ENABLED = cfg.moyasarEnabled === true;
     MOYASAR_PUBLISHABLE_KEY = cfg.moyasarPublishableKey || '';
+    CONFIG_LOADED = true;
   }catch(err){
-    console.error('Failed to load server config, using defaults:', err);
+    console.error('Failed to load server config:', err);
+    CONFIG_LOADED = false;
   }
 }
 
@@ -1898,16 +1907,21 @@ function pruneUnavailableCart(){
   }
 }
 function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
-function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
+function cartDeliveryFee(){ return orderType==='delivery' && DELIVERY_FEE_ENABLED ? DELIVERY_FEE : 0; }
 function cartTotal(){ return cartSubtotal() + cartDeliveryFee(); }
-// Amount text without trailing zeros: 39.00 -> "39"; a price with real cents keeps two decimals (39.50).
+function currencyDigits(){
+  try{ return new Intl.NumberFormat('en', { style:'currency', currency:CURRENCY }).resolvedOptions().maximumFractionDigits; }
+  catch{ return 2; }
+}
 function amountText(n){
   const v = Number(n);
-  return Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)) : v.toFixed(2);
+  return Number.isFinite(v) ? new Intl.NumberFormat('en', { minimumFractionDigits:0, maximumFractionDigits:currencyDigits() }).format(v) : '0';
 }
-function money(n){ return `${CURRENCY} ${amountText(n)}`; }   // plain text (WhatsApp message): the sign is not in most fonts, so it says SAR
-// Page markup: the Saudi Riyal sign before the amount, in every language (it reads as amount-then-riyal in Arabic too).
-function moneyHtml(n){ return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${amountText(n)}</span>`; }
+function money(n){ return `${CURRENCY} ${amountText(n)}`; }
+function moneyHtml(n){
+  if(CURRENCY !== 'SAR') return `<span class="money">${escapeHtml(money(n))}</span>`;
+  return `<span class="money"><svg class="riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="${CURRENCY}"><use href="#riyal-sign"/></svg>${amountText(n)}</span>`;
+}
 function setMoney(el, n){ el.innerHTML = moneyHtml(n); }
 
 /* ---------- ITEM MODAL ---------- */
@@ -2046,7 +2060,7 @@ function renderCart(){
   });
 
   setMoney(document.getElementById('cartSubtotalVal'), cartSubtotal());
-  document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' && DELIVERY_FEE_ENABLED ? 'flex' : 'none';
   setMoney(document.getElementById('cartDeliveryVal'), cartDeliveryFee());
   setMoney(document.getElementById('cartTotalVal'), cartTotal());
 }
@@ -2224,7 +2238,7 @@ function refreshCheckoutStaticText(){
   document.getElementById('addressLabel').textContent = STR[lang].deliveryAddress;
   document.getElementById('checkoutAddress').placeholder = STR[lang].deliveryAddressPh;
   document.getElementById('paymentLabel').textContent = STR[lang].paymentMethod;
-  document.getElementById('paymentMethodText').textContent = STR[lang].paymentSimulated;
+  document.getElementById('paymentMethodText').textContent = STR[lang].paymentProvider;
   document.getElementById('moyasarCancelBtn').textContent = STR[lang].paymentCancel;
   document.getElementById('checkoutSubLabel').textContent = STR[lang].subtotal;
   document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
@@ -2246,7 +2260,7 @@ function openCheckout(){
   document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
   document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
   setMoney(document.getElementById('checkoutSubVal'), cartSubtotal());
-  document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' && DELIVERY_FEE_ENABLED ? 'flex' : 'none';
   setMoney(document.getElementById('checkoutDeliveryVal'), cartDeliveryFee());
   setMoney(document.getElementById('checkoutTotalVal'), cartTotal());
   document.getElementById('checkoutStatusNote').textContent = '';
@@ -2323,6 +2337,10 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
 
   if(!name || !phone || (orderType==='delivery' && !address)){
     statusNote.textContent = STR[lang].orderFailed;
+    return;
+  }
+  if(!CONFIG_LOADED){
+    statusNote.textContent = STR[lang].configLoadFailed;
     return;
   }
   if(!MOYASAR_ENABLED || !MOYASAR_PUBLISHABLE_KEY){
@@ -2402,23 +2420,30 @@ Track: ${RHOrder.trackUrl(order.order_number, order.order_token)}`;
 
 async function handleMoyasarReturn(){
   const returnUrl = new URL(window.location.href);
-  if(returnUrl.searchParams.get('payment_return') !== '1') return;
-  const paymentId = returnUrl.searchParams.get('id');
-  returnUrl.searchParams.delete('payment_return');
-  returnUrl.searchParams.delete('id');
-  window.history.replaceState({}, '', returnUrl.pathname + returnUrl.search + returnUrl.hash);
-
+  const isPaymentReturn = returnUrl.searchParams.get('payment_return') === '1';
+  let paymentId = returnUrl.searchParams.get('id');
   let pendingOrder;
   try{
     pendingOrder = JSON.parse(sessionStorage.getItem(PENDING_PAYMENT_KEY) || 'null');
   }catch(err){
     console.error('Could not read the pending payment details:', err);
   }
+  if(isPaymentReturn){
+    returnUrl.searchParams.delete('payment_return');
+    returnUrl.searchParams.delete('id');
+    window.history.replaceState({}, '', returnUrl.pathname + returnUrl.search + returnUrl.hash);
+  }else if(!pendingOrder?.payment_id){
+    return;
+  }else{
+    paymentId = pendingOrder.payment_id;
+  }
   if(!paymentId || !pendingOrder || !pendingOrder.order_token){
     document.getElementById('checkoutStatusNote').textContent = STR[lang].paymentFailed;
     openOverlay(checkoutOverlay);
     return;
   }
+  pendingOrder.payment_id = paymentId;
+  sessionStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pendingOrder));
 
   try{
     const response = await fetch(`${API_BASE}/api/orders/payment/confirm`, {
@@ -2427,9 +2452,17 @@ async function handleMoyasarReturn(){
       body:JSON.stringify({ payment_id:paymentId, order_token:pendingOrder.order_token })
     });
     const order = await response.json();
-    if(!response.ok || order.payment_status !== 'paid'){
+    if(!response.ok){
       throw new Error(order.error || STR[lang].paymentFailed);
     }
+    if(order.payment_status === 'pending'){
+      document.getElementById('checkoutDetails').hidden = false;
+      document.getElementById('moyasarCheckout').hidden = true;
+      document.getElementById('checkoutStatusNote').textContent = STR[lang].paymentPending;
+      openOverlay(checkoutOverlay);
+      return;
+    }
+    if(order.payment_status !== 'paid') throw new Error(order.error || STR[lang].paymentFailed);
     lastOrder = order;
     sessionStorage.removeItem(PENDING_PAYMENT_KEY);
     RHOrder.remember(order.order_number, order.order_token);

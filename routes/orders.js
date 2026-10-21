@@ -5,19 +5,16 @@ const supabase = require('../db/supabase');
 const { getAuthUser } = require('../middleware/auth');
 const { parseOrderRef } = require('../db/order-ref');
 const { toPoint, geocodeAddress, getRoute } = require('../db/geo');
+const { getDeliverySettings, CURRENCY, CURRENCY_DIGITS } = require('../db/delivery-settings');
+const { getMoyasarConfig } = require('../db/moyasar-config');
 const contactRoutes = require('./contact');
 
 const router = express.Router();
 
-// Single source of truth for the delivery fee — set DELIVERY_FEE in your
-// .env / Render dashboard. homepage.html reads the same value from
-// GET /api/config instead of hardcoding its own copy.
-const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 20);
-const CURRENCY = (process.env.CURRENCY || 'SAR').toUpperCase();
-const CURRENCY_DIGITS = new Intl.NumberFormat('en', {
-  style: 'currency',
-  currency: CURRENCY,
-}).resolvedOptions().maximumFractionDigits;
+const PAYMENT_DEBUG = process.env.PAYMENT_DEBUG !== '0';
+const debug = (tag, message, data) => {
+  if (PAYMENT_DEBUG) console.log(`[PAYMENT-DEBUG ${new Date().toISOString()}] [${tag}] ${message}`, data || '');
+};
 const toMinorUnits = (amount) => Math.round(amount * (10 ** CURRENCY_DIGITS));
 
 // Order creation hits Supabase, sends (eventually) a WhatsApp handoff, and
@@ -37,6 +34,13 @@ const paymentConfirmLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many payment checks. Please wait a while and try again.' },
 });
+const paymentWebhookLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many payment notifications. Please try again later.' },
+});
 
 // POST /api/orders
 // body: {
@@ -45,7 +49,14 @@ const paymentConfirmLimiter = rateLimit({
 //   items: [{ menu_item_id, quantity }]
 // }
 router.post('/orders', orderLimiter, async (req, res) => {
-  if (!process.env.MOYASAR_PUBLISHABLE_KEY || !process.env.MOYASAR_SECRET_KEY) {
+  const requestId = randomUUID().slice(0, 8);
+  const paymentConfig = getMoyasarConfig();
+  debug('ORDER', `#${requestId} order request received`, {
+    paymentConfigurationValid: paymentConfig.enabled,
+    currency: CURRENCY,
+  });
+  if (!paymentConfig.enabled) {
+    console.error('Online payment order rejected: set matching, correctly formatted Moyasar publishable and secret keys.');
     return res.status(503).json({ error: 'Online payments are not configured. Please contact the restaurant.' });
   }
   if (req.body.payment_method !== 'moyasar') {
@@ -119,8 +130,16 @@ router.post('/orders', orderLimiter, async (req, res) => {
     });
   }
 
-  const deliveryFee = delivery_type === 'delivery' ? DELIVERY_FEE : 0;
+  let deliverySettings;
+  try {
+    deliverySettings = await getDeliverySettings();
+  } catch (error) {
+    console.error('Could not load delivery settings:', error.message);
+    return res.status(500).json({ error: 'Could not load delivery settings. Please try again.' });
+  }
+  const deliveryFee = delivery_type === 'delivery' && deliverySettings.enabled ? deliverySettings.amount : 0;
   const total = toMoney(subtotal + deliveryFee);
+  debug('ORDER', `#${requestId} total calculated`, { subtotal, deliveryFee, total, currency: CURRENCY });
   if (toMinorUnits(total) < 100) {
     return res.status(400).json({ error: 'The order total is below Moyasar’s minimum payment amount.' });
   }
@@ -170,59 +189,61 @@ router.post('/orders', orderLimiter, async (req, res) => {
   });
 });
 
-// POST /api/orders/payment/confirm { payment_id, order_token }
-// Called by Moyasar's browser form before the 3DS redirect and again on return.
-// Never trust the browser's payment status or amount: retrieve the payment
-// using the server-only secret key, then match it to the saved order.
-router.post('/orders/payment/confirm', paymentConfirmLimiter, async (req, res) => {
-  const paymentId = String(req.body.payment_id || '');
-  const orderToken = String(req.body.order_token || '');
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(paymentId)) {
-    return res.status(400).json({ error: 'A valid Moyasar payment_id is required' });
-  }
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderToken)) {
-    return res.status(400).json({ error: 'A valid order_token is required' });
-  }
-  if (!process.env.MOYASAR_SECRET_KEY) {
-    return res.status(503).json({ error: 'Online payments are not configured.' });
-  }
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-  let paymentResponse;
+async function fetchMoyasarPayment(paymentId) {
+  const paymentConfig = getMoyasarConfig();
+  if (!paymentConfig.enabled) {
+    const error = new Error('Moyasar keys are missing, malformed or from different modes.');
+    error.status = 503;
+    throw error;
+  }
+  let response;
   try {
-    paymentResponse = await fetch(`https://api.moyasar.com/v1/payments/${encodeURIComponent(paymentId)}`, {
+    response = await fetch(`https://api.moyasar.com/v1/payments/${encodeURIComponent(paymentId)}`, {
       headers: {
         Authorization: `Basic ${Buffer.from(`${process.env.MOYASAR_SECRET_KEY}:`).toString('base64')}`,
         Accept: 'application/json',
       },
       signal: AbortSignal.timeout(10000),
     });
-  } catch (error) {
-    console.error('Could not retrieve the Moyasar payment:', error.message);
-    return res.status(502).json({ error: 'Could not verify the payment. Please try again.' });
+  } catch (cause) {
+    const error = new Error('Could not retrieve the Moyasar payment.');
+    error.status = 502;
+    error.cause = cause;
+    throw error;
   }
-
-  if (!paymentResponse.ok) {
-    if (paymentResponse.status !== 404) {
-      console.error(`Moyasar payment lookup failed (${paymentResponse.status}).`);
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      console.error(`Moyasar rejected the server payment lookup (${response.status}); check MOYASAR_SECRET_KEY.`);
     }
-    return res.status(paymentResponse.status === 404 ? 404 : 502)
-      .json({ error: 'Could not find or verify this payment.' });
+    const error = new Error('Could not find or verify this payment.');
+    error.status = response.status === 404 ? 404 : 502;
+    throw error;
   }
-
   let payment;
   try {
-    payment = await paymentResponse.json();
-  } catch (error) {
-    console.error('Moyasar returned invalid payment data:', error.message);
-    return res.status(502).json({ error: 'Could not verify the payment. Please try again.' });
+    payment = await response.json();
+  } catch (cause) {
+    const error = new Error('Moyasar returned invalid payment data.');
+    error.status = 502;
+    error.cause = cause;
+    throw error;
   }
   if (!payment || typeof payment !== 'object' || payment.id !== paymentId) {
-    return res.status(502).json({ error: 'Moyasar returned invalid payment data.' });
+    const error = new Error('Moyasar returned invalid payment data.');
+    error.status = 502;
+    throw error;
   }
+  return payment;
+}
 
+async function updateOrderFromPayment(payment, orderToken) {
   const paymentReference = typeof payment.description === 'string' ? payment.description : '';
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(paymentReference)) {
-    return res.status(400).json({ error: 'This payment is not linked to an order.' });
+  if (!UUID_PATTERN.test(paymentReference)) {
+    const error = new Error('This payment is not linked to an order.');
+    error.status = 400;
+    throw error;
   }
 
   const { data: order, error: orderErr } = await supabase
@@ -230,66 +251,117 @@ router.post('/orders/payment/confirm', paymentConfirmLimiter, async (req, res) =
     .select('id, order_number, order_token, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, moyasar_payment_id, order_items(name_snapshot, quantity, line_total)')
     .eq('moyasar_reference', paymentReference)
     .maybeSingle();
-
-  if (orderErr) return res.status(500).json({ error: 'Could not load the matching order.' });
-  if (!order || order.order_token !== orderToken) {
-    return res.status(404).json({ error: 'This payment could not be matched to your order.' });
+  if (orderErr) throw Object.assign(new Error('Could not load the matching order.'), { status: 500, cause: orderErr });
+  if (!order || (orderToken && order.order_token !== orderToken)) {
+    throw Object.assign(new Error('This payment could not be matched to your order.'), { status: 404 });
   }
 
   const expectedAmount = toMinorUnits(Number(order.total));
   if (payment.amount !== expectedAmount || payment.currency !== CURRENCY) {
-    return res.status(400).json({ error: 'The payment amount or currency does not match the order.' });
+    debug('VERIFY', 'Payment rejected: amount or currency mismatch', {
+      orderNumber: order.order_number,
+      expectedAmount,
+      receivedAmount: payment.amount,
+      expectedCurrency: CURRENCY,
+      receivedCurrency: payment.currency,
+    });
+    throw Object.assign(new Error('The payment amount or currency does not match the order.'), { status: 400 });
   }
-  if (order.moyasar_payment_id && order.moyasar_payment_id !== paymentId) {
-    return res.status(409).json({ error: 'A different payment is already linked to this order.' });
+  if (order.moyasar_payment_id && order.moyasar_payment_id !== payment.id) {
+    throw Object.assign(new Error('A different payment is already linked to this order.'), { status: 409 });
   }
-  if (order.payment_status === 'paid' && order.payment_method !== 'moyasar') {
-    return res.status(409).json({ error: 'This order has already been paid by another method.' });
+  if (order.payment_status === 'paid' && order.moyasar_payment_id !== payment.id) {
+    throw Object.assign(new Error('This order has already been paid by another method.'), { status: 409 });
   }
 
-  if (payment.status !== 'paid') {
-    const paymentStatus = ['failed', 'expired', 'voided'].includes(payment.status) ? 'failed' : 'pending';
-    let statusUpdate = supabase
-      .from('orders')
-      .update({ payment_status: paymentStatus, moyasar_payment_id: paymentId })
-      .eq('id', order.id);
-    statusUpdate = order.moyasar_payment_id
-      ? statusUpdate.eq('moyasar_payment_id', paymentId)
-      : statusUpdate.is('moyasar_payment_id', null);
-    const { error: updateErr } = await statusUpdate;
-    if (updateErr) return res.status(500).json({ error: 'Could not save the payment status.' });
-    if (paymentStatus === 'failed') {
+  const paymentStatus = payment.status === 'paid'
+    ? 'paid'
+    : ['failed', 'expired', 'voided'].includes(payment.status) ? 'failed' : 'pending';
+  const values = { payment_status: paymentStatus, moyasar_payment_id: payment.id };
+  if (paymentStatus === 'paid') values.payment_method = 'moyasar';
+
+  let update = supabase
+    .from('orders')
+    .update(values)
+    .eq('id', order.id)
+    .neq('payment_status', 'paid');
+  if (paymentStatus === 'pending') update = update.neq('payment_status', 'failed');
+  update = order.moyasar_payment_id
+    ? update.eq('moyasar_payment_id', payment.id)
+    : update.is('moyasar_payment_id', null);
+  const { data: updated, error: updateErr } = await update
+    .select('id, order_number, order_token, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, moyasar_payment_id, order_items(name_snapshot, quantity, line_total)')
+    .maybeSingle();
+  if (updateErr) throw Object.assign(new Error('Could not save the payment status.'), { status: 500, cause: updateErr });
+
+  if (updated) return updated;
+  const { data: latest, error: latestErr } = await supabase
+    .from('orders')
+    .select('id, order_number, order_token, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, moyasar_payment_id, order_items(name_snapshot, quantity, line_total)')
+    .eq('id', order.id)
+    .single();
+  if (latestErr || latest.moyasar_payment_id !== payment.id) {
+    throw Object.assign(new Error('This payment could not be linked to the order.'), { status: 409 });
+  }
+  return latest;
+}
+
+// POST /api/orders/payment/confirm { payment_id, order_token }
+// Called by Moyasar's browser form before the 3DS redirect and again on return.
+// Never trust the browser's payment status or amount: retrieve the payment
+// using the server-only secret key, then match it to the saved order.
+router.post('/orders/payment/confirm', paymentConfirmLimiter, async (req, res) => {
+  const paymentId = String(req.body.payment_id || '');
+  const orderToken = String(req.body.order_token || '');
+  const requestId = randomUUID().slice(0, 8);
+  debug('CONFIRM', `#${requestId} payment confirmation requested`);
+  if (!UUID_PATTERN.test(paymentId)) {
+    return res.status(400).json({ error: 'A valid Moyasar payment_id is required' });
+  }
+  if (!UUID_PATTERN.test(orderToken)) {
+    return res.status(400).json({ error: 'A valid order_token is required' });
+  }
+
+  try {
+    const payment = await fetchMoyasarPayment(paymentId);
+    const order = await updateOrderFromPayment(payment, orderToken);
+    debug('CONFIRM', `#${requestId} verification complete`, {
+      orderNumber: order.order_number,
+      paymentStatus: order.payment_status,
+    });
+    if (order.payment_status === 'failed') {
       return res.status(402).json({ error: 'Payment was not completed. Please try again.' });
     }
-    return res.json({ payment_status: 'pending' });
+    if (order.payment_status !== 'paid') return res.json({ payment_status: order.payment_status });
+    return res.json(order);
+  } catch (error) {
+    const status = error.status || 500;
+    if (status >= 500) console.error(`Payment confirmation failed (${status}):`, error.cause?.code || error.cause?.name || error.message);
+    return res.status(status).json({
+      error: status >= 500 ? 'Could not verify or save the payment. Please try again.' : error.message,
+    });
   }
+});
 
-  const { data: updated, error: updateErr } = await supabase
-    .from('orders')
-    .update({
-      payment_status: 'paid',
-      payment_method: 'moyasar',
-      moyasar_payment_id: paymentId,
-    })
-    .eq('id', order.id)
-    .is('moyasar_payment_id', order.moyasar_payment_id)
-    .select('id, order_number, order_token, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, order_items(name_snapshot, quantity, line_total)')
-    .maybeSingle();
-
-  if (updateErr) return res.status(500).json({ error: 'Could not confirm the paid order.' });
-  if (!updated) {
-    const { data: latest, error: latestErr } = await supabase
-      .from('orders')
-      .select('id, order_number, order_token, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, moyasar_payment_id, order_items(name_snapshot, quantity, line_total)')
-      .eq('id', order.id)
-      .single();
-    if (latestErr || latest.payment_status !== 'paid' || latest.moyasar_payment_id !== paymentId) {
-      return res.status(409).json({ error: 'This payment could not be linked to the order.' });
-    }
-    return res.json({ ...latest, payment_status: 'paid' });
+// POST /api/orders/payment/webhook
+// Register this URL as a Moyasar webhook. The request is only a notification:
+// the payment is re-fetched from Moyasar before any order state is changed.
+router.post('/orders/payment/webhook', paymentWebhookLimiter, async (req, res) => {
+  const paymentId = String(req.body?.payment?.id || req.body?.data?.object?.id || req.body?.data?.id || req.body?.payment_id || req.body?.id || '');
+  if (!UUID_PATTERN.test(paymentId)) return res.status(400).json({ error: 'Invalid Moyasar payment notification.' });
+  try {
+    const payment = await fetchMoyasarPayment(paymentId);
+    const order = await updateOrderFromPayment(payment);
+    debug('WEBHOOK', 'Moyasar payment notification processed', {
+      orderNumber: order.order_number,
+      paymentStatus: order.payment_status,
+    });
+    res.json({ received: true });
+  } catch (error) {
+    const status = error.status || 500;
+    if (status >= 500) console.error(`Moyasar webhook processing failed (${status}):`, error.cause?.code || error.cause?.name || error.message);
+    res.status(status).json({ error: status >= 500 ? 'Could not process the payment notification.' : error.message });
   }
-
-  res.json(updated);
 });
 
 // GET /api/orders/:ref?token=<order_token> — for confirmation/support lookups.

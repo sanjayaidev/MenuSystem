@@ -199,9 +199,11 @@ cp .env.example .env
 | `APP_URL` | yes | Used for the keep-alive pinger **and** as the base for the password-reset redirect link (see below) |
 | `ALLOWED_ORIGINS` | recommended | Comma-separated list of origins allowed to call this API cross-origin, e.g. `https://your-service.onrender.com,https://yourdomain.com`. Falls back to `APP_URL` alone if unset. Requests with no `Origin` header (curl, same-origin page loads) are always allowed regardless. |
 | `BRANCH_NAME` | no (default "Red House Trading") | Shown in the WhatsApp message and checkout screen |
-| `DELIVERY_FEE` | no (default `20`) | Single source of truth for the delivery fee — used by `POST /api/orders` and served to the frontend via `GET /api/config`, so it only needs setting in one place |
+| `DELIVERY_FEE` | no (default `20`) | Initial delivery fee before it is saved in Admin → Delivery. The saved admin setting is used by `POST /api/orders` and `GET /api/config` |
+| `DELIVERY_FEE_ENABLED` | no (default enabled) | Initial switch for charging a delivery fee before it is saved in Admin → Delivery (`0` disables the fee) |
 | `MOYASAR_PUBLISHABLE_KEY` | yes for online payments | Public `pk_test_...` or `pk_live_...` key. The frontend uses it to load Moyasar's secure payment form |
 | `MOYASAR_SECRET_KEY` | yes for online payments | Secret `sk_test_...` or `sk_live_...` key. Server-side only; used to retrieve and verify completed payments |
+| `PAYMENT_DEBUG` | no (default on) | Prints payment-flow diagnostics without logging payment keys or customer data. Set to `0` to silence them |
 | `CURRENCY` | no (default `SAR`) | ISO currency code used for Moyasar payments and order verification |
 | `GEMINI_API_KEY` | no | Turns on the admin **Auto-translate from English** buttons (Gemini API, server-side only). Without it the buttons show "GEMINI_API_KEY is not configured on the server." and everything else works as before |
 | `GEMINI_MODEL` | no (default `gemini-flash-lite-latest`) | Gemini model used for translation. `-latest` follows Google's newest Flash-Lite; set a fixed name here if you want it to never change |
@@ -256,14 +258,17 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 ### Moyasar payment setup
 1. In the Moyasar dashboard, copy the **test** publishable and secret keys into `MOYASAR_PUBLISHABLE_KEY` and `MOYASAR_SECRET_KEY` (local `.env` or Render's Environment settings). Keep the secret key server-side; only the publishable key is sent to the browser.
 2. Run `db/06_moyasar_payments.sql` once in Supabase → SQL Editor to add the payment ID and private payment-reference columns with their uniqueness constraints.
-3. Test checkout over HTTPS (or with Moyasar test keys), including the return from any 3-D Secure challenge. Verify the order shows as paid in Admin before switching both keys to their live versions. Do not accept live payments until the Moyasar account and payment methods are enabled.
+3. In the Moyasar dashboard, register `https://<your-domain>/api/orders/payment/webhook` as a payment webhook. The webhook is only a notification: the server fetches the payment from Moyasar with the secret key and independently verifies its order reference, amount and currency before updating the order.
+4. Test checkout over HTTPS (or with Moyasar test keys), including the return from any 3-D Secure challenge. Verify the order shows as paid in Admin before switching both keys to their live versions. Do not accept live payments until the Moyasar account and payment methods are enabled.
 
-The menu uses Moyasar's JavaScript Payment Form. Card details are submitted directly from the browser to Moyasar and never pass through this server. The server retrieves each returned payment using the secret key and checks its status, amount, currency, and order reference before updating the order.
+The menu uses Moyasar's JavaScript Payment Form. Card details are submitted directly from the browser to Moyasar and never pass through this server. The server retrieves each returned or webhook-notified payment using the secret key and checks its status, amount, currency, and order reference before updating the order. `MOYASAR_PUBLISHABLE_KEY` and `MOYASAR_SECRET_KEY` must both be test keys or both be live keys; startup logs report missing or malformed configuration without printing key values.
+
+The delivery fee can be enabled or disabled and edited in **Admin → Delivery**. Changes are saved in the existing `site_settings` table and immediately affect new orders and the public checkout configuration; pickup remains free.
 
 ## API
 **Public**
 - `GET /health`
-- `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee, currency, moyasarEnabled, moyasarPublishableKey }`, read by the frontend instead of hardcoding these. `whatsappNumber` = Admin "orders" number, else Admin WhatsApp number 1. Only the Moyasar publishable key is public.
+- `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee, deliveryFeeEnabled, currency, moyasarEnabled, moyasarPublishableKey }`, read by the frontend instead of hardcoding these. `whatsappNumber` = Admin "orders" number, else Admin WhatsApp number 1. Only the Moyasar publishable key is public.
 - `GET /api/track/:orderNumber` — slim order status for the tracking page (no name/phone/address). Needs `?token=` (from checkout), `?phone=` (phone used on the order) or the signed-in owner.
 - `GET /api/track/:orderNumber/map` — `{ restaurant, destination, route }` for the delivery route map (all three can be `null`). Home-delivery orders only. Needs `?token=` or the signed-in owner; **a phone number is not enough**, because this reveals where the customer lives.
 - `GET /api/categories`
@@ -273,6 +278,8 @@ The menu uses Moyasar's JavaScript Payment Form. Card details are submitted dire
 - `GET /api/music` — `{ index, menu }`, each `null` or `{ url, name, enabled }`; read by `music.js` on the public pages.
 - `POST /api/orders` — rate-limited (20/15min/IP). Requires `payment_method: 'moyasar'`, re-checks every item's price server-side (never trusts client prices), computes subtotal/delivery fee/total, and creates an order with `payment_status='pending'`. Returns the order details and Moyasar payment-form configuration values; requires both Moyasar keys.
 - `POST /api/orders/payment/confirm` — `{ payment_id, order_token }`. Retrieves the payment from Moyasar using the secret key and only confirms the order if the payment is paid, the private order token matches, and the amount, currency, and random payment reference match.
+- `POST /api/orders/payment/webhook` — configured in the Moyasar dashboard. Re-fetches and verifies the payment with the server-side secret key before synchronizing its status; duplicate and out-of-order notifications do not downgrade a paid order.
+- `GET /api/admin/delivery-settings`, `PUT /api/admin/delivery-settings` — read and save the delivery-fee switch and amount. Admin authentication required.
 - **Keep `order_token` client-side** — it's the only way to look this order up again without an account.
 - `GET /api/orders/:id?token=<order_token>` — order + line items. Requires the matching `order_token`, or a signed-in request from the order's own `user_id`, or an admin. Otherwise `403`. (Ids are small sequential integers, so without this check anyone could just walk them and read other customers' names/phones/addresses.)
 

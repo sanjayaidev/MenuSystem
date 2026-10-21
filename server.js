@@ -18,6 +18,8 @@ const musicRoutes = require('./routes/music');
 const posterRoutes = require('./routes/poster');
 const designRoutes = require('./routes/design');
 const { renderMenuPage } = require('./routes/menu-page-ssr');
+const { getDeliverySettings, CURRENCY } = require('./db/delivery-settings');
+const { getMoyasarConfig } = require('./db/moyasar-config');
 
 const app = express();
 
@@ -118,14 +120,23 @@ app.get('/api/config', async (req, res) => {
   res.set('Cache-Control', 'no-cache');
   let whatsappNumber = '';
   try { whatsappNumber = await contactRoutes.getOrderWhatsapp(); } catch (e) { console.error('Could not resolve the order WhatsApp number:', e.message); }
+  let deliverySettings;
+  try {
+    deliverySettings = await getDeliverySettings();
+  } catch (error) {
+    console.error('Could not resolve delivery settings:', error.message);
+    return res.status(500).json({ error: 'Could not load site configuration.' });
+  }
+  const paymentConfig = getMoyasarConfig();
   res.json({
     // set in Admin -> Contact (falls back to WhatsApp number 1)
     whatsappNumber,
     branchName: process.env.BRANCH_NAME || 'Red House Trading',
-    deliveryFee: Number(process.env.DELIVERY_FEE || 20),
-    currency: (process.env.CURRENCY || 'SAR').toUpperCase(),
-    moyasarEnabled: Boolean(process.env.MOYASAR_PUBLISHABLE_KEY && process.env.MOYASAR_SECRET_KEY),
-    moyasarPublishableKey: process.env.MOYASAR_PUBLISHABLE_KEY || '',
+    deliveryFee: deliverySettings.enabled ? deliverySettings.amount : 0,
+    deliveryFeeEnabled: deliverySettings.enabled,
+    currency: CURRENCY,
+    moyasarEnabled: paymentConfig.enabled,
+    moyasarPublishableKey: paymentConfig.enabled ? paymentConfig.publishableKey : '',
     // map tiles for the admin pin picker and the tracking page (free OpenStreetMap tiles unless you set your own)
     mapTileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     mapAttribution: process.env.MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -145,6 +156,25 @@ app.use('/api/admin', adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Red House Catering server running on port ${PORT}`);
+
+  const paymentConfig = getMoyasarConfig();
+  const { publishableMode, secretMode } = paymentConfig;
+  const publishableKeySet = Boolean(process.env.MOYASAR_PUBLISHABLE_KEY);
+  const secretKeySet = Boolean(process.env.MOYASAR_SECRET_KEY);
+  if (!publishableKeySet || !secretKeySet) {
+    console.error('Moyasar payments are not configured: set both MOYASAR_PUBLISHABLE_KEY and MOYASAR_SECRET_KEY.');
+  }
+  if (publishableKeySet && !publishableMode) {
+    console.error('MOYASAR_PUBLISHABLE_KEY has an unexpected format; expected a pk_test_... or pk_live_... key.');
+  }
+  if (secretKeySet && !secretMode) {
+    console.error('MOYASAR_SECRET_KEY has an unexpected format; expected an sk_test_... or sk_live_... key.');
+  }
+  if (publishableMode && secretMode && publishableMode !== secretMode) {
+    console.error(`Moyasar key modes do not match (publishable=${publishableMode}, secret=${secretMode}); use both test keys or both live keys.`);
+  } else if (publishableMode && secretMode) {
+    console.log(`Moyasar ${publishableMode} keys detected; key values are not logged.`);
+  }
 
   if (!APP_URL) {
     console.log('APP_URL is not set; external keep-alive pinger is disabled.');

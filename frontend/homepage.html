@@ -641,8 +641,9 @@ const STR = {
        checkoutTitle:'Checkout', requestType:'Request type:', customerContact:'Customer contact information:',
        fullName:'Full name:', fullNamePh:'Enter your name...', mobileNumber:'Mobile number (WhatsApp/call):',
        deliveryAddress:'Delivery address:', deliveryAddressPh:'Neighborhood, street, building/villa, apartment...',
-       paymentMethod:'Payment method:', paymentSimulated:'Simulated payment (test mode)',
+       paymentMethod:'Payment method:', paymentProvider:'Moyasar secure card payment',
        payBtn:'Pay & send order', processingPayment:'Processing payment…', paymentDone:'Payment confirmed — opening WhatsApp…',
+       checkoutMoved:'This old checkout is retired. Please use the current menu page checkout.',
        orderFailed:'Something went wrong. Please try again.',
        includesTitle:'This meal automatically includes:', includesText:'Steamed rice, soup, salad and bottled water.',
        descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
@@ -665,8 +666,9 @@ const STR = {
        checkoutTitle:'إتمام الطلب', requestType:'نوع الطلب:', customerContact:'بيانات التواصل:',
        fullName:'الاسم الكامل:', fullNamePh:'أدخل اسمك...', mobileNumber:'رقم الجوال (واتساب/اتصال):',
        deliveryAddress:'عنوان التوصيل:', deliveryAddressPh:'الحي، الشارع، رقم المبنى/الفيلا، الشقة...',
-       paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع تجريبي (وضع الاختبار)',
+       paymentMethod:'طريقة الدفع:', paymentProvider:'دفع آمن بالبطاقة عبر Moyasar',
        payBtn:'ادفع وأرسل الطلب', processingPayment:'جارٍ معالجة الدفع…', paymentDone:'تم تأكيد الدفع — جارٍ فتح واتساب…',
+       checkoutMoved:'تم إيقاف صفحة الدفع القديمة. يرجى استخدام صفحة المنيو الحالية لإتمام الدفع.',
        orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
        includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'أرز مطهو على البخار، شوربة، سلطة وماء معبأ.',
        descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
@@ -689,8 +691,9 @@ const STR = {
        checkoutTitle:'چیک آؤٹ', requestType:'درخواست کی قسم:', customerContact:'رابطہ کی معلومات:',
        fullName:'پورا نام:', fullNamePh:'اپنا نام درج کریں...', mobileNumber:'موبائل نمبر (واٹس ایپ/کال):',
        deliveryAddress:'ڈیلیوری پتہ:', deliveryAddressPh:'محلہ، گلی، عمارت/ولا نمبر، اپارٹمنٹ...',
-       paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'ٹیسٹ ادائیگی (آزمائشی موڈ)',
+       paymentMethod:'ادائیگی کا طریقہ:', paymentProvider:'Moyasar کے ذریعے محفوظ کارڈ ادائیگی',
        payBtn:'ادائیگی کریں اور آرڈر بھیجیں', processingPayment:'ادائیگی جاری ہے…', paymentDone:'ادائیگی کی تصدیق — واٹس ایپ کھل رہا ہے…',
+       checkoutMoved:'پرانا چیک آؤٹ بند ہے۔ براہ کرم موجودہ مینو صفحے سے ادائیگی کریں۔',
        orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
        includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'ابلے چاول، سوپ، سلاد اور بوتل بند پانی۔',
        descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
@@ -713,8 +716,9 @@ const STR = {
        checkoutTitle:'结账', requestType:'订单类型：', customerContact:'客户联系信息：',
        fullName:'姓名：', fullNamePh:'请输入您的姓名…', mobileNumber:'手机号码（WhatsApp/通话）：',
        deliveryAddress:'送货地址：', deliveryAddressPh:'小区、街道、楼栋/别墅号、公寓号…',
-       paymentMethod:'付款方式：', paymentSimulated:'模拟付款（测试模式）',
+       paymentMethod:'付款方式：', paymentProvider:'通过 Moyasar 安全银行卡付款',
        payBtn:'付款并发送订单', processingPayment:'正在处理付款…', paymentDone:'付款已确认——正在打开WhatsApp…',
+       checkoutMoved:'旧版结账已停用。请使用当前菜单页面完成付款。',
        orderFailed:'出错了，请重试。',
        includesTitle:'此套餐自动包含：', includesText:'米饭、汤、沙拉和瓶装水。',
        descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
@@ -993,9 +997,11 @@ document.getElementById('specialRow').addEventListener('keydown', e=>{
    the server (GET /api/config), which reads them from env vars, so
    there's one source of truth instead of duplicating them here.
    ===================================================================== */
-const CURRENCY = '$';
+let CURRENCY = 'SAR';
 const API_BASE = window.location.origin;
 let DELIVERY_FEE = 20;          // overwritten by loadConfig() below
+let DELIVERY_FEE_ENABLED = true;
+let CONFIG_LOADED = false;
 let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
 let BRANCH_NAME = 'Red House Trading';
 
@@ -1005,10 +1011,14 @@ async function loadConfig(){
     if(!res.ok) throw new Error(`GET /api/config failed (${res.status})`);
     const cfg = await res.json();
     DELIVERY_FEE = Number(cfg.deliveryFee ?? DELIVERY_FEE);
+    DELIVERY_FEE_ENABLED = cfg.deliveryFeeEnabled !== false;
+    CURRENCY = cfg.currency || CURRENCY;
     WHATSAPP_NUMBER = cfg.whatsappNumber || '';
     BRANCH_NAME = cfg.branchName || BRANCH_NAME;
+    CONFIG_LOADED = true;
   }catch(err){
-    console.error('Failed to load server config, using defaults:', err);
+    console.error('Failed to load server config:', err);
+    CONFIG_LOADED = false;
   }
 }
 
@@ -1253,9 +1263,14 @@ function cartLines(){
   }).filter(l=>l.item);
 }
 function cartSubtotal(){ return cartLines().reduce((sum,l)=>sum+l.lineTotal,0); }
-function cartDeliveryFee(){ return orderType==='delivery' ? DELIVERY_FEE : 0; }
+function cartDeliveryFee(){ return orderType==='delivery' && DELIVERY_FEE_ENABLED ? DELIVERY_FEE : 0; }
 function cartTotal(){ return cartSubtotal() + cartDeliveryFee(); }
-function money(n){ return `${CURRENCY}${n.toFixed(2)}`; }
+function money(n){
+  const value = Number(n);
+  let digits = 2;
+  try{ digits = new Intl.NumberFormat('en', { style:'currency', currency:CURRENCY }).resolvedOptions().maximumFractionDigits; }catch(_){}
+  return `${CURRENCY} ${new Intl.NumberFormat('en', { minimumFractionDigits:0, maximumFractionDigits:digits }).format(value)}`;
+}
 
 /* ---------- ITEM MODAL ---------- */
 const itemModal = document.getElementById('itemModal');
@@ -1382,7 +1397,7 @@ function renderCart(){
   });
 
   document.getElementById('cartSubtotalVal').textContent = money(cartSubtotal());
-  document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('cartDeliveryLine').style.display = orderType==='delivery' && DELIVERY_FEE_ENABLED ? 'flex' : 'none';
   document.getElementById('cartDeliveryVal').textContent = money(cartDeliveryFee());
   document.getElementById('cartTotalVal').textContent = money(cartTotal());
 }
@@ -1560,7 +1575,7 @@ function refreshCheckoutStaticText(){
   document.getElementById('addressLabel').textContent = STR[lang].deliveryAddress;
   document.getElementById('checkoutAddress').placeholder = STR[lang].deliveryAddressPh;
   document.getElementById('paymentLabel').textContent = STR[lang].paymentMethod;
-  document.getElementById('paymentMethodText').textContent = STR[lang].paymentSimulated;
+  document.getElementById('paymentMethodText').textContent = STR[lang].paymentProvider;
   document.getElementById('checkoutSubLabel').textContent = STR[lang].subtotal;
   document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
   document.getElementById('checkoutTotalLabel').textContent = STR[lang].finalTotal;
@@ -1578,7 +1593,7 @@ function openCheckout(){
   document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
   document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
   document.getElementById('checkoutSubVal').textContent = money(cartSubtotal());
-  document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' ? 'flex' : 'none';
+  document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' && DELIVERY_FEE_ENABLED ? 'flex' : 'none';
   document.getElementById('checkoutDeliveryVal').textContent = money(cartDeliveryFee());
   document.getElementById('checkoutTotalVal').textContent = money(cartTotal());
   document.getElementById('checkoutStatusNote').textContent = '';
@@ -1589,83 +1604,11 @@ document.getElementById('checkoutBack').addEventListener('click', ()=>{
   openCart();
 });
 
-/* ---------- SIMULATED PAYMENT + WHATSAPP HANDOFF ---------- */
+/* The legacy checkout is intentionally disabled: only the active menu page can confirm real payments. */
 document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
-  const name = document.getElementById('checkoutName').value.trim();
-  const phone = document.getElementById('checkoutPhone').value.trim();
-  const address = document.getElementById('checkoutAddress').value.trim();
   const statusNote = document.getElementById('checkoutStatusNote');
-  const payBtn = document.getElementById('checkoutPayBtn');
-
-  if(!name || !phone || (orderType==='delivery' && !address)){
-    statusNote.textContent = STR[lang].orderFailed;
-    return;
-  }
-
-  payBtn.disabled = true;
-  checkoutOverlay.dataset.submitting = '1';
-  payBtn.textContent = STR[lang].processingPayment;
-  statusNote.textContent = '';
-
-  const payload = {
-    customer_name: name,
-    customer_phone: phone,
-    delivery_type: orderType,
-    delivery_address: orderType==='delivery' ? address : null,
-    items: cartLines().map(l=>({ menu_item_id: l.item.id, quantity: l.qty }))
-  };
-
-  try{
-    // Simulated payment: brief delay to mimic processing, then create the
-    // order server-side (server re-checks prices in Supabase — never trust
-    // client-sent prices) and mark it paid.
-    await new Promise(r=>setTimeout(r, 700));
-    const res = await fetch(`${API_BASE}/api/orders`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json', ...authHeaders()},
-      body: JSON.stringify(payload)
-    });
-    if(!res.ok) throw new Error('order failed');
-    const order = await res.json();
-    lastOrder = order;
-
-    statusNote.textContent = STR[lang].paymentDone;
-    sendOrderToWhatsApp(order, { name, phone, address });
-
-    await clearCart();
-    closeOverlay(checkoutOverlay);
-  }catch(err){
-    statusNote.textContent = STR[lang].orderFailed;
-  }finally{
-    payBtn.disabled = false;
-    delete checkoutOverlay.dataset.submitting;
-    refreshCheckoutStaticText();
-  }
+  statusNote.textContent = STR[lang].checkoutMoved;
 });
-
-function sendOrderToWhatsApp(order, contact){
-  const lines = cartLines().map(l=>`• ${l.qty}x ${l.item.name.en} — ${money(l.lineTotal)}`).join('\n');
-  const typeLine = orderType==='delivery'
-    ? `Home delivery\nAddress: ${contact.address}`
-    : `Pick-up from the branch`;
-  const message =
-`New order ${order.order_number || '#'+order.id} — ${BRANCH_NAME}
-${typeLine}
-
-Name: ${contact.name}
-Phone: ${contact.phone}
-
-Items:
-${lines}
-
-Subtotal: ${money(cartSubtotal())}
-Delivery: ${money(cartDeliveryFee())}
-Total: ${money(cartTotal())}
-Payment: confirmed (simulated)`;
-
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  window.open(url, '_blank');
-}
 
 (async function init(){
   await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact(), loadBranding()]);

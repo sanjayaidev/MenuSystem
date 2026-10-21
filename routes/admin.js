@@ -4,6 +4,7 @@ const supabase = require('../db/supabase');
 const { parseOrderRef, sanitizeSearch } = require('../db/order-ref');
 const { requireAdmin } = require('../middleware/auth');
 const { translateTexts, TranslateError } = require('../db/translate');
+const { getDeliverySettings, saveDeliverySettings, CURRENCY } = require('../db/delivery-settings');
 
 const router = express.Router();
 
@@ -261,6 +262,36 @@ async function applyGlobalTextStyleToNewItem(values) {
 // Every route below requires a signed-in Supabase user whose
 // profiles.is_admin = true (see middleware/auth.js).
 router.use(requireAdmin);
+
+router.get('/delivery-settings', asyncHandler(async (req, res) => {
+  try {
+    res.json({ ...(await getDeliverySettings()), currency: CURRENCY });
+  } catch (error) {
+    console.error('Could not load delivery settings:', error.message);
+    res.status(500).json({ error: 'Could not load delivery settings.' });
+  }
+}));
+
+router.put('/delivery-settings', asyncHandler(async (req, res) => {
+  const enabled = req.body?.enabled;
+  const rawAmount = req.body?.amount;
+  const amount = Number(rawAmount);
+  if (typeof enabled !== 'boolean') {
+    return res.status(400).json({ error: 'Delivery cost enabled must be true or false.' });
+  }
+  if (rawAmount == null || (typeof rawAmount === 'string' && !rawAmount.trim())
+      || !Number.isFinite(amount) || amount < 0 || amount > 100000 || Math.round(amount * 100) !== amount * 100) {
+    return res.status(400).json({ error: 'Delivery amount must be a non-negative amount with at most two decimal places.' });
+  }
+  try {
+    const settings = { enabled, amount: Math.round(amount * 100) / 100 };
+    await saveDeliverySettings(settings);
+    res.json({ ...settings, currency: CURRENCY });
+  } catch (error) {
+    console.error('Could not save delivery settings:', error.message);
+    res.status(500).json({ error: 'Could not save delivery settings.' });
+  }
+}));
 
 // GET /api/admin/categories
 router.get('/categories', asyncHandler(async (req, res) => {
