@@ -225,7 +225,7 @@
      --cs-font / --cs-size come from the card box. Unset = exactly the look this page had before. */
   .row .name{
     margin:0; font-family:var(--cs-name-font,var(--cs-font,var(--lang-font,var(--menu-font-family,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif)))); font-weight:var(--bold-name,700);
-    letter-spacing:.06em; text-transform:uppercase; font-size:calc((max(12px, calc(var(--menu-font-scale,3.2) * var(--u) + 2pt)) + var(--lang-add,0px)) * var(--cs-name-size,1) * var(--cs-size,1)); line-height:1.2;
+    letter-spacing:.06em; text-transform:uppercase; white-space:pre-line; font-size:calc((max(12px, calc(var(--menu-font-scale,3.2) * var(--u) + 2pt)) + var(--lang-add,0px)) * var(--cs-name-size,1) * var(--cs-size,1)); line-height:1.2;
     color:var(--cs-name-color,var(--menu-font-color,var(--ink))); overflow-wrap:anywhere;
     transform:translate(calc(var(--cs-name-x,0) * var(--dir,1) * var(--u)), calc(var(--cs-name-y,0) * .4 * var(--u)));
   }

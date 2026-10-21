@@ -143,7 +143,7 @@
   .live-preview-flourish{width:calc(11 * var(--preview-u,4px)); height:auto; color:#b8975a;}
   /* --pv-* are set from the "Text style" and card boxes by updateLiveMenuPreview() (unset = the normal look) */
   .live-preview-paper::before{content:""; position:absolute; inset:calc(1.6 * var(--preview-u,4px)); border:var(--pv-border-w,1px) solid var(--pv-border-color,rgba(184,151,90,.55)); pointer-events:none;}
-  .live-preview-name-layer strong{margin:0; max-width:100%; letter-spacing:.06em; text-transform:uppercase; overflow-wrap:anywhere; font-family:var(--pv-name-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(9px,4.2cqw,15px) + 2pt) * var(--pv-name-size,1) * var(--pv-size,1)); line-height:1.2; color:var(--pv-name-color,#2b2622);
+  .live-preview-name-layer strong{margin:0; max-width:100%; letter-spacing:.06em; text-transform:uppercase; white-space:pre-line; overflow-wrap:anywhere; font-family:var(--pv-name-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(9px,4.2cqw,15px) + 2pt) * var(--pv-name-size,1) * var(--pv-size,1)); line-height:1.2; color:var(--pv-name-color,#2b2622);
     transform:translate(calc(var(--preview-dir,1) * var(--pv-name-x,0) * var(--preview-u,4px)), calc(var(--pv-name-y,0) * .4 * var(--preview-u,4px)));}
   #liveMenuPrice{transform:translate(calc(var(--preview-dir,1) * var(--pv-price-x,var(--preview-price-x,0)) * var(--preview-u,4px)), calc(var(--pv-price-y,var(--preview-price-y,0)) * .4 * var(--preview-u,4px)));}
   .live-preview-price-layer span{display:block; font-family:var(--pv-price-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(10px,5cqw,17px) + 2pt) * var(--pv-price-size,1) * var(--pv-size,1)); font-weight:700; line-height:1; color:var(--pv-price-color,#2b2622);}
@@ -603,10 +603,10 @@
         </div>
         <div class="translate-bar"><button class="action-btn" id="itemTranslateBtn" type="button">Auto-translate from English (Arabic + Chinese)</button><span class="field-hint">Fills the Arabic and Chinese name and description. Check them, then save.</span></div>
         <div class="language-fields">
-          <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Item name<input name="name_en" required></label><label>Description<textarea name="description_en"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الطبق<input name="name_ar" required></label><label>الوصف<textarea name="description_ar"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>ڈش کا نام<input name="name_ur"></label><label>تفصیل<textarea name="description_ur"></textarea></label></fieldset>
-          <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>菜品名称<input name="name_zh" required></label><label>描述<textarea name="description_zh"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="en" data-language-panel="en"><legend>English</legend><label>Item name<textarea name="name_en" rows="2" required></textarea></label><label>Description<textarea name="description_en"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="ar" data-language-panel="ar" hidden><legend>العربية</legend><label>اسم الطبق<textarea name="name_ar" rows="2" required></textarea></label><label>الوصف<textarea name="description_ar"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="ur" data-language-panel="ur" hidden><legend>اردو</legend><label>ڈش کا نام<textarea name="name_ur" rows="2"></textarea></label><label>تفصیل<textarea name="description_ur"></textarea></label></fieldset>
+          <fieldset class="language-card" lang="zh" data-language-panel="zh" hidden><legend>中文</legend><label>菜品名称<textarea name="name_zh" rows="2" required></textarea></label><label>描述<textarea name="description_zh"></textarea></label></fieldset>
         </div>
         <div class="check-fields">
           <label><input type="checkbox" name="is_available" id="itemAvailable" checked> <span data-ui="availableToOrder">Available to order</span></label>
