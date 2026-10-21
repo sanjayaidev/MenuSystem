@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Red House Catering — Menu</title>
+<link rel="stylesheet" href="https://cdn.moyasar.com/mpf/1.14.0/moyasar.css">
 <script>document.documentElement.setAttribute('data-theme','dark');</script>
 <script src="order-status.js"></script>
 <!-- LIGHT/DARK TOGGLE DISABLED (dark only). Original theme script:
@@ -811,6 +812,7 @@
       <span style="width:38px;"></span>
     </div>
     <div class="checkout-body">
+      <div id="checkoutDetails">
       <p class="checkout-branch" id="checkoutBranch"></p>
       <div class="checkout-subrow"><span id="checkoutTypeLabel"></span><span id="checkoutTypeVal"></span></div>
 
@@ -836,6 +838,11 @@
         <div class="summary-line final"><span id="checkoutTotalLabel"></span><span id="checkoutTotalVal"></span></div>
         <button class="primary-btn wa-btn" id="checkoutPayBtn"></button>
         <p class="status-note" id="checkoutStatusNote"></p>
+      </div>
+      </div>
+      <div id="moyasarCheckout" hidden>
+        <div id="moyasarForm"></div>
+        <button class="profile-secondary-btn" id="moyasarCancelBtn" type="button"></button>
       </div>
     </div>
   </div>
@@ -870,9 +877,10 @@ const STR = {
        checkoutTitle:'Checkout', requestType:'Request type:', customerContact:'Customer contact information:',
        fullName:'Full name:', fullNamePh:'Enter your name...', mobileNumber:'Mobile number (WhatsApp/call):',
        deliveryAddress:'Delivery address:', deliveryAddressPh:'Neighborhood, street, building/villa, apartment...',
-       paymentMethod:'Payment method:', paymentSimulated:'Simulated payment (test mode)',
-       payBtn:'Pay & send order', processingPayment:'Processing payment…', paymentDone:'Payment confirmed — opening WhatsApp…',
-       orderFailed:'Something went wrong. Please try again.',
+       paymentMethod:'Payment method:', paymentSimulated:'Secure card payment by Moyasar',
+       payBtn:'Continue to secure payment', processingPayment:'Preparing secure payment…', paymentDone:'Payment confirmed.',
+       paymentCancel:'Back to order details', paymentNotConfigured:'Online payments are not available. Please contact the restaurant.',
+       paymentFailed:'Payment was not completed. Please try again.', orderFailed:'Something went wrong. Please try again.',
        includesTitle:'This meal automatically includes:', includesText:'Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water',
        descTemplate:'Chef-prepared {name}, served with steamed rice, salad, soup and bottled water.' },
     ar:{ loading:'جارٍ التحميل', explore:'تصفح القائمة', allCategories:'كل الأصناف',
@@ -894,9 +902,10 @@ const STR = {
        checkoutTitle:'إتمام الطلب', requestType:'نوع الطلب:', customerContact:'بيانات التواصل:',
        fullName:'الاسم الكامل:', fullNamePh:'أدخل اسمك...', mobileNumber:'رقم الجوال (واتساب/اتصال):',
        deliveryAddress:'عنوان التوصيل:', deliveryAddressPh:'الحي، الشارع، رقم المبنى/الفيلا، الشقة...',
-       paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع تجريبي (وضع الاختبار)',
-       payBtn:'ادفع وأرسل الطلب', processingPayment:'جارٍ معالجة الدفع…', paymentDone:'تم تأكيد الدفع — جارٍ فتح واتساب…',
-       orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
+       paymentMethod:'طريقة الدفع:', paymentSimulated:'دفع آمن بالبطاقة عبر Moyasar',
+       payBtn:'المتابعة إلى الدفع الآمن', processingPayment:'جارٍ تجهيز الدفع الآمن…', paymentDone:'تم تأكيد الدفع.',
+       paymentCancel:'العودة إلى تفاصيل الطلب', paymentNotConfigured:'الدفع الإلكتروني غير متاح. يرجى التواصل مع المطعم.',
+       paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
        includesTitle:'تشمل هذه الوجبة تلقائياً:', includesText:'شوربة أعشاب البحر، أرز مقلي بالبيض، نودلز، سلطة وماء',
        descTemplate:'{name} محضّرة بعناية، تُقدَّم مع أرز مطهو، سلطة، شوربة وماء.' },
     ur:{ loading:'لوڈ ہو رہا ہے', explore:'مینو دیکھیں', allCategories:'تمام زمرے',
@@ -918,9 +927,10 @@ const STR = {
        checkoutTitle:'چیک آؤٹ', requestType:'درخواست کی قسم:', customerContact:'رابطہ کی معلومات:',
        fullName:'پورا نام:', fullNamePh:'اپنا نام درج کریں...', mobileNumber:'موبائل نمبر (واٹس ایپ/کال):',
        deliveryAddress:'ڈیلیوری پتہ:', deliveryAddressPh:'محلہ، گلی، عمارت/ولا نمبر، اپارٹمنٹ...',
-       paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'ٹیسٹ ادائیگی (آزمائشی موڈ)',
-       payBtn:'ادائیگی کریں اور آرڈر بھیجیں', processingPayment:'ادائیگی جاری ہے…', paymentDone:'ادائیگی کی تصدیق — واٹس ایپ کھل رہا ہے…',
-       orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+       paymentMethod:'ادائیگی کا طریقہ:', paymentSimulated:'Moyasar کے ذریعے محفوظ کارڈ ادائیگی',
+       payBtn:'محفوظ ادائیگی جاری رکھیں', processingPayment:'محفوظ ادائیگی تیار ہو رہی ہے…', paymentDone:'ادائیگی کی تصدیق ہو گئی۔',
+       paymentCancel:'آرڈر کی تفصیلات پر واپس جائیں', paymentNotConfigured:'آن لائن ادائیگی دستیاب نہیں۔ براہ کرم ریسٹورنٹ سے رابطہ کریں۔',
+       paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
        includesTitle:'یہ کھانا خودکار طور پر شامل کرتا ہے:', includesText:'سمندری کائی کا سوپ، انڈے والے فرائیڈ رائس، نوڈلز، سلاد اور پانی',
        descTemplate:'{name} — شیف کے ہاتھوں تیار، ابلے چاول، سلاد، سوپ اور پانی کے ساتھ پیش کیا جاتا ہے۔' },
     zh:{ loading:'加载中', explore:'查看菜单', allCategories:'全部分类',
@@ -942,9 +952,10 @@ const STR = {
        checkoutTitle:'结账', requestType:'订单类型：', customerContact:'客户联系信息：',
        fullName:'姓名：', fullNamePh:'请输入您的姓名…', mobileNumber:'手机号码（WhatsApp/通话）：',
        deliveryAddress:'送货地址：', deliveryAddressPh:'小区、街道、楼栋/别墅号、公寓号…',
-       paymentMethod:'付款方式：', paymentSimulated:'模拟付款（测试模式）',
-       payBtn:'付款并发送订单', processingPayment:'正在处理付款…', paymentDone:'付款已确认——正在打开WhatsApp…',
-       orderFailed:'出错了，请重试。',
+       paymentMethod:'付款方式：', paymentSimulated:'通过 Moyasar 安全银行卡付款',
+       payBtn:'继续安全付款', processingPayment:'正在准备安全付款…', paymentDone:'付款已确认。',
+       paymentCancel:'返回订单详情', paymentNotConfigured:'暂无法在线付款，请联系餐厅。',
+       paymentFailed:'付款未完成，请重试。', orderFailed:'出错了，请重试。',
        includesTitle:'此套餐自动包含：', includesText:'紫菜汤、蛋炒饭、面条、沙拉和水',
        descTemplate:'{name}，主厨精心制作，配米饭、沙拉、汤和瓶装水。' },
 };
@@ -1556,11 +1567,14 @@ document.getElementById('posterCue').addEventListener('click', ()=>{
    the server (GET /api/config), which reads them from env vars, so
    there's one source of truth instead of duplicating them here.
    ===================================================================== */
-const CURRENCY = 'SAR';
+let CURRENCY = 'SAR';
 const API_BASE = window.location.origin;
 let DELIVERY_FEE = 20;          // overwritten by loadConfig() below
 let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
 let BRANCH_NAME = 'Red House Trading';
+let MOYASAR_ENABLED = false;
+let MOYASAR_PUBLISHABLE_KEY = '';
+const PENDING_PAYMENT_KEY = 'redhouse_pending_payment';
 
 async function loadConfig(){
   try{
@@ -1568,8 +1582,11 @@ async function loadConfig(){
     if(!res.ok) throw new Error(`GET /api/config failed (${res.status})`);
     const cfg = await res.json();
     DELIVERY_FEE = Number(cfg.deliveryFee ?? DELIVERY_FEE);
+    CURRENCY = cfg.currency || CURRENCY;
     WHATSAPP_NUMBER = cfg.whatsappNumber || '';
     BRANCH_NAME = cfg.branchName || BRANCH_NAME;
+    MOYASAR_ENABLED = cfg.moyasarEnabled === true;
+    MOYASAR_PUBLISHABLE_KEY = cfg.moyasarPublishableKey || '';
   }catch(err){
     console.error('Failed to load server config, using defaults:', err);
   }
@@ -1749,7 +1766,7 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
    sync with whichever storage is currently active. */
 let cart = {};            // { itemId: qty } — always the in-memory source of truth for rendering
 let orderType = 'pickup'; // 'pickup' | 'delivery'
-let lastOrder = null;     // {id, items, subtotal, deliveryFee, total} set after a successful order
+let lastOrder = null;     // most recently created or paid order
 
 const GUEST_CART_KEY = 'redhouse_guest_cart';
 function loadGuestCart(){
@@ -2208,6 +2225,7 @@ function refreshCheckoutStaticText(){
   document.getElementById('checkoutAddress').placeholder = STR[lang].deliveryAddressPh;
   document.getElementById('paymentLabel').textContent = STR[lang].paymentMethod;
   document.getElementById('paymentMethodText').textContent = STR[lang].paymentSimulated;
+  document.getElementById('moyasarCancelBtn').textContent = STR[lang].paymentCancel;
   document.getElementById('checkoutSubLabel').textContent = STR[lang].subtotal;
   document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
   document.getElementById('checkoutTotalLabel').textContent = STR[lang].finalTotal;
@@ -2216,6 +2234,9 @@ function refreshCheckoutStaticText(){
   }
 }
 function openCheckout(){
+  document.getElementById('checkoutDetails').hidden = false;
+  document.getElementById('moyasarCheckout').hidden = true;
+  document.getElementById('moyasarForm').replaceChildren();
   refreshCheckoutStaticText();
   if(profileData){
     document.getElementById('checkoutName').value = profileData.profile.display_name || '';
@@ -2236,7 +2257,63 @@ document.getElementById('checkoutBack').addEventListener('click', ()=>{
   openCart();
 });
 
-/* ---------- SIMULATED PAYMENT + WHATSAPP HANDOFF ---------- */
+function loadMoyasarForm(){
+  if(window.Moyasar) return Promise.resolve();
+  if(!window.moyasarScriptPromise){
+    window.moyasarScriptPromise = new Promise((resolve, reject)=>{
+      const script = document.createElement('script');
+      script.src = 'https://cdn.moyasar.com/mpf/1.14.0/moyasar.js';
+      script.onload = resolve;
+      script.onerror = ()=>{
+        window.moyasarScriptPromise = null;
+        reject(new Error('Could not load the Moyasar payment form.'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+  return window.moyasarScriptPromise;
+}
+
+async function initializeMoyasarForm(order){
+  await loadMoyasarForm();
+  if(!window.Moyasar) throw new Error('Moyasar payment form did not initialize.');
+  document.getElementById('checkoutDetails').hidden = true;
+  document.getElementById('moyasarCheckout').hidden = false;
+  document.getElementById('moyasarCancelBtn').textContent = STR[lang].paymentCancel;
+
+  const callbackUrl = new URL('/menu', window.location.origin);
+  callbackUrl.searchParams.set('payment_return', '1');
+  callbackUrl.searchParams.set('lang', lang);
+  window.Moyasar.init({
+    element: '#moyasarForm',
+    amount: order.payment_amount,
+    currency: order.currency,
+    description: order.payment_description,
+    publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
+    callback_url: callbackUrl.toString(),
+    supported_networks: ['visa', 'mastercard', 'mada', 'amex', 'unionpay'],
+    methods: ['creditcard'],
+    language: lang === 'ar' ? 'ar' : 'en',
+    on_completed: async payment=>{
+      if(!payment || !payment.id) throw new Error('Moyasar did not return a payment ID.');
+      const response = await fetch(`${API_BASE}/api/orders/payment/confirm`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ payment_id:payment.id, order_token:order.order_token })
+      });
+      if(!response.ok) throw new Error('Could not save the Moyasar payment reference.');
+      return response.json();
+    }
+  });
+}
+
+document.getElementById('moyasarCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('moyasarCheckout').hidden = true;
+  document.getElementById('moyasarForm').replaceChildren();
+  document.getElementById('checkoutDetails').hidden = false;
+});
+
+/* ---------- MOYASAR PAYMENT + WHATSAPP HANDOFF ---------- */
 document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
   const name = document.getElementById('checkoutName').value.trim();
   const phone = document.getElementById('checkoutPhone').value.trim();
@@ -2248,6 +2325,10 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     statusNote.textContent = STR[lang].orderFailed;
     return;
   }
+  if(!MOYASAR_ENABLED || !MOYASAR_PUBLISHABLE_KEY){
+    statusNote.textContent = STR[lang].paymentNotConfigured;
+    return;
+  }
 
   payBtn.disabled = true;
   checkoutOverlay.dataset.submitting = '1';
@@ -2257,33 +2338,35 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
   const payload = {
     customer_name: name,
     customer_phone: phone,
+    payment_method: 'moyasar',
     delivery_type: orderType,
     delivery_address: orderType==='delivery' ? address : null,
     items: cartLines().map(l=>({ menu_item_id: l.item.id, quantity: l.qty }))
   };
 
   try{
-    // Simulated payment: brief delay to mimic processing, then create the
-    // order server-side (server re-checks prices in Supabase — never trust
-    // client-sent prices) and mark it paid.
-    await new Promise(r=>setTimeout(r, 700));
     const res = await fetch(`${API_BASE}/api/orders`, {
       method:'POST',
       headers:{'Content-Type':'application/json', ...authHeaders()},
       body: JSON.stringify(payload)
     });
-    if(!res.ok) throw new Error('order failed');
+    if(!res.ok){
+      const data = await res.json().catch(()=>({}));
+      throw new Error(data.error || 'Could not create the order.');
+    }
     const order = await res.json();
     lastOrder = order;
-    RHOrder.remember(order.order_number, order.order_token);   // guests have no account: keep the token on this device
-
-    statusNote.textContent = STR[lang].paymentDone;
-    const waUrl = sendOrderToWhatsApp(order, { name, phone, address });
-
-    await clearCart();
-    showOrderDone(order, waUrl);
+    sessionStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify({
+      order_number: order.order_number,
+      order_token: order.order_token
+    }));
+    await initializeMoyasarForm(order);
   }catch(err){
-    statusNote.textContent = STR[lang].orderFailed;
+    console.error('Could not start the Moyasar payment:', err);
+    document.getElementById('checkoutDetails').hidden = false;
+    document.getElementById('moyasarCheckout').hidden = true;
+    document.getElementById('moyasarForm').replaceChildren();
+    statusNote.textContent = err.message || STR[lang].orderFailed;
   }finally{
     payBtn.disabled = false;
     delete checkoutOverlay.dataset.submitting;
@@ -2291,31 +2374,75 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
   }
 });
 
-function sendOrderToWhatsApp(order, contact){
-  const lines = cartLines().map(l=>`• ${l.qty}x ${l.item.name.en} — ${money(l.lineTotal)}`).join('\n');
-  const typeLine = orderType==='delivery'
-    ? `Home delivery\nAddress: ${contact.address}`
+function sendOrderToWhatsApp(order){
+  const lines = (order.order_items || [])
+    .map(item=>`• ${item.quantity}x ${item.name_snapshot} — ${money(item.line_total)}`).join('\n');
+  const typeLine = order.delivery_type==='delivery'
+    ? `Home delivery\nAddress: ${order.delivery_address || ''}`
     : `Pick-up from the branch`;
   const message =
 `New order ${order.order_number || '#'+order.id} — ${BRANCH_NAME}
 ${typeLine}
 
-Name: ${contact.name}
-Phone: ${contact.phone}
+Name: ${order.customer_name}
+Phone: ${order.customer_phone}
 
 Items:
 ${lines}
 
-Subtotal: ${money(cartSubtotal())}
-Delivery: ${money(cartDeliveryFee())}
-Total: ${money(cartTotal())}
-Payment: confirmed (simulated)
+Subtotal: ${money(order.subtotal)}
+Delivery: ${money(Number(order.total) - Number(order.subtotal))}
+Total: ${money(order.total)}
+Payment: confirmed (Moyasar)
 
 Track: ${RHOrder.trackUrl(order.order_number, order.order_token)}`;
 
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  window.open(url, '_blank');
-  return url;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+async function handleMoyasarReturn(){
+  const returnUrl = new URL(window.location.href);
+  if(returnUrl.searchParams.get('payment_return') !== '1') return;
+  const paymentId = returnUrl.searchParams.get('id');
+  returnUrl.searchParams.delete('payment_return');
+  returnUrl.searchParams.delete('id');
+  window.history.replaceState({}, '', returnUrl.pathname + returnUrl.search + returnUrl.hash);
+
+  let pendingOrder;
+  try{
+    pendingOrder = JSON.parse(sessionStorage.getItem(PENDING_PAYMENT_KEY) || 'null');
+  }catch(err){
+    console.error('Could not read the pending payment details:', err);
+  }
+  if(!paymentId || !pendingOrder || !pendingOrder.order_token){
+    document.getElementById('checkoutStatusNote').textContent = STR[lang].paymentFailed;
+    openOverlay(checkoutOverlay);
+    return;
+  }
+
+  try{
+    const response = await fetch(`${API_BASE}/api/orders/payment/confirm`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ payment_id:paymentId, order_token:pendingOrder.order_token })
+    });
+    const order = await response.json();
+    if(!response.ok || order.payment_status !== 'paid'){
+      throw new Error(order.error || STR[lang].paymentFailed);
+    }
+    lastOrder = order;
+    sessionStorage.removeItem(PENDING_PAYMENT_KEY);
+    RHOrder.remember(order.order_number, order.order_token);
+    const waUrl = sendOrderToWhatsApp(order);
+    await clearCart();
+    showOrderDone(order, waUrl);
+  }catch(err){
+    console.error('Could not confirm the Moyasar payment:', err);
+    document.getElementById('checkoutDetails').hidden = false;
+    document.getElementById('moyasarCheckout').hidden = true;
+    document.getElementById('checkoutStatusNote').textContent = STR[lang].paymentFailed;
+    openOverlay(checkoutOverlay);
+  }
 }
 
 /* Order confirmation: the customer sees the order number here (and can open the tracking page).
@@ -2350,6 +2477,7 @@ document.getElementById('doneClose').addEventListener('click', () => closeOverla
   updateCartBadge();
   setLang(initialLang());
   syncFooter();
+  await handleMoyasarReturn();
 //~   renderSpecial();
 })();
 

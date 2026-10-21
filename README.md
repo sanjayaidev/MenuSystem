@@ -200,6 +200,9 @@ cp .env.example .env
 | `ALLOWED_ORIGINS` | recommended | Comma-separated list of origins allowed to call this API cross-origin, e.g. `https://your-service.onrender.com,https://yourdomain.com`. Falls back to `APP_URL` alone if unset. Requests with no `Origin` header (curl, same-origin page loads) are always allowed regardless. |
 | `BRANCH_NAME` | no (default "Red House Trading") | Shown in the WhatsApp message and checkout screen |
 | `DELIVERY_FEE` | no (default `20`) | Single source of truth for the delivery fee — used by `POST /api/orders` and served to the frontend via `GET /api/config`, so it only needs setting in one place |
+| `MOYASAR_PUBLISHABLE_KEY` | yes for online payments | Public `pk_test_...` or `pk_live_...` key. The frontend uses it to load Moyasar's secure payment form |
+| `MOYASAR_SECRET_KEY` | yes for online payments | Secret `sk_test_...` or `sk_live_...` key. Server-side only; used to retrieve and verify completed payments |
+| `CURRENCY` | no (default `SAR`) | ISO currency code used for Moyasar payments and order verification |
 | `GEMINI_API_KEY` | no | Turns on the admin **Auto-translate from English** buttons (Gemini API, server-side only). Without it the buttons show "GEMINI_API_KEY is not configured on the server." and everything else works as before |
 | `GEMINI_MODEL` | no (default `gemini-flash-lite-latest`) | Gemini model used for translation. `-latest` follows Google's newest Flash-Lite; set a fixed name here if you want it to never change |
 | `MAP_TILE_URL`, `MAP_TILE_ATTRIBUTION` | no | Map pictures for the admin pin picker and the tracking page. Default is free OpenStreetMap tiles, fine for light traffic. To switch to another provider's free tier, set a raster tile URL with `{z}/{x}/{y}` and the credit text it requires. Served to the pages via `GET /api/config` |
@@ -250,10 +253,17 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 5. Add all the environment variables from section 3 in Render's dashboard.
 6. Deploy. Your API (and the frontend, served statically) will be at `https://your-service.onrender.com`.
 
+### Moyasar payment setup
+1. In the Moyasar dashboard, copy the **test** publishable and secret keys into `MOYASAR_PUBLISHABLE_KEY` and `MOYASAR_SECRET_KEY` (local `.env` or Render's Environment settings). Keep the secret key server-side; only the publishable key is sent to the browser.
+2. Run `db/06_moyasar_payments.sql` once in Supabase → SQL Editor to add the payment ID and private payment-reference columns with their uniqueness constraints.
+3. Test checkout over HTTPS (or with Moyasar test keys), including the return from any 3-D Secure challenge. Verify the order shows as paid in Admin before switching both keys to their live versions. Do not accept live payments until the Moyasar account and payment methods are enabled.
+
+The menu uses Moyasar's JavaScript Payment Form. Card details are submitted directly from the browser to Moyasar and never pass through this server. The server retrieves each returned payment using the secret key and checks its status, amount, currency, and order reference before updating the order.
+
 ## API
 **Public**
 - `GET /health`
-- `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee, currency }`, read by the frontend instead of hardcoding these. `whatsappNumber` = Admin "orders" number, else Admin WhatsApp number 1.
+- `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee, currency, moyasarEnabled, moyasarPublishableKey }`, read by the frontend instead of hardcoding these. `whatsappNumber` = Admin "orders" number, else Admin WhatsApp number 1. Only the Moyasar publishable key is public.
 - `GET /api/track/:orderNumber` — slim order status for the tracking page (no name/phone/address). Needs `?token=` (from checkout), `?phone=` (phone used on the order) or the signed-in owner.
 - `GET /api/track/:orderNumber/map` — `{ restaurant, destination, route }` for the delivery route map (all three can be `null`). Home-delivery orders only. Needs `?token=` or the signed-in owner; **a phone number is not enough**, because this reveals where the customer lives.
 - `GET /api/categories`
@@ -261,7 +271,9 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `GET /api/menu/:id`
 - `GET /api/banner` and `GET /api/special` — public video URLs and category-specific featured menu references.
 - `GET /api/music` — `{ index, menu }`, each `null` or `{ url, name, enabled }`; read by `music.js` on the public pages.
-- `POST /api/orders` — rate-limited (20/15min/IP). Re-checks every item's price server-side (never trusts client prices), computes subtotal/delivery fee/total, marks `payment_status='paid'` (simulated — swap for a real gateway later). Returns `{ id, order_token, subtotal, deliveryFee, total, status, payment_status }`. **Keep `order_token` client-side** — it's the only way to look this order up again without an account.
+- `POST /api/orders` — rate-limited (20/15min/IP). Requires `payment_method: 'moyasar'`, re-checks every item's price server-side (never trusts client prices), computes subtotal/delivery fee/total, and creates an order with `payment_status='pending'`. Returns the order details and Moyasar payment-form configuration values; requires both Moyasar keys.
+- `POST /api/orders/payment/confirm` — `{ payment_id, order_token }`. Retrieves the payment from Moyasar using the secret key and only confirms the order if the payment is paid, the private order token matches, and the amount, currency, and random payment reference match.
+- **Keep `order_token` client-side** — it's the only way to look this order up again without an account.
 - `GET /api/orders/:id?token=<order_token>` — order + line items. Requires the matching `order_token`, or a signed-in request from the order's own `user_id`, or an admin. Otherwise `403`. (Ids are small sequential integers, so without this check anyone could just walk them and read other customers' names/phones/addresses.)
 
 **Auth** (`/api/auth`, login/register/reset-request rate-limited at 20/15min/IP)
@@ -308,9 +320,9 @@ blocked while it contains menu items, and menu item deletion keeps existing orde
 1. Customer browses the live menu (fetched from Supabase via `/api/categories` + `/api/menu`) → taps an item → item detail modal.
 2. Basket tab / cart icon opens the cart overlay → **Pickup** (free) or **Home delivery** (+`DELIVERY_FEE`, from `/api/config`). Cart is saved to Supabase (`cart_items`) if signed in, or to `localStorage` as a guest — logging in merges a guest cart into the account automatically.
 3. "Complete your order now" → checkout form (name, phone, address if delivery).
-4. "Pay & send order" → simulates a brief payment step, then `POST /api/orders` creates the order in Supabase already marked paid, returning an order id + `order_token`.
-5. The app builds a WhatsApp message and opens `https://wa.me/<WHATSAPP_NUMBER>?text=...` (number from `/api/config`) so the customer sends it straight to the branch.
-6. The customer sees a confirmation with the order number and a **Track my order** button (`/track`). The tracking link is also in the WhatsApp message, and the order is remembered on the device.
+4. Continue to secure payment → `POST /api/orders` creates an unpaid order using server-verified prices, then Moyasar's JavaScript form collects the card details directly in the browser. The server verifies the returned payment ID against Moyasar and the order's private token before marking the order paid.
+5. After successful verification, the customer sees the order confirmation and can open the WhatsApp message (`https://wa.me/<WHATSAPP_NUMBER>?text=...`) for the branch.
+6. The confirmation shows the order number and a **Track my order** button (`/track`). The tracking link is also in the WhatsApp message, and the order is remembered on the device.
 7. Staff move the order through its stages from `/admin`.
 
 Order statuses: `confirmed` (shown as "Confirmed & preparing", the status every new order starts with) `→ out_for_delivery` (delivery orders only) `→ completed`, or `cancelled` at any point. Run `db/05_order_status_simplify.sql` once to convert old pending / preparing / ready orders. Labels for all four languages live in `frontend/order-status.js`.
@@ -318,12 +330,11 @@ Order statuses: `confirmed` (shown as "Confirmed & preparing", the status every 
 WhatsApp numbers (Admin → Contact) must be in international format (`+` and the country code, any country). Local numbers starting with `0` are rejected, because without a country code WhatsApp can not open the chat.
 
 ## Security notes
-- **Rate limiting**: login, register, password-reset-request, and order creation are all limited per-IP (20 requests / 15 min) via `express-rate-limit`.
+- **Rate limiting**: login, register, password-reset-request, order creation, and payment verification are limited per-IP via `express-rate-limit`.
 - **CORS**: locked to `ALLOWED_ORIGINS` (see section 3) instead of wide open.
 - **`helmet`** is enabled for standard security headers (CSP is left off since the frontend is single-file with inline `<script>`/`<style>` — worth tightening if you split those out later).
 - **RLS** is enabled on `profiles`, `orders`, `order_items`, and `cart_items` (see `db/02_relations.sql`). The server always uses the `service_role` key, which bypasses RLS entirely — these policies are defense-in-depth for if anything ever queries Supabase directly with the anon key.
 
 ## Next up
-- Real payment gateway to replace the simulated step in `routes/orders.js`.
 - Translated (ar/ur/zh) menu item descriptions — only English descriptions exist today.
 - Real-time order updates in `/admin` (currently polls every 25s) via Supabase Realtime.

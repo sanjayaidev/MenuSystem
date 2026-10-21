@@ -123,7 +123,9 @@ app.get('/api/config', async (req, res) => {
     whatsappNumber,
     branchName: process.env.BRANCH_NAME || 'Red House Trading',
     deliveryFee: Number(process.env.DELIVERY_FEE || 20),
-    currency: process.env.CURRENCY || 'SAR',
+    currency: (process.env.CURRENCY || 'SAR').toUpperCase(),
+    moyasarEnabled: Boolean(process.env.MOYASAR_PUBLISHABLE_KEY && process.env.MOYASAR_SECRET_KEY),
+    moyasarPublishableKey: process.env.MOYASAR_PUBLISHABLE_KEY || '',
     // map tiles for the admin pin picker and the tracking page (free OpenStreetMap tiles unless you set your own)
     mapTileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     mapAttribution: process.env.MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
