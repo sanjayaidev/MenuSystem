@@ -185,4 +185,62 @@ router.get('/orders/:id', async (req, res) => {
   res.json(safeOrder);
 });
 
+// ---------- customer order tracking ----------
+// GET /api/track/:orderNumber?token=<order_token> | ?phone=<phone used on the order> | signed-in owner
+// Returns only what a tracking page needs (no name, phone or address). A wrong order number and a wrong
+// proof give the same 404, so order numbers can not be probed.
+const trackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 90,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many lookups. Please wait a while and try again.' },
+});
+
+// Digits only, without leading zeros (a local trunk "0" or an international "00" prefix).
+const digitsOf = (v) => String(v || '').replace(/\D/g, '').replace(/^0+/, '');
+// Tolerates a missing country code: the shorter number (7+ digits) must be the tail of the longer one.
+function phonesMatch(a, b) {
+  const x = digitsOf(a);
+  const y = digitsOf(b);
+  if (x.length < 7 || y.length < 7) return false;
+  return x === y || x.endsWith(y) || y.endsWith(x);
+}
+
+router.get('/track/:ref', trackLimiter, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const notFound = () => res.status(404).json({ error: 'We could not find that order. Check the order number and phone number.' });
+
+  const ref = parseOrderRef(req.params.ref);
+  if (!ref || ref.column !== 'order_number') return notFound();
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('order_number, order_token, user_id, customer_phone, delivery_type, status, subtotal, total, created_at, updated_at, order_items(name_snapshot, quantity)')
+    .eq('order_number', ref.value)
+    .maybeSingle();
+  if (error) return res.status(500).json({ error: 'Could not load the order. Please try again.' });
+  if (!order) return notFound();
+
+  const { token, phone } = req.query;
+  let allowed = typeof token === 'string' && token.length > 0 && token === order.order_token;
+  if (!allowed && typeof phone === 'string' && phonesMatch(phone, order.customer_phone)) allowed = true;
+  if (!allowed && req.get('authorization')) {
+    const authUser = await getAuthUser(req);
+    allowed = Boolean(authUser && order.user_id && authUser.id === order.user_id);
+  }
+  if (!allowed) return notFound();
+
+  res.json({
+    order_number: order.order_number,
+    status: order.status,
+    delivery_type: order.delivery_type,
+    created_at: order.created_at,
+    updated_at: order.updated_at,
+    subtotal: order.subtotal,
+    total: order.total,
+    items: (order.order_items || []).map((i) => ({ name: i.name_snapshot, quantity: i.quantity })),
+  });
+});
+
 module.exports = router;

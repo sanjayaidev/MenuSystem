@@ -77,6 +77,7 @@
   .badge.confirmed{background:rgba(80,150,220,.15); color:#5a9fe0;}
   .badge.preparing{background:rgba(227,178,60,.15); color:var(--gold);}
   .badge.ready{background:rgba(76,175,125,.15); color:var(--green);}
+  .badge.out_for_delivery{background:rgba(80,150,220,.15); color:#5a9fe0;}
   .badge.completed{background:rgba(76,175,125,.15); color:var(--green);}
   .badge.cancelled{background:rgba(184,53,43,.15); color:var(--red);}
 
@@ -525,9 +526,15 @@
       <form class="manager-form" id="contactForm" novalidate>
         <p class="form-note" style="margin:0 0 12px;" data-ui="cdHint">Shown to customers when they tap the call button on the homepage.</p>
         <div class="form-grid compact">
-          <label><span data-ui="cdPhone">WhatsApp number 1</span><input name="phone" id="contactPhone" type="tel" required maxlength="30" autocomplete="off" placeholder="056 928 3982"></label>
-          <label><span data-ui="cdPhone2">WhatsApp number 2 (optional)</span><input name="phone2" id="contactPhone2" type="tel" maxlength="30" autocomplete="off" placeholder="00966 56 928 3982"></label>
+          <label><span data-ui="cdPhone">WhatsApp number 1</span><input name="phone" id="contactPhone" type="tel" required maxlength="30" autocomplete="off" placeholder="+44 7911 123456"><small class="form-note" id="live_contactPhone"></small></label>
+          <label><span data-ui="cdPhone2">WhatsApp number 2 (optional)</span><input name="phone2" id="contactPhone2" type="tel" maxlength="30" autocomplete="off" placeholder="+44 7911 123456"><small class="form-note" id="live_contactPhone2"></small></label>
         </div>
+        <div style="margin-top:12px;">
+          <label><span data-ui="cdOrderPhone">WhatsApp number for orders</span><input name="orderPhone" id="contactOrderPhone" type="tel" maxlength="30" autocomplete="off" placeholder="+44 7911 123456"><small class="form-note" id="live_contactOrderPhone"></small></label>
+          <p class="form-note" style="margin:6px 0 0;" data-ui="cdOrderEmpty">Leave empty to use WhatsApp number 1.</p>
+          <p class="form-note" style="margin:4px 0 0; font-weight:600;" id="contactOrderNow"></p>
+        </div>
+        <p class="form-note" style="margin:12px 0 0;" data-ui="cdIntlHelp">Type the full international number: + then the country code, then the number. Do not start with 0. Examples: +966 56 928 3982, +91 98765 43210, +44 7911 123456. Spaces and dashes are fine.</p>
         <div style="margin-top:12px;">
           <label><span data-ui="cdMapUrl">Map link (Google Maps)</span><input name="mapUrl" id="contactMapUrl" type="url" maxlength="300" autocomplete="off" placeholder="https://maps.app.goo.gl/..."></label>
         </div>
@@ -668,7 +675,7 @@
 const API_BASE = window.location.origin;
 const TOKEN_KEY = 'redhouse_admin_token';
 const ADMIN_LANGUAGE_KEY = 'redhouse_admin_language';
-const STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+const STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
 const AUTO_REFRESH_MS = 25000;
 const ADMIN_UI_STRINGS = {
   en: {
@@ -688,7 +695,7 @@ const ADMIN_UI_STRINGS = {
     saveMenuItem:'Save menu item', searchMenuItems:'Search menu items', searchOrders:'Search order no. or phone', edit:'Edit', delete:'Delete',
     menuReorderHint:'Drag the grip to reorder all menu items. Clear search to enable dragging.', menuReorderSearch:'Clear search to reorder menu items.',
     savingMenuOrder:'Saving menu order…', menuOrderSaved:'Menu order saved.', dragMenuItem:'Drag to reorder',
-    all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', completed:'Completed', cancelled:'Cancelled',
+    all:'All', pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', out_for_delivery:'Out for delivery', completed:'Completed', cancelled:'Cancelled',
     orderCount:'{count} orders', orderCountOne:'1 order', paid:'Paid', unpaid:'Unpaid',
     contact:'Contact', items:'Items', deliveryAddressLine:'Delivery — {address}', pickup:'Pickup', subtotal:'Subtotal', total:'Total', payment:'Payment',
     noOrders:'No orders here yet.', failedLoadOrders:'Failed to load orders.', saving:'Saving…', saved:'Saved.', failedSave:'Failed to save.', deleteOrder:'Delete order', deleteOrderConfirm:'Delete this cancelled order for good? You cannot get it back.', couldNotDeleteOrder:'Could not delete the order.',
@@ -735,7 +742,7 @@ const ADMIN_UI_STRINGS = {
     saveMenuItem:'حفظ الصنف', searchMenuItems:'بحث في أصناف القائمة', searchOrders:'بحث برقم الطلب أو الهاتف', edit:'تعديل', delete:'حذف',
     menuReorderHint:'اسحب المقبض لإعادة ترتيب جميع الأصناف. امسح البحث لتفعيل السحب.', menuReorderSearch:'امسح البحث لإعادة ترتيب الأصناف.',
     savingMenuOrder:'جارٍ حفظ ترتيب القائمة…', menuOrderSaved:'تم حفظ ترتيب القائمة.', dragMenuItem:'اسحب لإعادة الترتيب',
-    all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', completed:'مكتمل', cancelled:'ملغي',
+    all:'الكل', pending:'قيد الانتظار', confirmed:'مؤكد', preparing:'قيد التحضير', ready:'جاهز', out_for_delivery:'في الطريق', completed:'مكتمل', cancelled:'ملغي',
     orderCount:'عدد الطلبات: {count}', orderCountOne:'طلب واحد', paid:'مدفوع', unpaid:'غير مدفوع',
     contact:'التواصل', items:'الأصناف', deliveryAddressLine:'توصيل — {address}', pickup:'استلام', subtotal:'المجموع الفرعي', total:'الإجمالي', payment:'الدفع',
     noOrders:'لا توجد طلبات حالياً.', failedLoadOrders:'تعذر تحميل الطلبات.', saving:'جارٍ الحفظ…', saved:'تم الحفظ.', failedSave:'تعذر الحفظ.', deleteOrder:'حذف الطلب', deleteOrderConfirm:'هل تريد حذف هذا الطلب الملغى نهائياً؟ لا يمكن استرجاعه.', couldNotDeleteOrder:'تعذّر حذف الطلب.',
@@ -782,7 +789,7 @@ const ADMIN_UI_STRINGS = {
     saveMenuItem:'مینو آئٹم محفوظ کریں', searchMenuItems:'مینو آئٹمز تلاش کریں', searchOrders:'آرڈر نمبر یا فون سے تلاش کریں', edit:'ترمیم', delete:'حذف',
     menuReorderHint:'تمام مینو آئٹمز کی ترتیب بدلنے کے لیے ہینڈل کھینچیں۔ ڈریگ فعال کرنے کے لیے تلاش صاف کریں۔', menuReorderSearch:'آئٹمز کی ترتیب بدلنے کے لیے تلاش صاف کریں۔',
     savingMenuOrder:'مینو کی ترتیب محفوظ ہو رہی ہے…', menuOrderSaved:'مینو کی ترتیب محفوظ ہو گئی۔', dragMenuItem:'ترتیب بدلنے کے لیے کھینچیں',
-    all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', completed:'مکمل', cancelled:'منسوخ',
+    all:'تمام', pending:'زیرِ انتظار', confirmed:'تصدیق شدہ', preparing:'تیاری جاری', ready:'تیار', out_for_delivery:'راستے میں', completed:'مکمل', cancelled:'منسوخ',
     orderCount:'آرڈرز: {count}', orderCountOne:'ایک آرڈر', paid:'ادا شدہ', unpaid:'غیر ادا شدہ',
     contact:'رابطہ', items:'آئٹمز', deliveryAddressLine:'ڈیلیوری — {address}', pickup:'پک اَپ', subtotal:'ذیلی مجموعہ', total:'کل', payment:'ادائیگی',
     noOrders:'ابھی کوئی آرڈر نہیں۔', failedLoadOrders:'آرڈرز لوڈ نہیں ہو سکے۔', saving:'محفوظ ہو رہا ہے…', saved:'محفوظ ہو گیا۔', failedSave:'محفوظ نہیں ہو سکا۔', deleteOrder:'آرڈر حذف کریں', deleteOrderConfirm:'کیا اس منسوخ آرڈر کو ہمیشہ کے لیے حذف کرنا ہے؟ اسے واپس نہیں لایا جا سکتا۔', couldNotDeleteOrder:'آرڈر حذف نہیں ہو سکا۔',
@@ -829,7 +836,7 @@ const ADMIN_UI_STRINGS = {
     saveMenuItem:'保存商品', searchMenuItems:'搜索菜单商品', searchOrders:'按订单号或电话搜索', edit:'编辑', delete:'删除',
     menuReorderHint:'拖动手柄可调整所有菜单商品顺序。清除搜索后即可拖动。', menuReorderSearch:'清除搜索后即可调整商品顺序。',
     savingMenuOrder:'正在保存菜单顺序…', menuOrderSaved:'菜单顺序已保存。', dragMenuItem:'拖动以调整顺序',
-    all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', completed:'已完成', cancelled:'已取消',
+    all:'全部', pending:'待处理', confirmed:'已确认', preparing:'制作中', ready:'已备好', out_for_delivery:'配送中', completed:'已完成', cancelled:'已取消',
     orderCount:'共 {count} 个订单', orderCountOne:'1 个订单', paid:'已付款', unpaid:'未付款',
     contact:'联系方式', items:'商品', deliveryAddressLine:'配送 — {address}', pickup:'自取', subtotal:'小计', total:'总计', payment:'付款',
     noOrders:'暂无订单。', failedLoadOrders:'无法加载订单。', saving:'正在保存…', saved:'已保存。', failedSave:'保存失败。', deleteOrder:'删除订单', deleteOrderConfirm:'要永久删除这个已取消的订单吗？删除后无法恢复。', couldNotDeleteOrder:'无法删除订单。',
@@ -967,6 +974,27 @@ const CONTACT_ADMIN_STRINGS_2 = {
         cdPhone:'WhatsApp 号码 1', cdPhone2:'WhatsApp 号码 2（可选）', cdMapUrl:'地图链接（Google 地图）' },
 };
 Object.keys(CONTACT_ADMIN_STRINGS_2).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS_2[code]));
+
+// WhatsApp numbers must include the country code (any country). Instructions, live check and error text.
+const CONTACT_ADMIN_STRINGS_3 = {
+  en: { cdOrderPhone:'WhatsApp number for orders', cdOrderEmpty:'Leave empty to use WhatsApp number 1.',
+        cdIntlHelp:'Type the full international number: + then the country code, then the number. Do not start with 0. Examples: +966 56 928 3982, +91 98765 43210, +44 7911 123456. Spaces and dashes are fine.',
+        cdIntl:'Enter the number in international format: start with + and the country code (for example +44 7911 123456). Do not start with 0.',
+        cdOrderNow:'Orders are sent to', cdOrderNone:'no valid number yet', cdLiveOk:'WhatsApp will open the chat with', cdLiveBad:'Not valid yet: start with + and the country code.' },
+  ar: { cdOrderPhone:'رقم واتساب لاستقبال الطلبات', cdOrderEmpty:'اتركه فارغًا لاستخدام رقم واتساب 1.',
+        cdIntlHelp:'اكتب الرقم الدولي كاملًا: علامة + ثم رمز الدولة ثم الرقم. لا تبدأ بالصفر. أمثلة: ‎+966 56 928 3982 ، ‎+91 98765 43210 ، ‎+44 7911 123456. المسافات والشرطات مقبولة.',
+        cdIntl:'أدخل الرقم بالصيغة الدولية: ابدأ بعلامة + ثم رمز الدولة (مثال: ‎+44 7911 123456). لا تبدأ بالصفر.',
+        cdOrderNow:'يتم إرسال الطلبات إلى', cdOrderNone:'لا يوجد رقم صالح بعد', cdLiveOk:'سيفتح واتساب محادثة مع', cdLiveBad:'غير صالح بعد: ابدأ بعلامة + ثم رمز الدولة.' },
+  ur: { cdOrderPhone:'آرڈرز کے لیے واٹس ایپ نمبر', cdOrderEmpty:'خالی چھوڑیں تو واٹس ایپ نمبر 1 استعمال ہوگا۔',
+        cdIntlHelp:'مکمل بین الاقوامی نمبر لکھیں: + پھر ملک کا کوڈ، پھر نمبر۔ صفر سے شروع نہ کریں۔ مثالیں: +966 56 928 3982، +91 98765 43210، +44 7911 123456۔ خالی جگہ اور ڈیش ٹھیک ہیں۔',
+        cdIntl:'نمبر بین الاقوامی انداز میں لکھیں: + اور ملک کے کوڈ سے شروع کریں (مثلاً +44 7911 123456)۔ صفر سے شروع نہ کریں۔',
+        cdOrderNow:'آرڈرز یہاں بھیجے جاتے ہیں', cdOrderNone:'ابھی کوئی درست نمبر نہیں', cdLiveOk:'واٹس ایپ اس نمبر کی چیٹ کھولے گا', cdLiveBad:'ابھی درست نہیں: + اور ملک کے کوڈ سے شروع کریں۔' },
+  zh: { cdOrderPhone:'接收订单的 WhatsApp 号码', cdOrderEmpty:'留空则使用 WhatsApp 号码 1。',
+        cdIntlHelp:'请输入完整的国际号码：先输入 +，再输入国家/地区代码，然后是号码。不要以 0 开头。示例：+966 56 928 3982、+91 98765 43210、+44 7911 123456。可以包含空格和短横线。',
+        cdIntl:'请使用国际格式：以 + 和国家/地区代码开头（例如 +44 7911 123456）。不要以 0 开头。',
+        cdOrderNow:'订单将发送到', cdOrderNone:'暂无有效号码', cdLiveOk:'WhatsApp 将打开与此号码的聊天：', cdLiveBad:'尚无效：请以 + 和国家/地区代码开头。' },
+};
+Object.keys(CONTACT_ADMIN_STRINGS_3).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS_3[code]));
 
 // Strings for the Music tab (background music for the index and menu pages).
 const MUSIC_ADMIN_STRINGS = {
@@ -3300,6 +3328,7 @@ document.getElementById('musicCards').addEventListener('change', async event => 
 /* ---------- contact details (homepage call button) ---------- */
 function contactErrorText(message){
   const known = [
+    ['international format', 'cdIntl'],
     ['valid phone number', 'cdInvalidPhone'],
     ['Enter an address or a map link', 'cdInvalidAddress'],
     ['site_settings table is missing', 'cdTableMissing'],
@@ -3307,6 +3336,26 @@ function contactErrorText(message){
   const hit = known.find(([text]) => (message || '').includes(text));
   return adminText(hit ? hit[1] : 'cdSaveFailed');
 }
+// Same rule as the server (routes/contact.js toWaNumber): + or 00, then the country code and number, any country.
+function waDigits(raw){
+  const text = String(raw || '').trim();
+  const digits = text.replace(/\D/g, '');
+  const wa = text.startsWith('+') ? digits : (digits.startsWith('00') ? digits.slice(2) : '');
+  return /^[1-9]\d{7,14}$/.test(wa) ? wa : '';
+}
+function updateWaHints(orderWa){
+  ['contactPhone', 'contactPhone2', 'contactOrderPhone'].forEach(id => {
+    const value = document.getElementById(id).value.trim();
+    const hint = document.getElementById('live_' + id);
+    const wa = waDigits(value);
+    hint.textContent = !value ? '' : wa ? `${adminText('cdLiveOk')} +${wa}` : adminText('cdLiveBad');
+    hint.style.color = value && !wa ? 'var(--red)' : '';
+  });
+  if(orderWa !== undefined){
+    document.getElementById('contactOrderNow').textContent = `${adminText('cdOrderNow')}: ${orderWa ? '+' + orderWa : adminText('cdOrderNone')}`;
+  }
+}
+['contactPhone', 'contactPhone2', 'contactOrderPhone'].forEach(id => document.getElementById(id).addEventListener('input', () => updateWaHints()));
 async function loadContact(){
   try{
     const response = await fetch(`${API_BASE}/api/contact`, { cache: 'no-store' });
@@ -3314,8 +3363,10 @@ async function loadContact(){
     const contact = await response.json();
     document.getElementById('contactPhone').value = contact.phone || '';
     document.getElementById('contactPhone2').value = contact.phone2 || '';
+    document.getElementById('contactOrderPhone').value = contact.orderPhone || '';
     document.getElementById('contactMapUrl').value = contact.mapUrl || '';
     savedContactAddress = contact.address || '';
+    updateWaHints(contact.orderWa || '');
     // HIDDEN: address -- document.getElementById('contactAddress').value = contact.address || '';
     setFormNote('contactNote', '');
   }catch{
@@ -3334,12 +3385,15 @@ document.getElementById('contactForm').addEventListener('submit', async event =>
       body: JSON.stringify({
         phone: document.getElementById('contactPhone').value,
         phone2: document.getElementById('contactPhone2').value,
+        orderPhone: document.getElementById('contactOrderPhone').value,
         mapUrl: document.getElementById('contactMapUrl').value,
         address: savedContactAddress,   // HIDDEN: address field -- was document.getElementById('contactAddress').value
       }),
     });
     document.getElementById('contactPhone').value = result.contact.phone;
     document.getElementById('contactPhone2').value = result.contact.phone2 || '';
+    document.getElementById('contactOrderPhone').value = result.contact.orderPhone || '';
+    updateWaHints(result.orderWa || '');
     document.getElementById('contactMapUrl').value = result.contact.mapUrl || '';
     savedContactAddress = result.contact.address || '';
     // HIDDEN: address -- document.getElementById('contactAddress').value = result.contact.address;

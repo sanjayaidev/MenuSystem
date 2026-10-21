@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Red House Catering — Menu</title>
 <script>document.documentElement.setAttribute('data-theme','dark');</script>
+<script src="order-status.js"></script>
 <!-- LIGHT/DARK TOGGLE DISABLED (dark only). Original theme script:
 <script>
 (function(){
@@ -439,6 +440,7 @@
   .profile-orders-title{font-size:calc(16px + var(--lang-add,0px)); margin:26px 0 10px;}
   .profile-order{border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:12px; margin-bottom:8px;}
   .profile-order-head{display:flex; justify-content:space-between; gap:10px; font-size:calc(13px + var(--lang-add,0px)); font-weight:700;}
+  .profile-track{color:var(--gold); font-weight:600;}
   .profile-order small{display:block; color:var(--muted); margin-top:6px; line-height:1.45;}
   .profile-empty{color:var(--muted); font-size:calc(13px + var(--lang-add,0px));}
   .checkout-branch{color:var(--gold); font-weight:700; font-size:calc(14px + var(--lang-add,0px)); margin-bottom:2px;}
@@ -783,6 +785,23 @@
   </div>
 
   <!-- ===== CHECKOUT OVERLAY ===== -->
+  <div class="overlay" id="orderDoneOverlay">
+    <div class="overlay-head">
+      <span style="width:38px;"></span>
+      <span class="overlay-title" id="doneTitle"></span>
+      <button class="icon-btn" id="doneClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="checkout-body" style="text-align:center; padding-top:34px;">
+      <p class="field-label" id="doneLabel"></p>
+      <p id="doneNumber" dir="ltr" style="font-family:'Cinzel',serif; font-weight:700; font-size:30px; color:var(--gold); margin:6px 0 12px;"></p>
+      <p class="status-note" id="doneKeep"></p>
+      <a class="primary-btn" id="doneTrack" href="#" style="text-decoration:none;"></a>
+      <a class="primary-btn wa-btn" id="doneWa" href="#" target="_blank" rel="noopener" style="text-decoration:none;"></a>
+    </div>
+  </div>
+
   <div class="overlay" id="checkoutOverlay">
     <div class="overlay-head">
       <button class="icon-btn" id="checkoutBack" aria-label="Back">
@@ -799,7 +818,7 @@
       <p class="field-label" id="nameLabel"></p>
       <input class="field-input" id="checkoutName" type="text">
       <p class="field-label" id="phoneLabel"></p>
-      <input class="field-input" id="checkoutPhone" type="tel" placeholder="05XXXXXXXX">
+      <input class="field-input" id="checkoutPhone" type="tel" placeholder="+__ _________">
       <div id="addressWrap">
         <p class="field-label" id="addressLabel"></p>
         <textarea class="field-textarea" id="checkoutAddress"></textarea>
@@ -1419,7 +1438,7 @@ listEl.addEventListener('click', e=>{
 sortSelect.addEventListener('change', render);
 
 /* ---------- overlay and tab state ---------- */
-const overlayElements = ['itemModal', 'cartOverlay', 'profileOverlay', 'checkoutOverlay', 'contactOverlay']
+const overlayElements = ['itemModal', 'cartOverlay', 'profileOverlay', 'checkoutOverlay', 'orderDoneOverlay', 'contactOverlay']
   .map(id => document.getElementById(id));
 function resetOverlayScroll(overlay){
   overlay.scrollTop = 0;
@@ -1559,7 +1578,6 @@ async function loadConfig(){
 /* ---------- contact details (call button) ---------- */
 // Editable from the admin "Contact" tab; served by GET /api/contact.
 let CONTACT = { phone:'', phone2:'', address:'', mapUrl:'' };
-const WA_COUNTRY = '966';   // local numbers starting with 0 are treated as Saudi (+966)
 
 async function loadContact(){
   try{
@@ -1572,12 +1590,13 @@ async function loadContact(){
   }
 }
 
-// 00966 56 928 3982 / 056 928 3982 / +966569283982  ->  966569283982 (wa.me format)
+// International numbers only (any country): +91 98765 43210 / 0091 98765 43210 -> 919876543210 (wa.me format).
+// A local number with no country code can not be linked, so it gives '' (Admin -> Contact asks for the + format).
 function waNumber(raw){
-  let d = String(raw || '').replace(/\D/g, '');
-  if(d.startsWith('00')) d = d.slice(2);
-  else if(d.startsWith('0')) d = WA_COUNTRY + d.slice(1);
-  return d;
+  const s = String(raw || '').trim();
+  let d = s.replace(/\D/g, '');
+  if(s.startsWith('+')) return d;
+  return d.startsWith('00') ? d.slice(2) : '';
 }
 
 function renderContact(){
@@ -2097,7 +2116,7 @@ async function loadProfileOrders(){
   if(!orders.length){ ordersEl.innerHTML = `<p class="profile-empty">${escapeHtml(STR[lang].noOrders)}</p>`; return; }
   ordersEl.innerHTML = orders.map(order => {
     const items = order.order_items.map(item => `${item.quantity} × ${escapeHtml(item.name_snapshot)}`).join(', ');
-    return `<div class="profile-order"><div class="profile-order-head"><span>${escapeHtml(order.order_number || '#'+order.id)}</span><span>${moneyHtml(Number(order.total))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(order.status)}<br>${items}</small></div>`;
+    return `<div class="profile-order"><div class="profile-order-head"><span>${escapeHtml(order.order_number || '#'+order.id)}</span><span>${moneyHtml(Number(order.total))}</span></div><small>${escapeHtml(new Date(order.created_at).toLocaleDateString())} · ${escapeHtml(RHOrder.label(order.status, order.delivery_type, lang))}<br>${items}<br><a class="profile-track" href="/track?o=${encodeURIComponent(order.order_number || '')}&lang=${lang}">${escapeHtml(RHOrder.t('track', lang))}</a></small></div>`;
   }).join('');
 }
 function openProfile(){
@@ -2256,12 +2275,13 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     if(!res.ok) throw new Error('order failed');
     const order = await res.json();
     lastOrder = order;
+    RHOrder.remember(order.order_number, order.order_token);   // guests have no account: keep the token on this device
 
     statusNote.textContent = STR[lang].paymentDone;
-    sendOrderToWhatsApp(order, { name, phone, address });
+    const waUrl = sendOrderToWhatsApp(order, { name, phone, address });
 
     await clearCart();
-    closeOverlay(checkoutOverlay);
+    showOrderDone(order, waUrl);
   }catch(err){
     statusNote.textContent = STR[lang].orderFailed;
   }finally{
@@ -2289,11 +2309,33 @@ ${lines}
 Subtotal: ${money(cartSubtotal())}
 Delivery: ${money(cartDeliveryFee())}
 Total: ${money(cartTotal())}
-Payment: confirmed (simulated)`;
+Payment: confirmed (simulated)
+
+Track: ${RHOrder.trackUrl(order.order_number, order.order_token)}`;
 
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   window.open(url, '_blank');
+  return url;
 }
+
+/* Order confirmation: the customer sees the order number here (and can open the tracking page).
+   The WhatsApp button is a fallback for when the browser blocked the automatic WhatsApp window. */
+const orderDoneOverlay = document.getElementById('orderDoneOverlay');
+function showOrderDone(order, waUrl){
+  const t = k => RHOrder.t(k, lang);
+  document.getElementById('doneTitle').textContent = t('orderPlaced');
+  document.getElementById('doneLabel').textContent = t('orderNumber');
+  document.getElementById('doneNumber').textContent = order.order_number || ('#' + order.id);
+  document.getElementById('doneKeep').textContent = t('keepNumber');
+  const track = document.getElementById('doneTrack');
+  track.textContent = t('trackOrder');
+  track.href = RHOrder.trackUrl(order.order_number, order.order_token) + '&lang=' + lang;
+  const wa = document.getElementById('doneWa');
+  wa.textContent = t('sendWhatsapp');
+  wa.href = waUrl;
+  openOverlay(orderDoneOverlay);
+}
+document.getElementById('doneClose').addEventListener('click', () => closeOverlay(orderDoneOverlay));
 
  (async function init(){
 //~   await Promise.all([loadMenuData(), loadSpecialData(), loadConfig(), loadContact()]);

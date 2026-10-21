@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Track your order — Red House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Cinzel:wght@600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#121110; --surface:#1c1a18; --line:#2c2925; --gold:#e3b23c; --red:#b8352b; --green:#4caf7d; --text:#f4efe6; --muted:#a99f8f; }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Poppins',sans-serif; line-height:1.5;
+       padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);}
+  html[lang="ar"] body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
+  html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Poppins',sans-serif; line-height:1.9;}
+  html[lang="zh"] body{font-family:'Noto Sans SC','Poppins',sans-serif;}
+  main{max-width:480px; margin:0 auto; padding:18px 18px 48px;}
+  a{color:var(--gold);}
+  .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px;}
+  .top a{font-size:14px; text-decoration:none;}
+  h1{font-size:18px; margin:0; font-weight:600;}
+  h2{font-size:15px; margin:30px 0 10px; font-weight:600;}
+  [hidden]{display:none !important;}
+
+  /* the order itself: number first, then where it is right now */
+  .hero{padding:6px 0 26px; border-bottom:1px solid var(--line);}
+  .num{font-family:'Cinzel',serif; font-weight:700; font-size:clamp(26px,8.4vw,34px); color:var(--gold); margin:0; letter-spacing:.02em; direction:ltr; text-align:start;}
+  html[dir="rtl"] .num, html[dir="rtl"] .order-row b{text-align:right;}
+  .state{font-size:22px; font-weight:600; margin:10px 0 4px;}
+  .state.cancelled{color:var(--red);}
+  .meta{color:var(--muted); font-size:13px; margin:0;}
+
+  .steps{list-style:none; margin:26px 0 0; padding:0;}
+  .steps li{position:relative; padding-inline-start:36px; padding-bottom:24px; color:var(--muted); font-size:15px;}
+  .steps li::before{content:''; position:absolute; inset-inline-start:9px; top:22px; bottom:-2px; width:2px; background:var(--line);}
+  .steps li:last-child{padding-bottom:0;}
+  .steps li:last-child::before{display:none;}
+  .steps .dot{position:absolute; inset-inline-start:0; top:2px; width:20px; height:20px; border-radius:50%; border:2px solid var(--line); background:var(--bg);}
+  .steps .done::before{background:var(--gold);}
+  .steps .done .dot{background:var(--gold); border-color:var(--gold);}
+  .steps .done .dot::after{content:''; position:absolute; left:5px; top:1px; width:5px; height:10px; border:solid #1a1408; border-width:0 2px 2px 0; transform:rotate(45deg);}
+  .steps .current{color:var(--text); font-weight:600; font-size:17px;}
+  .steps .current .dot{border-color:var(--gold); box-shadow:0 0 0 5px rgba(227,178,60,.18);}
+  @media (prefers-reduced-motion:no-preference){ .steps .current .dot{animation:beat 2.2s ease-in-out infinite;} }
+  @keyframes beat{ 50%{box-shadow:0 0 0 8px rgba(227,178,60,.06);} }
+  .note{color:var(--muted); font-size:13px; margin:18px 0 0;}
+  .cancel-note{margin:20px 0 0; padding:12px 14px; border:1px solid rgba(184,53,43,.5); border-radius:10px; color:var(--text); font-size:14px;}
+
+  .sum{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:6px 14px;}
+  .sum .row{display:flex; justify-content:space-between; gap:12px; padding:9px 0; font-size:14px; border-bottom:1px solid var(--line);}
+  .sum .row:last-child{border-bottom:0;}
+  .sum .row.total{font-weight:700;}
+  .sum .q{color:var(--muted); direction:ltr;}
+
+  .order-row{display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:start; font:inherit; color:inherit;
+             background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer;}
+  .order-row:hover,.order-row:focus-visible{border-color:var(--gold); outline:none;}
+  .order-row b{display:block; font-size:14px; direction:ltr; text-align:start;}
+  .order-row small{color:var(--muted); font-size:12px;}
+  .pill{font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px; background:rgba(227,178,60,.15); color:var(--gold); white-space:nowrap;}
+  .pill.done{background:rgba(76,175,125,.15); color:var(--green);}
+  .pill.cancelled{background:rgba(184,53,43,.15); color:var(--red);}
+
+  form{display:grid; gap:10px;}
+  label{display:grid; gap:5px; font-size:13px; color:var(--muted);}
+  input{font:inherit; font-size:16px; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:11px 12px; width:100%;}
+  input:focus-visible{outline:2px solid var(--gold); outline-offset:1px;}
+  input[dir="ltr"]{text-align:start;}
+  button.go{font:inherit; font-weight:600; font-size:15px; background:var(--gold); color:#1a1408; border:0; border-radius:10px; padding:12px; cursor:pointer;}
+  button.go:disabled{opacity:.6; cursor:default;}
+  button.go:focus-visible,.link-btn:focus-visible{outline:2px solid var(--text); outline-offset:2px;}
+  .link-btn{font:inherit; font-size:14px; color:var(--gold); background:none; border:0; padding:0; cursor:pointer; text-decoration:underline;}
+  .err{color:#ff8a80; font-size:13px; margin:0; min-height:1em;}
+  .empty{color:var(--muted); font-size:14px; margin:0 0 4px;}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1 id="title"></h1>
+    <a id="backLink" href="/menu"></a>
+  </div>
+
+  <!-- one order -->
+  <section id="detail" hidden aria-live="polite">
+    <div class="hero">
+      <p class="num" id="dNum"></p>
+      <p class="state" id="dState"></p>
+      <p class="meta" id="dPlaced"></p>
+      <p class="meta" id="dUpdated"></p>
+    </div>
+    <p class="cancel-note" id="dCancel" hidden></p>
+    <ol class="steps" id="dSteps"></ol>
+    <p class="note" id="dAuto"></p>
+    <h2 id="dItemsTitle"></h2>
+    <div class="sum" id="dSum"></div>
+    <h2><button class="link-btn" id="otherBtn" type="button"></button></h2>
+  </section>
+
+  <!-- list + lookup -->
+  <section id="finder">
+    <div id="accountBlock" hidden><h2 id="accountTitle" style="margin-top:0"></h2><div id="accountList"></div></div>
+    <div id="deviceBlock"><h2 id="deviceTitle" style="margin-top:0"></h2><div id="deviceList"></div></div>
+    <h2 id="lookupTitle"></h2>
+    <form id="lookupForm" novalidate>
+      <label><span id="lblNo"></span><input id="inNo" dir="ltr" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+      <label><span id="lblPhone"></span><input id="inPhone" type="tel" dir="ltr" autocomplete="tel"></label>
+      <p class="err" id="lookupErr" role="alert"></p>
+      <button class="go" id="lookupBtn" type="submit"></button>
+    </form>
+  </section>
+</main>
+
+<script src="order-status.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var AUTH_KEY = 'redhouse_access_token', REFRESH_MS = 20000;
+  var params = new URLSearchParams(location.search);
+  var auth = ''; try{ auth = localStorage.getItem(AUTH_KEY) || ''; }catch(e){}
+  var currency = 'SAR', timer = null, creds = null;
+
+  var lang = (function(){
+    var l = params.get('lang'); try{ l = l || localStorage.getItem('redhouse_lang'); }catch(e){}
+    l = l || (navigator.language || 'en').slice(0,2).toLowerCase();
+    return ['en','ar','ur','zh'].indexOf(l) > -1 ? l : 'en';
+  })();
+  var T = function(k){ return RHOrder.t(k, lang); };
+  document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'ar' || lang === 'ur') ? 'rtl' : 'ltr';
+
+  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function when(iso){ try{ return new Date(iso).toLocaleString(lang, { dateStyle:'medium', timeStyle:'short' }); }catch(e){ return ''; } }
+  function money(n){ return currency + ' ' + String(Math.round(Number(n) * 100) / 100); }
+  function pillClass(s){ return s === 'cancelled' ? 'cancelled' : s === 'completed' ? 'done' : ''; }
+
+  $('title').textContent = T('trackTitle');
+  $('backLink').textContent = T('back');
+  $('dItemsTitle').textContent = T('items');
+  $('dAuto').textContent = T('autoRefresh');
+  $('otherBtn').textContent = T('lookup');
+  $('accountTitle').textContent = T('signedIn');
+  $('deviceTitle').textContent = T('yourOrders');
+  $('lookupTitle').textContent = T('lookup');
+  $('lblNo').textContent = T('orderNo');
+  $('inNo').placeholder = T('orderNoPh');
+  $('lblPhone').textContent = T('phone');
+  $('inPhone').placeholder = T('phonePh');
+  $('lookupBtn').textContent = T('find');
+
+  fetch('/api/config').then(function(r){ return r.json(); }).then(function(c){ if(c && c.currency) currency = c.currency; }).catch(function(){});
+
+  /* ---- data ---- */
+  function load(c){
+    var q = [];
+    if(c.t) q.push('token=' + encodeURIComponent(c.t));
+    if(c.p) q.push('phone=' + encodeURIComponent(c.p));
+    var headers = auth ? { Authorization:'Bearer ' + auth } : {};
+    return fetch('/api/track/' + encodeURIComponent(c.n) + (q.length ? '?' + q.join('&') : ''), { headers: headers, cache:'no-store' })
+      .then(function(res){
+        return res.json().catch(function(){ return {}; }).then(function(body){
+          if(!res.ok){ var e = new Error(body.error || T('loadFail')); e.status = res.status; throw e; }
+          return body;
+        });
+      });
+  }
+
+  /* ---- one order ---- */
+  function showOrder(order, c){
+    creds = c;
+    $('finder').hidden = true; $('detail').hidden = false;
+    $('dNum').textContent = order.order_number;
+    var cancelled = order.status === 'cancelled';
+    var st = $('dState'); st.textContent = RHOrder.label(order.status, order.delivery_type, lang); st.className = 'state' + (cancelled ? ' cancelled' : '');
+    $('dPlaced').textContent = T('placedOn') + ': ' + when(order.created_at);
+    $('dUpdated').textContent = T('updated') + ': ' + when(order.updated_at);
+    $('dCancel').hidden = !cancelled; $('dCancel').textContent = T('cancelledNote');
+
+    var flow = RHOrder.flow(order.delivery_type), at = flow.indexOf(order.status), finished = order.status === 'completed';
+    $('dSteps').hidden = cancelled;
+    $('dAuto').hidden = cancelled || finished;
+    $('dSteps').innerHTML = flow.map(function(s, i){
+      var cls = finished || i < at ? 'done' : i === at ? 'current' : '';
+      return '<li class="' + cls + '"' + (i === at ? ' aria-current="step"' : '') + '><span class="dot"></span>' + esc(RHOrder.label(s, order.delivery_type, lang)) + '</li>';
+    }).join('');
+
+    var fee = Math.round((Number(order.total) - Number(order.subtotal)) * 100) / 100;
+    $('dSum').innerHTML = (order.items || []).map(function(i){ return '<div class="row"><span>' + esc(i.name) + '</span><span class="q">× ' + esc(i.quantity) + '</span></div>'; }).join('')
+      + (fee > 0 ? '<div class="row"><span>' + esc(T('delivery')) + '</span><span dir="ltr">' + esc(money(fee)) + '</span></div>' : '')
+      + '<div class="row total"><span>' + esc(T('total')) + '</span><span dir="ltr">' + esc(money(order.total)) + '</span></div>';
+
+    clearInterval(timer);
+    if(!cancelled && !finished){
+      timer = setInterval(function(){
+        if(document.hidden) return;
+        load(c).then(function(o){ showOrder(o, c); }).catch(function(){});
+      }, REFRESH_MS);
+    }
+  }
+
+  /* ---- list + lookup ---- */
+  function row(o){
+    var label = RHOrder.label(o.status, o.delivery_type, lang);
+    return '<button class="order-row" type="button" data-n="' + esc(o.n) + '"' + (o.t ? ' data-t="' + esc(o.t) + '"' : '') + '><span><b>' + esc(o.n) + '</b><small>' + esc(when(o.at)) + '</small></span><span class="pill ' + pillClass(o.status) + '">' + esc(label) + '</span></button>';
+  }
+  function fill(listEl, blockEl, items, emptyText){
+    listEl.innerHTML = items.length ? items.map(row).join('') : (emptyText ? '<p class="empty">' + esc(emptyText) + '</p>' : '');
+    if(blockEl) blockEl.hidden = !items.length && !emptyText;
+  }
+  function showFinder(){
+    clearInterval(timer); creds = null;
+    $('detail').hidden = true; $('finder').hidden = false;
+    var accountNumbers = {};
+    if(auth){
+      fetch('/api/auth/orders', { headers:{ Authorization:'Bearer ' + auth } })
+        .then(function(r){ return r.ok ? r.json() : { orders:[] }; })
+        .then(function(d){
+          var list = (d.orders || []).slice(0, 10).map(function(o){ accountNumbers[o.order_number] = 1; return { n:o.order_number, status:o.status, delivery_type:o.delivery_type, at:o.created_at }; });
+          fill($('accountList'), $('accountBlock'), list, '');
+          renderDevice(accountNumbers);
+        }).catch(function(){ renderDevice(accountNumbers); });
+    }else{
+      renderDevice(accountNumbers);
+    }
+  }
+  function renderDevice(skip){
+    var saved = RHOrder.saved().filter(function(o){ return !skip[o.n]; }).slice(0, 10);
+    if(!saved.length){ fill($('deviceList'), $('deviceBlock'), [], T('noneYet')); return; }
+    $('deviceList').innerHTML = '<p class="empty">' + esc(T('loading')) + '</p>';
+    Promise.all(saved.map(function(s){
+      return load({ n:s.n, t:s.t }).then(function(o){ return { n:o.order_number, t:s.t, status:o.status, delivery_type:o.delivery_type, at:o.created_at }; }).catch(function(){ return null; });
+    })).then(function(rows){ fill($('deviceList'), $('deviceBlock'), rows.filter(Boolean), T('noneYet')); });
+  }
+  function open(c){
+    load(c).then(function(o){ showOrder(o, c); }).catch(function(e){ showFinder(); $('lookupErr').textContent = e.message; });
+  }
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.order-row');
+    if(b) open({ n:b.dataset.n, t:b.dataset.t || '' });
+  });
+  $('otherBtn').addEventListener('click', function(){ history.replaceState(null, '', '/track'); showFinder(); });
+  $('lookupForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var n = $('inNo').value.trim().toUpperCase(), p = $('inPhone').value.trim();
+    $('lookupErr').textContent = '';
+    if(!n || (!p && !auth)){ $('lookupErr').textContent = T('notFound'); return; }
+    $('lookupBtn').disabled = true;
+    load({ n:n, p:p }).then(function(o){ showOrder(o, { n:n, p:p }); })
+      .catch(function(err){ $('lookupErr').textContent = err.message; })
+      .then(function(){ $('lookupBtn').disabled = false; });
+  });
+
+  var n0 = (params.get('o') || '').trim().toUpperCase();
+  if(n0){ $('inNo').value = n0; open({ n:n0, t:params.get('t') || '' }); }
+  else showFinder();
+})();
+</script>
+</body>
+</html>

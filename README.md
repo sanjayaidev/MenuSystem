@@ -198,7 +198,6 @@ cp .env.example .env
 | `PORT` | no (default 3000) | Local port |
 | `APP_URL` | yes | Used for the keep-alive pinger **and** as the base for the password-reset redirect link (see below) |
 | `ALLOWED_ORIGINS` | recommended | Comma-separated list of origins allowed to call this API cross-origin, e.g. `https://your-service.onrender.com,https://yourdomain.com`. Falls back to `APP_URL` alone if unset. Requests with no `Origin` header (curl, same-origin page loads) are always allowed regardless. |
-| `WHATSAPP_NUMBER` | yes for checkout | Your business WhatsApp, digits only, no `+` or leading `00` (e.g. `9665XXXXXXXX`) |
 | `BRANCH_NAME` | no (default "Red House Trading") | Shown in the WhatsApp message and checkout screen |
 | `DELIVERY_FEE` | no (default `20`) | Single source of truth for the delivery fee — used by `POST /api/orders` and served to the frontend via `GET /api/config`, so it only needs setting in one place |
 | `GEMINI_API_KEY` | no | Turns on the admin **Auto-translate from English** buttons (Gemini API, server-side only). Without it the buttons show "GEMINI_API_KEY is not configured on the server." and everything else works as before |
@@ -251,7 +250,8 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 ## API
 **Public**
 - `GET /health`
-- `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee }`, read by the frontend instead of hardcoding these.
+- `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee, currency }`, read by the frontend instead of hardcoding these. `whatsappNumber` = Admin "orders" number, else Admin WhatsApp number 1.
+- `GET /api/track/:orderNumber` — slim order status for the tracking page (no name/phone/address). Needs `?token=` (from checkout), `?phone=` (phone used on the order) or the signed-in owner.
 - `GET /api/categories`
 - `GET /api/menu?category=<key>&sort=popular|name|time|offer|price`
 - `GET /api/menu/:id`
@@ -296,7 +296,12 @@ blocked while it contains menu items, and menu item deletion keeps existing orde
 3. "Complete your order now" → checkout form (name, phone, address if delivery).
 4. "Pay & send order" → simulates a brief payment step, then `POST /api/orders` creates the order in Supabase already marked paid, returning an order id + `order_token`.
 5. The app builds a WhatsApp message and opens `https://wa.me/<WHATSAPP_NUMBER>?text=...` (number from `/api/config`) so the customer sends it straight to the branch.
-6. Staff move the order through its stages from `/admin`.
+6. The customer sees a confirmation with the order number and a **Track my order** button (`/track`). The tracking link is also in the WhatsApp message, and the order is remembered on the device.
+7. Staff move the order through its stages from `/admin`.
+
+Order statuses: `pending → confirmed → preparing → ready → (out_for_delivery, delivery orders only) → completed`, or `cancelled` at any point. Labels for all four languages live in `frontend/order-status.js`.
+
+WhatsApp numbers (Admin → Contact) must be in international format (`+` and the country code, any country). Local numbers starting with `0` are rejected, because without a country code WhatsApp can not open the chat.
 
 ## Security notes
 - **Rate limiting**: login, register, password-reset-request, and order creation are all limited per-IP (20 requests / 15 min) via `express-rate-limit`.

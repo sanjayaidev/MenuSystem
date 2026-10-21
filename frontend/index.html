@@ -374,8 +374,7 @@ document.querySelectorAll('.pill').forEach(function(a){
     zh:{ title:'联系我们', whatsapp:'WhatsApp', location:'位置', chat:'通过 WhatsApp 联系', map:'在地图中打开' }
   };
   /* shown until /api/contact answers (same defaults as routes/contact.js), so the card is never empty */
-  var CONTACT = { phone:'056 928 3982', phone2:'00966 56 928 3982', address:'', mapUrl:'https://maps.app.goo.gl/SPNMnoHksw7VcNu66' };
-  var WA_COUNTRY = '966';
+  var CONTACT = { phone:'+966 56 928 3982', phone2:'', address:'', mapUrl:'https://maps.app.goo.gl/SPNMnoHksw7VcNu66' };
   var $ = function(id){ return document.getElementById(id); };
   var wrap = $('contactWrap'), sheet = $('contactSheet'), fab = $('waFab'), lastFocus = null;
 
@@ -386,12 +385,13 @@ document.querySelectorAll('.pill').forEach(function(a){
     if(!STR[l]){ l = (navigator.language || 'en').slice(0,2).toLowerCase(); }
     return STR[l] ? l : 'en';
   }
-  /* 00966 56 928 3982 / 056 928 3982 / +966569283982 -> 966569283982 (wa.me format) */
+  /* international numbers only (any country): +91 98765 43210 / 0091 98765 43210 -> 919876543210 (wa.me format).
+     A local number with no country code can not be linked, so it gives ''. */
   function waNumber(raw){
-    var d = String(raw || '').replace(/\D/g, '');
-    if(d.indexOf('00') === 0) d = d.slice(2);
-    else if(d.indexOf('0') === 0) d = WA_COUNTRY + d.slice(1);
-    return d;
+    var s = String(raw || '').trim();
+    var d = s.replace(/\D/g, '');
+    if(s.charAt(0) === '+') return d;
+    return d.indexOf('00') === 0 ? d.slice(2) : '';
   }
   function render(){
     var l = lang(), t = STR[l];

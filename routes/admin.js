@@ -7,7 +7,7 @@ const { translateTexts, TranslateError } = require('../db/translate');
 
 const router = express.Router();
 
-const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
 const LANGUAGES = ['en', 'ar', 'ur', 'zh'];
 
 function asyncHandler(handler) {

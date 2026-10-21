@@ -96,6 +96,10 @@ app.get('/', (req, res) => {
 
 app.get('/menu', sendMenuPage);
 
+app.get('/track', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'track.html'));
+});
+
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'admin.html'));
 });
@@ -103,13 +107,18 @@ app.get('/admin', (req, res) => {
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Public, non-secret runtime config the frontend needs. Keeps
-// WHATSAPP_NUMBER/BRANCH_NAME/DELIVERY_FEE defined once, server-side,
+// BRANCH_NAME/DELIVERY_FEE defined once, server-side,
 // instead of hardcoded in homepage.html.
-app.get('/api/config', (req, res) => {
+app.get('/api/config', async (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  let whatsappNumber = '';
+  try { whatsappNumber = await contactRoutes.getOrderWhatsapp(); } catch (e) { console.error('Could not resolve the order WhatsApp number:', e.message); }
   res.json({
-    whatsappNumber: process.env.WHATSAPP_NUMBER || '',
+    // set in Admin -> Contact (falls back to WhatsApp number 1)
+    whatsappNumber,
     branchName: process.env.BRANCH_NAME || 'Red House Trading',
     deliveryFee: Number(process.env.DELIVERY_FEE || 20),
+    currency: process.env.CURRENCY || 'SAR',
   });
 });
 
