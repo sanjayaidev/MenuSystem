@@ -86,6 +86,8 @@ async function sendMenuPage(req, res) {
 app.get('/menu-page.html', sendMenuPage);
 
 app.use('/demo', express.static(path.join(__dirname, 'demo')));
+// Leaflet (map library) is served from this server, not a CDN, so the maps do not depend on a third party script.
+app.use('/vendor/leaflet', express.static(path.join(__dirname, 'node_modules', 'leaflet', 'dist'), { maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // New flow: / = landing page (index.html) -> /menu = menu page (menu-page.html).
@@ -119,6 +121,9 @@ app.get('/api/config', async (req, res) => {
     branchName: process.env.BRANCH_NAME || 'Red House Trading',
     deliveryFee: Number(process.env.DELIVERY_FEE || 20),
     currency: process.env.CURRENCY || 'SAR',
+    // map tiles for the admin pin picker and the tracking page (free OpenStreetMap tiles unless you set your own)
+    mapTileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    mapAttribution: process.env.MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   });
 });
 

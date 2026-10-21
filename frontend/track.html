@@ -73,6 +73,15 @@
   .link-btn{font:inherit; font-size:14px; color:var(--gold); background:none; border:0; padding:0; cursor:pointer; text-decoration:underline;}
   .err{color:#ff8a80; font-size:13px; margin:0; min-height:1em;}
   .empty{color:var(--muted); font-size:14px; margin:0 0 4px;}
+
+  /* delivery route map (delivery orders only) */
+  .route-map{height:260px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); direction:ltr; z-index:0;}
+  .route-facts{display:flex; flex-wrap:wrap; gap:8px 28px; margin:12px 0 0;}
+  .route-facts span{display:block; color:var(--muted); font-size:12px;}
+  .route-facts b{font-size:15px; font-weight:600;}
+  .pin span{display:block; width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.5);}
+  .pin b{display:block; transform:rotate(45deg); text-align:center; line-height:26px; font-size:14px;}
+  .leaflet-tooltip{font-family:'Poppins',sans-serif; font-size:12px; font-weight:600; color:#1a1408;}
 </style>
 </head>
 <body>
@@ -93,6 +102,12 @@
     <p class="cancel-note" id="dCancel" hidden></p>
     <ol class="steps" id="dSteps"></ol>
     <p class="note" id="dAuto"></p>
+    <section id="dMapWrap" hidden>
+      <h2 id="dMapTitle"></h2>
+      <div class="route-map" id="dMap" role="img"></div>
+      <div class="route-facts" id="dMapFacts"></div>
+      <p class="note" id="dMapNote"></p>
+    </section>
     <h2 id="dItemsTitle"></h2>
     <div class="sum" id="dSum"></div>
     <h2><button class="link-btn" id="otherBtn" type="button"></button></h2>
@@ -149,7 +164,82 @@
   $('inPhone').placeholder = T('phonePh');
   $('lookupBtn').textContent = T('find');
 
-  fetch('/api/config').then(function(r){ return r.json(); }).then(function(c){ if(c && c.currency) currency = c.currency; }).catch(function(){});
+  var cfgReady = fetch('/api/config').then(function(r){ return r.json(); }).then(function(c){ if(c && c.currency) currency = c.currency; return c || {}; }).catch(function(){ return {}; });
+
+  /* ---- delivery route map ----
+     Draws the road route from the restaurant pin (Admin -> Contact) to the delivery address. It is a fixed picture of
+     the route, not live driver tracking. Only for delivery orders, and only when the page was opened with the order's
+     own link or a signed-in account: the server never sends the delivery position for a phone-number lookup. */
+  var leafletLoading = null, mapState = { n:'', map:null, done:false, busy:false };
+  function loadLeaflet(){
+    if(window.L) return Promise.resolve();
+    if(!leafletLoading){
+      var css = new Promise(function(resolve){
+        var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/vendor/leaflet/leaflet.css';
+        l.onload = resolve; l.onerror = resolve; document.head.appendChild(l);
+      });
+      var js = new Promise(function(resolve, reject){
+        var s = document.createElement('script'); s.src = '/vendor/leaflet/leaflet.js';
+        s.onload = resolve; s.onerror = function(){ leafletLoading = null; reject(new Error('leaflet')); };
+        document.head.appendChild(s);
+      });
+      leafletLoading = Promise.all([css, js]);
+    }
+    return leafletLoading;
+  }
+  function fetchMapData(c){
+    if(!c.t && !auth) return Promise.resolve(null);
+    var headers = auth ? { Authorization:'Bearer ' + auth } : {};
+    return fetch('/api/track/' + encodeURIComponent(c.n) + '/map' + (c.t ? '?token=' + encodeURIComponent(c.t) : ''), { headers: headers, cache:'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; });
+  }
+  function pinIcon(color, glyph){
+    return L.divIcon({ className:'pin', html:'<span style="background:' + color + '"><b>' + glyph + '</b></span>', iconSize:[30,30], iconAnchor:[15,36], tooltipAnchor:[0,-34] });
+  }
+  function drawMap(d, cfg){
+    $('dMapWrap').hidden = false;
+    $('dMapTitle').textContent = T('mapTitle');
+    $('dMap').setAttribute('aria-label', T('mapTitle'));
+    var map = L.map($('dMap'), { scrollWheelZoom:false, worldCopyJump:true });
+    L.tileLayer(cfg.mapTileUrl || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: cfg.mapAttribution !== undefined ? cfg.mapAttribution : '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var from = [d.restaurant.lat, d.restaurant.lng], to = [d.destination.lat, d.destination.lng];
+    var hasRoute = !!(d.route && d.route.points && d.route.points.length > 1);
+    var line = hasRoute ? L.polyline(d.route.points, { color:'#b8352b', weight:5, opacity:.9 })
+                        : L.polyline([from, to], { color:'#b8352b', weight:4, opacity:.8, dashArray:'8 8' });
+    line.addTo(map);
+    L.marker(from, { icon: pinIcon('#e3b23c', '\uD83C\uDF7D'), keyboard:false }).addTo(map).bindTooltip(T('mapRestaurant'), { permanent:true, direction:'top' });
+    L.marker(to, { icon: pinIcon('#4caf7d', '\uD83C\uDFE0'), keyboard:false }).addTo(map).bindTooltip(T('mapHome'), { permanent:true, direction:'top' });
+    map.fitBounds(L.latLngBounds(hasRoute ? d.route.points : [from, to]), { padding:[40, 40], maxZoom:16 });
+
+    $('dMapFacts').innerHTML = hasRoute
+      ? '<div><span>' + esc(T('mapDistance')) + '</span><b dir="ltr">' + esc(Math.round(d.route.distance_m / 100) / 10 + ' ' + T('mapKm')) + '</b></div>'
+        + '<div><span>' + esc(T('mapDrive')) + '</span><b>' + esc(T('mapMin').replace('{n}', Math.max(1, Math.round(d.route.duration_s / 60)))) + '</b></div>'
+      : '';
+    $('dMapNote').textContent = T('mapApprox') + (hasRoute ? '' : ' ' + T('mapStraight'));
+    return map;
+  }
+  function resetMap(){
+    if(mapState.map) mapState.map.remove();
+    mapState = { n:'', map:null, done:false, busy:false };
+    $('dMapWrap').hidden = true;
+  }
+  function updateMap(order, c){
+    if(order.delivery_type !== 'delivery' || order.status === 'cancelled'){ resetMap(); return; }
+    if(mapState.n !== order.order_number){ resetMap(); mapState.n = order.order_number; }
+    if(mapState.done || mapState.busy) return;
+    var st = mapState; st.busy = true;
+    Promise.all([ fetchMapData(c), loadLeaflet(), cfgReady ]).then(function(r){
+      if(mapState !== st) return;                                  // the customer moved to another order meanwhile
+      var d = r[0];
+      if(!d || !d.restaurant || !d.destination) return;            // nothing to draw (yet): asked again on the next refresh
+      st.map = drawMap(d, r[2]); st.done = true;
+    }).catch(function(){ /* leaflet or network failed: asked again on the next refresh */ })
+      .then(function(){ st.busy = false; });
+  }
 
   /* ---- data ---- */
   function load(c){
@@ -190,6 +280,8 @@
       + (fee > 0 ? '<div class="row"><span>' + esc(T('delivery')) + '</span><span dir="ltr">' + esc(money(fee)) + '</span></div>' : '')
       + '<div class="row total"><span>' + esc(T('total')) + '</span><span dir="ltr">' + esc(money(order.total)) + '</span></div>';
 
+    updateMap(order, c);
+
     clearInterval(timer);
     if(!cancelled && !finished){
       timer = setInterval(function(){
@@ -209,7 +301,7 @@
     if(blockEl) blockEl.hidden = !items.length && !emptyText;
   }
   function showFinder(){
-    clearInterval(timer); creds = null;
+    clearInterval(timer); creds = null; resetMap();
     $('detail').hidden = true; $('finder').hidden = false;
     var accountNumbers = {};
     if(auth){

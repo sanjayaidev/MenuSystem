@@ -97,6 +97,12 @@ create table if not exists orders (
   updated_at       timestamptz not null default now()
 );
 
+-- Where a home delivery goes on the map. Filled in by the server the first time the order is tracked
+-- (it looks the delivery_address text up on OpenStreetMap). The ALTERs also bring an orders table that
+-- already exists up to date, so re-running this file is all an existing database needs.
+alter table orders add column if not exists delivery_lat double precision;
+alter table orders add column if not exists delivery_lng double precision;
+
 create table if not exists order_items (
   id            bigint generated always as identity primary key,
   order_id      bigint not null,                         -- -> orders

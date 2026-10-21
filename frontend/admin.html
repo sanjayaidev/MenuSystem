@@ -212,6 +212,15 @@
   .form-note{min-height:18px; color:var(--muted); font-size:12px;}
   .form-note.error{color:#ff9085;}
   .form-note.ok{color:var(--green);}
+  .pin-picker{margin-top:18px; padding-top:14px; border-top:1px solid var(--line);}
+  .pin-picker h3{margin:0 0 4px;}
+  .manager-form .pin-search{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .manager-form .pin-search input{flex:1 1 220px; margin-top:0;}
+  .pin-results{display:grid; gap:4px; margin-top:8px;}
+  .pin-results[hidden]{display:none;}
+  .pin-results .pin-result{text-align:start; font-weight:500; line-height:1.4;}
+  .pin-map{height:340px; margin-top:10px; border:1px solid var(--line); border-radius:8px; background:#1c1a18; direction:ltr; z-index:0;}
+  .pin-coords{margin-top:10px; direction:ltr;}
   .translate-bar .action-btn.done{border-color:var(--green); color:var(--green);}
   .records{display:grid; gap:8px;}
   .record{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:7px;}
@@ -537,6 +546,22 @@
         <p class="form-note" style="margin:12px 0 0;" data-ui="cdIntlHelp">Type the full international number: + then the country code, then the number. Do not start with 0. Examples: +966 56 928 3982, +91 98765 43210, +44 7911 123456. Spaces and dashes are fine.</p>
         <div style="margin-top:12px;">
           <label><span data-ui="cdMapUrl">Map link (Google Maps)</span><input name="mapUrl" id="contactMapUrl" type="url" maxlength="300" autocomplete="off" placeholder="https://maps.app.goo.gl/..."></label>
+        </div>
+        <div class="pin-picker">
+          <h3 data-ui="cdPinTitle">Restaurant location (exact pin)</h3>
+          <p class="form-note" style="margin:0;" data-ui="cdPinHelp">Search for your place, or click the map, then drag the pin to the exact spot. Zoom in for accuracy. This pin is where the delivery route on the order tracking page starts.</p>
+          <div class="pin-search">
+            <input id="contactPinSearch" type="search" maxlength="200" autocomplete="off" data-ui-placeholder="cdSearchPh" placeholder="Search an address or place">
+            <button class="action-btn" id="contactPinSearchBtn" type="button" data-ui="cdSearch">Search</button>
+            <button class="action-btn" id="contactPinLocate" type="button" data-ui="cdLocate">Use my current location</button>
+          </div>
+          <div class="pin-results" id="contactPinResults" hidden></div>
+          <div class="pin-map" id="contactPinMap"></div>
+          <div class="form-grid pin-coords" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+            <label><span data-ui="cdLat">Latitude</span><input id="contactLat" inputmode="decimal" autocomplete="off" placeholder="24.713600"></label>
+            <label><span data-ui="cdLng">Longitude</span><input id="contactLng" inputmode="decimal" autocomplete="off" placeholder="46.675300"></label>
+          </div>
+          <div class="form-actions" style="margin-top:8px;"><button class="action-btn danger" id="contactPinClear" type="button" data-ui="cdPinClear">Remove pin</button><span class="form-note" id="contactPinNote" role="status"></span></div>
         </div>
         <!-- HIDDEN: address is no longer shown on the main pages (the map link is used instead).
              The saved address is kept untouched in the script (savedContactAddress). Un-comment to restore.
@@ -995,6 +1020,51 @@ const CONTACT_ADMIN_STRINGS_3 = {
         cdOrderNow:'订单将发送到', cdOrderNone:'暂无有效号码', cdLiveOk:'WhatsApp 将打开与此号码的聊天：', cdLiveBad:'尚无效：请以 + 和国家/地区代码开头。' },
 };
 Object.keys(CONTACT_ADMIN_STRINGS_3).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS_3[code]));
+
+// Exact restaurant pin (map picker in the Contact tab).
+const CONTACT_ADMIN_STRINGS_4 = {
+  en: { cdPinTitle:'Restaurant location (exact pin)',
+        cdPinHelp:'Search for your place, or click the map, then drag the pin to the exact spot. Zoom in for accuracy. This pin is where the delivery route on the order tracking page starts.',
+        cdSearchPh:'Search an address or place', cdSearch:'Search', cdLocate:'Use my current location',
+        cdLat:'Latitude', cdLng:'Longitude', cdPinClear:'Remove pin',
+        cdPinNone:'No pin placed yet. Click the map to place it.', cdPinAt:'Pin at {lat}, {lng} (kept only after you press Save).', cdPinSavedAt:'Saved pin at {lat}, {lng}.',
+        cdSearching:'Searching…', cdNoResults:'Nothing found. Try a shorter search or click the map.',
+        cdSearchFailed:'Place search is not available right now. Click the map to place the pin.',
+        cdLocating:'Finding your location…', cdLocateFailed:'Could not get your location. Allow location access, or click the map.',
+        cdBadPin:'Enter both latitude (-90 to 90) and longitude (-180 to 180), or remove the pin.',
+        cdMapLoadFailed:'The map could not be loaded. Check your connection and reopen this tab.' },
+  ar: { cdPinTitle:'موقع المطعم (دبوس دقيق)',
+        cdPinHelp:'ابحث عن مكانك أو اضغط على الخريطة، ثم اسحب الدبوس إلى النقطة الدقيقة. قرّب الخريطة لمزيد من الدقة. من هذا الدبوس يبدأ مسار التوصيل في صفحة تتبع الطلب.',
+        cdSearchPh:'ابحث عن عنوان أو مكان', cdSearch:'بحث', cdLocate:'استخدم موقعي الحالي',
+        cdLat:'خط العرض', cdLng:'خط الطول', cdPinClear:'إزالة الدبوس',
+        cdPinNone:'لم يتم وضع دبوس بعد. اضغط على الخريطة لوضعه.', cdPinAt:'الدبوس عند {lat}، {lng} (لا يُحفظ إلا بعد الضغط على حفظ).', cdPinSavedAt:'الدبوس المحفوظ عند {lat}، {lng}.',
+        cdSearching:'جارٍ البحث…', cdNoResults:'لا توجد نتائج. جرّب بحثًا أقصر أو اضغط على الخريطة.',
+        cdSearchFailed:'البحث عن الأماكن غير متاح الآن. اضغط على الخريطة لوضع الدبوس.',
+        cdLocating:'جارٍ تحديد موقعك…', cdLocateFailed:'تعذّر تحديد موقعك. اسمح بالوصول إلى الموقع أو اضغط على الخريطة.',
+        cdBadPin:'أدخل خط العرض (من -90 إلى 90) وخط الطول (من -180 إلى 180) معًا، أو أزل الدبوس.',
+        cdMapLoadFailed:'تعذّر تحميل الخريطة. تحقق من الاتصال وأعد فتح هذا التبويب.' },
+  ur: { cdPinTitle:'ریستوران کا مقام (درست پن)',
+        cdPinHelp:'اپنی جگہ تلاش کریں یا نقشے پر کلک کریں، پھر پن کو عین جگہ تک گھسیٹیں۔ زیادہ درستگی کے لیے زوم ان کریں۔ آرڈر ٹریکنگ صفحے پر ڈیلیوری کا راستہ اسی پن سے شروع ہوتا ہے۔',
+        cdSearchPh:'پتہ یا جگہ تلاش کریں', cdSearch:'تلاش', cdLocate:'میرا موجودہ مقام استعمال کریں',
+        cdLat:'عرض بلد', cdLng:'طول بلد', cdPinClear:'پن ہٹائیں',
+        cdPinNone:'ابھی کوئی پن نہیں لگایا گیا۔ لگانے کے لیے نقشے پر کلک کریں۔', cdPinAt:'پن {lat}، {lng} پر ہے (محفوظ کریں دبانے کے بعد ہی محفوظ ہوگا)۔', cdPinSavedAt:'محفوظ شدہ پن {lat}، {lng} پر ہے۔',
+        cdSearching:'تلاش ہو رہی ہے…', cdNoResults:'کچھ نہیں ملا۔ مختصر تلاش آزمائیں یا نقشے پر کلک کریں۔',
+        cdSearchFailed:'جگہ کی تلاش ابھی دستیاب نہیں۔ پن لگانے کے لیے نقشے پر کلک کریں۔',
+        cdLocating:'آپ کا مقام تلاش ہو رہا ہے…', cdLocateFailed:'آپ کا مقام معلوم نہیں ہو سکا۔ مقام کی اجازت دیں یا نقشے پر کلک کریں۔',
+        cdBadPin:'عرض بلد (-90 سے 90) اور طول بلد (-180 سے 180) دونوں درج کریں، یا پن ہٹا دیں۔',
+        cdMapLoadFailed:'نقشہ لوڈ نہیں ہو سکا۔ کنکشن چیک کریں اور یہ ٹیب دوبارہ کھولیں۔' },
+  zh: { cdPinTitle:'餐厅位置（精确定位）',
+        cdPinHelp:'搜索地点或点击地图，然后将图钉拖到准确位置。放大地图可提高精度。订单追踪页面上的配送路线以此图钉为起点。',
+        cdSearchPh:'搜索地址或地点', cdSearch:'搜索', cdLocate:'使用我当前的位置',
+        cdLat:'纬度', cdLng:'经度', cdPinClear:'移除图钉',
+        cdPinNone:'尚未放置图钉。点击地图即可放置。', cdPinAt:'图钉位置：{lat}，{lng}（点击保存后才会生效）。', cdPinSavedAt:'已保存的图钉位置：{lat}，{lng}。',
+        cdSearching:'搜索中…', cdNoResults:'没有找到结果。请缩短搜索词或直接点击地图。',
+        cdSearchFailed:'暂时无法搜索地点。请点击地图放置图钉。',
+        cdLocating:'正在获取您的位置…', cdLocateFailed:'无法获取您的位置。请允许定位权限，或直接点击地图。',
+        cdBadPin:'请同时填写纬度（-90 到 90）和经度（-180 到 180），或移除图钉。',
+        cdMapLoadFailed:'地图无法加载。请检查网络后重新打开此标签页。' },
+};
+Object.keys(CONTACT_ADMIN_STRINGS_4).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], CONTACT_ADMIN_STRINGS_4[code]));
 
 // Strings for the Music tab (background music for the index and menu pages).
 const MUSIC_ADMIN_STRINGS = {
@@ -3331,6 +3401,7 @@ function contactErrorText(message){
     ['international format', 'cdIntl'],
     ['valid phone number', 'cdInvalidPhone'],
     ['Enter an address or a map link', 'cdInvalidAddress'],
+    ['pin position is not valid', 'cdBadPin'],
     ['site_settings table is missing', 'cdTableMissing'],
   ];
   const hit = known.find(([text]) => (message || '').includes(text));
@@ -3356,6 +3427,145 @@ function updateWaHints(orderWa){
   }
 }
 ['contactPhone', 'contactPhone2', 'contactOrderPhone'].forEach(id => document.getElementById(id).addEventListener('input', () => updateWaHints()));
+/* ---------- restaurant pin: exact location, start of the delivery route on the tracking page ---------- */
+const DEFAULT_MAP_VIEW = { lat: 24.7136, lng: 46.6753, zoom: 5 };   // Saudi Arabia, until a pin exists
+let pinMap = null, pinMarker = null, mapSettings = null, leafletLoading = null;
+let pinSaved = false;   // true while the pin on screen is the one stored on the server
+
+function loadLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(!leafletLoading){
+    leafletLoading = new Promise((resolve, reject) => {
+      if(!document.getElementById('leafletCss')){
+        const css = document.createElement('link');
+        css.id = 'leafletCss'; css.rel = 'stylesheet'; css.href = `${API_BASE}/vendor/leaflet/leaflet.css`;
+        document.head.appendChild(css);
+      }
+      const script = document.createElement('script');
+      script.src = `${API_BASE}/vendor/leaflet/leaflet.js`;
+      script.onload = () => { L.Icon.Default.imagePath = `${API_BASE}/vendor/leaflet/images/`; resolve(); };
+      script.onerror = () => { leafletLoading = null; script.remove(); reject(new Error('Leaflet did not load')); };
+      document.head.appendChild(script);
+    });
+  }
+  return leafletLoading;
+}
+async function loadMapSettings(){
+  if(mapSettings) return mapSettings;
+  let config = {};
+  try{ config = await (await fetch(`${API_BASE}/api/config`, { cache: 'no-store' })).json(); }catch{}
+  mapSettings = {
+    tileUrl: config.mapTileUrl || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: config.mapAttribution !== undefined ? config.mapAttribution : '&copy; OpenStreetMap contributors',
+  };
+  return mapSettings;
+}
+
+// The two coordinate fields are the single source of truth: { lat, lng }, null (no pin) or 'invalid'.
+function readPin(){
+  const latText = document.getElementById('contactLat').value.trim();
+  const lngText = document.getElementById('contactLng').value.trim();
+  if(!latText && !lngText) return null;
+  const lat = Number(latText), lng = Number(lngText);
+  if(!latText || !lngText || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return 'invalid';
+  return { lat, lng };
+}
+function showPinStatus(){
+  const pin = readPin();
+  const text = pin === 'invalid' ? adminText('cdBadPin')
+    : pin ? adminText(pinSaved ? 'cdPinSavedAt' : 'cdPinAt', { lat: pin.lat.toFixed(6), lng: pin.lng.toFixed(6) })
+    : adminText('cdPinNone');
+  setFormNote('contactPinNote', text, pin === 'invalid');
+}
+function removePinMarker(){
+  if(pinMarker){ pinMarker.remove(); pinMarker = null; }
+}
+// Puts the pin (marker + fields) at a position. `zoom` also moves the map there; without it only the marker moves.
+// `saved` marks it as the position already stored on the server (page load, after Save); anything else is a change.
+function setPin(lat, lng, { zoom, saved = false } = {}){
+  pinSaved = saved;
+  lat = Math.round(lat * 1e6) / 1e6;
+  lng = Math.round(lng * 1e6) / 1e6;
+  document.getElementById('contactLat').value = lat;
+  document.getElementById('contactLng').value = lng;
+  if(pinMap){
+    if(pinMarker){
+      pinMarker.setLatLng([lat, lng]);
+    }else{
+      pinMarker = L.marker([lat, lng], { draggable: true, autoPan: true }).addTo(pinMap);
+      pinMarker.on('dragend', () => { const p = pinMarker.getLatLng().wrap(); setPin(p.lat, p.lng); });
+    }
+    if(zoom) pinMap.setView([lat, lng], zoom);
+  }
+  showPinStatus();
+}
+function clearPin(){
+  pinSaved = false;
+  document.getElementById('contactLat').value = '';
+  document.getElementById('contactLng').value = '';
+  removePinMarker();
+  showPinStatus();
+}
+async function initPinPicker(saved){
+  try{
+    await loadLeaflet();
+    const settings = await loadMapSettings();
+    if(!pinMap){
+      pinMap = L.map(document.getElementById('contactPinMap'), { center: [DEFAULT_MAP_VIEW.lat, DEFAULT_MAP_VIEW.lng], zoom: DEFAULT_MAP_VIEW.zoom, worldCopyJump: true });
+      L.tileLayer(settings.tileUrl, { maxZoom: 19, attribution: settings.attribution }).addTo(pinMap);
+      pinMap.on('click', event => { const p = event.latlng.wrap(); setPin(p.lat, p.lng); });
+    }
+    pinMap.invalidateSize();
+    removePinMarker();
+    if(saved) setPin(saved.lat, saved.lng, { zoom: 17, saved: true });
+    else{ pinMap.setView([DEFAULT_MAP_VIEW.lat, DEFAULT_MAP_VIEW.lng], DEFAULT_MAP_VIEW.zoom); showPinStatus(); }
+  }catch{
+    setFormNote('contactPinNote', adminText('cdMapLoadFailed'), true);
+  }
+}
+async function searchPinPlaces(){
+  const query = document.getElementById('contactPinSearch').value.trim();
+  const list = document.getElementById('contactPinResults');
+  if(query.length < 3) return;
+  list.hidden = true; list.innerHTML = '';
+  setFormNote('contactPinNote', adminText('cdSearching'));
+  try{
+    const data = await adminRequest(`/geocode?q=${encodeURIComponent(query)}`);
+    const results = data.results || [];
+    if(!results.length){ setFormNote('contactPinNote', adminText('cdNoResults')); return; }
+    results.forEach(place => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'action-btn pin-result'; button.textContent = place.label;
+      button.addEventListener('click', () => { list.hidden = true; setPin(place.lat, place.lng, { zoom: 18 }); });
+      list.appendChild(button);
+    });
+    list.hidden = false;
+    showPinStatus();
+  }catch{
+    setFormNote('contactPinNote', adminText('cdSearchFailed'), true);
+  }
+}
+function locatePin(){
+  if(!navigator.geolocation){ setFormNote('contactPinNote', adminText('cdLocateFailed'), true); return; }
+  setFormNote('contactPinNote', adminText('cdLocating'));
+  navigator.geolocation.getCurrentPosition(
+    position => setPin(position.coords.latitude, position.coords.longitude, { zoom: 18 }),
+    () => setFormNote('contactPinNote', adminText('cdLocateFailed'), true),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+document.getElementById('contactPinSearchBtn').addEventListener('click', searchPinPlaces);
+document.getElementById('contactPinSearch').addEventListener('keydown', event => {
+  if(event.key === 'Enter'){ event.preventDefault(); searchPinPlaces(); }   // Enter must search, not save the form
+});
+document.getElementById('contactPinLocate').addEventListener('click', locatePin);
+document.getElementById('contactPinClear').addEventListener('click', clearPin);
+['contactLat', 'contactLng'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+  const pin = readPin();
+  if(pin && pin !== 'invalid') setPin(pin.lat, pin.lng, { zoom: pinMap ? Math.max(pinMap.getZoom(), 17) : 17 });
+  else{ if(!pin) removePinMarker(); showPinStatus(); }
+}));
+
 async function loadContact(){
   try{
     const response = await fetch(`${API_BASE}/api/contact`, { cache: 'no-store' });
@@ -3366,6 +3576,10 @@ async function loadContact(){
     document.getElementById('contactOrderPhone').value = contact.orderPhone || '';
     document.getElementById('contactMapUrl').value = contact.mapUrl || '';
     savedContactAddress = contact.address || '';
+    const savedPin = Number.isFinite(contact.lat) && Number.isFinite(contact.lng) ? { lat: contact.lat, lng: contact.lng } : null;
+    document.getElementById('contactLat').value = savedPin ? savedPin.lat : '';
+    document.getElementById('contactLng').value = savedPin ? savedPin.lng : '';
+    initPinPicker(savedPin);
     updateWaHints(contact.orderWa || '');
     // HIDDEN: address -- document.getElementById('contactAddress').value = contact.address || '';
     setFormNote('contactNote', '');
@@ -3376,6 +3590,8 @@ async function loadContact(){
 document.getElementById('contactForm').addEventListener('submit', async event => {
   event.preventDefault();
   const button = document.getElementById('contactSubmit');
+  const pin = readPin();
+  if(pin === 'invalid'){ setFormNote('contactNote', adminText('cdBadPin'), true); return; }
   button.disabled = true;
   setFormNote('contactNote', adminText('saving'));
   try{
@@ -3387,6 +3603,8 @@ document.getElementById('contactForm').addEventListener('submit', async event =>
         phone2: document.getElementById('contactPhone2').value,
         orderPhone: document.getElementById('contactOrderPhone').value,
         mapUrl: document.getElementById('contactMapUrl').value,
+        lat: pin ? pin.lat : null,
+        lng: pin ? pin.lng : null,
         address: savedContactAddress,   // HIDDEN: address field -- was document.getElementById('contactAddress').value
       }),
     });
@@ -3397,6 +3615,8 @@ document.getElementById('contactForm').addEventListener('submit', async event =>
     document.getElementById('contactMapUrl').value = result.contact.mapUrl || '';
     savedContactAddress = result.contact.address || '';
     // HIDDEN: address -- document.getElementById('contactAddress').value = result.contact.address;
+    if(Number.isFinite(result.contact.lat) && Number.isFinite(result.contact.lng)) setPin(result.contact.lat, result.contact.lng, { saved: true });
+    else clearPin();
     setFormNote('contactNote', adminText('cdSaved'));
   }catch(error){
     setFormNote('contactNote', error.message || adminText('cdSaveFailed'), true);

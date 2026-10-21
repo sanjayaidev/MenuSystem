@@ -3,6 +3,8 @@ const rateLimit = require('express-rate-limit');
 const supabase = require('../db/supabase');
 const { getAuthUser } = require('../middleware/auth');
 const { parseOrderRef } = require('../db/order-ref');
+const { toPoint, geocodeAddress, getRoute } = require('../db/geo');
+const contactRoutes = require('./contact');
 
 const router = express.Router();
 
@@ -241,6 +243,102 @@ router.get('/track/:ref', trackLimiter, async (req, res) => {
     total: order.total,
     items: (order.order_items || []).map((i) => ({ name: i.name_snapshot, quantity: i.quantity })),
   });
+});
+
+// ---------- delivery route map for the tracking page ----------
+// GET /api/track/:orderNumber/map?token=<order_token> | signed-in owner
+// Returns { restaurant, destination, route } for a home-delivery order. Any part can be null: the restaurant pin
+// is set in Admin -> Contact, the destination is looked up from the delivery address text, and the route
+// comes from the free OSRM service.
+// Unlike the status lookup above, the phone number is NOT enough here: this reveals where the customer lives,
+// and a phone number is easy to know. The order link/token from checkout, or the owner's sign-in, is required.
+const mapLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many lookups. Please wait a while and try again.' },
+});
+
+const GEO_RETRY_MS = 10 * 60 * 1000;   // after a failed address lookup, wait before trying that order again
+const GEO_MEMORY_MAX = 500;
+const geoMemory = new Map();   // order_number -> { lat, lng }  (also covers a database without the delivery_lat/lng columns)
+const geoMisses = new Map();   // order_number -> time of the failed lookup
+const geoInFlight = new Map(); // order_number -> Promise, so the 20-second refreshes share one lookup
+
+function remember(map, key, value) {
+  if (map.size >= GEO_MEMORY_MAX) map.delete(map.keys().next().value);
+  map.set(key, value);
+}
+
+// 42703 = Postgres undefined_column, PGRST204 = PostgREST schema-cache miss: 01_tables.sql has not been re-run yet
+const isMissingColumn = (error) => Boolean(error && (error.code === '42703' || error.code === 'PGRST204'));
+
+// Where this order is delivered: the saved position, else a lookup of the address text (saved for next time).
+function findDestination(order) {
+  const saved = toPoint(order.delivery_lat, order.delivery_lng) || geoMemory.get(order.order_number);
+  if (saved) return Promise.resolve(saved);
+  if (!order.delivery_address) return Promise.resolve(null);
+
+  const key = order.order_number;
+  const failedAt = geoMisses.get(key);
+  if (failedAt && Date.now() - failedAt < GEO_RETRY_MS) return Promise.resolve(null);
+  if (geoInFlight.has(key)) return geoInFlight.get(key);
+
+  const job = (async () => {
+    const near = await contactRoutes.getRestaurantLocation();
+    const found = await geocodeAddress(order.delivery_address, near);
+    if (!found) { remember(geoMisses, key, Date.now()); return null; }
+    remember(geoMemory, key, found);
+    const { error } = await supabase.from('orders').update({ delivery_lat: found.lat, delivery_lng: found.lng }).eq('id', order.id);
+    if (error && !isMissingColumn(error)) console.error('Could not save the delivery position:', error.message);
+    return found;
+  })()
+    .catch((error) => {
+      console.error('Could not place the delivery address on the map:', error.message);
+      remember(geoMisses, key, Date.now());
+      return null;
+    })
+    .finally(() => geoInFlight.delete(key));
+  geoInFlight.set(key, job);
+  return job;
+}
+
+router.get('/track/:ref/map', mapLimiter, async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const notFound = () => res.status(404).json({ error: 'We could not find that order.' });
+
+  const ref = parseOrderRef(req.params.ref);
+  if (!ref || ref.column !== 'order_number') return notFound();
+
+  const columns = 'id, order_number, order_token, user_id, delivery_type, status, delivery_address';
+  let { data: order, error } = await supabase
+    .from('orders')
+    .select(`${columns}, delivery_lat, delivery_lng`)
+    .eq('order_number', ref.value)
+    .maybeSingle();
+  if (isMissingColumn(error)) {
+    ({ data: order, error } = await supabase.from('orders').select(columns).eq('order_number', ref.value).maybeSingle());
+  }
+  if (error) return res.status(500).json({ error: 'Could not load the map. Please try again.' });
+  if (!order) return notFound();
+
+  const { token } = req.query;
+  let allowed = typeof token === 'string' && token.length > 0 && token === order.order_token;
+  if (!allowed && req.get('authorization')) {
+    const authUser = await getAuthUser(req);
+    allowed = Boolean(authUser && order.user_id && authUser.id === order.user_id);
+  }
+  if (!allowed) return notFound();
+
+  if (order.delivery_type !== 'delivery' || order.status === 'cancelled') {
+    return res.json({ restaurant: null, destination: null, route: null });
+  }
+
+  const restaurant = await contactRoutes.getRestaurantLocation();
+  const destination = restaurant ? await findDestination(order) : null;
+  const route = restaurant && destination ? await getRoute(restaurant, destination) : null;
+  res.json({ restaurant, destination, route });
 });
 
 module.exports = router;

@@ -202,6 +202,9 @@ cp .env.example .env
 | `DELIVERY_FEE` | no (default `20`) | Single source of truth for the delivery fee — used by `POST /api/orders` and served to the frontend via `GET /api/config`, so it only needs setting in one place |
 | `GEMINI_API_KEY` | no | Turns on the admin **Auto-translate from English** buttons (Gemini API, server-side only). Without it the buttons show "GEMINI_API_KEY is not configured on the server." and everything else works as before |
 | `GEMINI_MODEL` | no (default `gemini-flash-lite-latest`) | Gemini model used for translation. `-latest` follows Google's newest Flash-Lite; set a fixed name here if you want it to never change |
+| `MAP_TILE_URL`, `MAP_TILE_ATTRIBUTION` | no | Map pictures for the admin pin picker and the tracking page. Default is free OpenStreetMap tiles, fine for light traffic. To switch to another provider's free tier, set a raster tile URL with `{z}/{x}/{y}` and the credit text it requires. Served to the pages via `GET /api/config` |
+| `ROUTING_URL` | no (default `https://router.project-osrm.org`) | OSRM-compatible server used to draw the road route. The default is a free shared demo server (cached here, so it is only asked once per route); point this at your own OSRM or a hosted one if traffic grows |
+| `GEOCODER_USER_AGENT` | no | Identifies this site to OpenStreetMap's address search (their usage policy asks for it). Default is built from `APP_URL` |
 
 ## 4. Supabase Auth setup for password reset
 The app uses Supabase Auth's built-in "send password recovery email" flow — no separate
@@ -252,6 +255,7 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `GET /health`
 - `GET /api/config` — `{ whatsappNumber, branchName, deliveryFee, currency }`, read by the frontend instead of hardcoding these. `whatsappNumber` = Admin "orders" number, else Admin WhatsApp number 1.
 - `GET /api/track/:orderNumber` — slim order status for the tracking page (no name/phone/address). Needs `?token=` (from checkout), `?phone=` (phone used on the order) or the signed-in owner.
+- `GET /api/track/:orderNumber/map` — `{ restaurant, destination, route }` for the delivery route map (all three can be `null`). Home-delivery orders only. Needs `?token=` or the signed-in owner; **a phone number is not enough**, because this reveals where the customer lives.
 - `GET /api/categories`
 - `GET /api/menu?category=<key>&sort=popular|name|time|offer|price`
 - `GET /api/menu/:id`
@@ -279,9 +283,19 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `POST /images` — text/plain image data URL; uploads through Imgbb and returns `{ url }`
 - `GET /special`, `POST /banner`, `POST /banner/reset`, `POST /special/:categoryKey` — manage the homepage hero and per-category video/five menu references.
 - `POST /music/:page` (multipart field `audio`), `PATCH /music/:page` (`{ enabled }`), `DELETE /music/:page` — background music for `index` or `menu`.
+- `GET /geocode?q=<text>` — place search for the pin picker in Admin → Contact. `{ results: [{ label, lat, lng }] }`
+- `PUT /contact` — also takes `lat` and `lng` (the restaurant pin; both or neither)
 - `GET /orders?status=<pending|confirmed|preparing|ready|completed|cancelled>` — omit `status` for all orders
 - `GET /orders/:id`
 - `PATCH /orders/:id/status` — `{ status }`
+
+## Delivery route map (21/10/2026)
+Free maps, no API keys: Leaflet (served from `/vendor/leaflet`), OpenStreetMap tiles, OpenStreetMap address search (Nominatim) and OSRM for the road route.
+
+- **Admin → Contact → Restaurant location.** Search for the place or click the map, then drag the pin to the exact spot (or type the latitude/longitude, or use "Use my current location" while standing at the restaurant). Press **Save contact details**. The pin is stored in the `contact` row of `site_settings` as `lat` / `lng`. If the Map link is left empty, saving fills it with a Google Maps link to the pin so the customers' location button keeps working.
+- **Tracking page (`/track`).** For home-delivery orders it shows the road route from the restaurant pin to the delivery address, with the distance and the normal driving time. This is a fixed picture of the route, **not live driver tracking**. It only appears when the page is opened from the order's own link (or a signed-in account), and not after a phone-number lookup, and only once the restaurant pin exists.
+- **How the delivery point is found.** The delivery address is free text typed at checkout, so the server looks it up the first time the order is tracked (long addresses are retried without their first parts, e.g. the apartment) and saves the result in `orders.delivery_lat` / `delivery_lng`. Run `db/01_tables.sql` again once to add those two columns; until then the lookup still works but is only remembered in server memory. Because it comes from text, the dot can be off by some distance, and the page says so. For an exact spot, the next step is to let the customer drop a pin at checkout.
+- **Limits of the free services.** OpenStreetMap's address search allows 1 request per second (the server spaces its calls) and OpenStreetMap's tile server and the OSRM demo server are shared, best-effort services meant for light use. Routes are cached for 6 hours and a failed address lookup is not retried for 10 minutes. If traffic grows, set `MAP_TILE_URL` and `ROUTING_URL`.
 
 ## Admin dashboard
 `frontend/admin.html`, served at `/admin`. Staff sign in with their normal email/password
