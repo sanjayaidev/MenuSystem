@@ -85,7 +85,7 @@ create table if not exists orders (
   customer_email   text,
   delivery_type    text not null default 'pickup',
   delivery_address text,
-  status           text not null default 'pending',
+  status           text not null default 'confirmed',   -- confirmed | out_for_delivery | completed | cancelled
   payment_status   text not null default 'unpaid',
   payment_method   text,
   subtotal         numeric(10,2) not null default 0,

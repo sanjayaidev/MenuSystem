@@ -7,7 +7,8 @@ const { translateTexts, TranslateError } = require('../db/translate');
 
 const router = express.Router();
 
-const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
+// Only four statuses are used: confirmed (= "Confirmed & preparing"), out_for_delivery, completed, cancelled.
+const VALID_STATUSES = ['confirmed', 'out_for_delivery', 'completed', 'cancelled'];
 const LANGUAGES = ['en', 'ar', 'ur', 'zh'];
 
 function asyncHandler(handler) {
@@ -689,7 +690,7 @@ router.post('/images', express.text({ type: 'text/plain', limit: '7mb' }), async
   res.status(502).json({ error: `Image upload failed. ${reasons.join(' ')}` });
 }));
 
-// GET /api/admin/orders?status=pending&q=RH-2609&date=2026-09-28
+// GET /api/admin/orders?status=confirmed&q=RH-2609&date=2026-09-28
 // Omit everything for every order, newest first.
 //   status  exact status filter
 //   q       partial match on order number (RH-2609 = all of Sept 2026,

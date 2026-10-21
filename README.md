@@ -85,7 +85,7 @@ After the setup above, the dishes in Beef Meal, Chicken Meal and Shrimp Meal are
 
 #### Point 7: Cancelled orders (delete or keep)
 1. Click **Orders** in the left menu.
-2. On the order, choose **Cancelled** in the status list. It saves by itself.
+2. On the order, choose **Canceled** in the status list. It saves by itself.
 3. The button **Delete order** appears next to the status list. Click it and confirm to delete the order for good. It cannot be brought back.
 4. To keep the order for reference, do nothing. Cancelled orders stay in the list. Click the filter button **Cancelled** at the top of the page to see only the cancelled orders.
 
@@ -285,7 +285,7 @@ curl "http://localhost:3000/api/menu?category=beef&sort=price"
 - `POST /music/:page` (multipart field `audio`), `PATCH /music/:page` (`{ enabled }`), `DELETE /music/:page` — background music for `index` or `menu`.
 - `GET /geocode?q=<text>` — place search for the pin picker in Admin → Contact. `{ results: [{ label, lat, lng }] }`
 - `PUT /contact` — also takes `lat` and `lng` (the restaurant pin; both or neither)
-- `GET /orders?status=<pending|confirmed|preparing|ready|completed|cancelled>` — omit `status` for all orders
+- `GET /orders?status=<confirmed|out_for_delivery|completed|cancelled>` — omit `status` for all orders
 - `GET /orders/:id`
 - `PATCH /orders/:id/status` — `{ status }`
 
@@ -313,7 +313,7 @@ blocked while it contains menu items, and menu item deletion keeps existing orde
 6. The customer sees a confirmation with the order number and a **Track my order** button (`/track`). The tracking link is also in the WhatsApp message, and the order is remembered on the device.
 7. Staff move the order through its stages from `/admin`.
 
-Order statuses: `pending → confirmed → preparing → ready → (out_for_delivery, delivery orders only) → completed`, or `cancelled` at any point. Labels for all four languages live in `frontend/order-status.js`.
+Order statuses: `confirmed` (shown as "Confirmed & preparing", the status every new order starts with) `→ out_for_delivery` (delivery orders only) `→ completed`, or `cancelled` at any point. Run `db/05_order_status_simplify.sql` once to convert old pending / preparing / ready orders. Labels for all four languages live in `frontend/order-status.js`.
 
 WhatsApp numbers (Admin → Contact) must be in international format (`+` and the country code, any country). Local numbers starting with `0` are rejected, because without a country code WhatsApp can not open the chat.
 

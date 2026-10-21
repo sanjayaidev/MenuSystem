@@ -57,6 +57,9 @@ app.use(helmet({
   // so a default strict CSP would break it; leave CSP off here and add a
   // tuned policy later if you split JS/CSS into separate files.
   contentSecurityPolicy: false,
+  // helmet's default is "no-referrer", which strips the Referer header from map tile requests.
+  // OpenStreetMap's tile servers block requests without a Referer (the "403 Access blocked" tiles).
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
 app.use(express.json());
 // Menu page: the poster image at the top is editable in Admin -> Poster. The custom image URL is put

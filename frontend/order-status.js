@@ -1,20 +1,19 @@
 /* Order status names + order/tracking texts, shared by menu-page.html and track.html.
    Statuses (same list as routes/admin.js VALID_STATUSES):
-     pickup:   pending > confirmed > preparing > ready > completed
-     delivery: pending > confirmed > preparing > ready > out_for_delivery > completed
-     cancelled can happen at any point.
-   The same status reads differently per order type ("ready" = ready for pickup / ready for delivery). */
+     pickup:   confirmed > completed
+     delivery: confirmed > out_for_delivery > completed
+     canceled can happen at any point.
+   "confirmed" is shown as "Confirmed & preparing". Old orders saved as pending / preparing / ready
+   are treated as "confirmed" (see db/05_order_status_simplify.sql). */
 (function(){
   var LABELS = {
-    en:{ pending:'Order received', confirmed:'Confirmed', preparing:'Being prepared', ready_pickup:'Ready for pickup', ready_delivery:'Ready for delivery',
-         out_for_delivery:'Out for delivery', completed_pickup:'Picked up', completed_delivery:'Delivered', cancelled:'Cancelled' },
-    ar:{ pending:'تم استلام الطلب', confirmed:'تم التأكيد', preparing:'قيد التحضير', ready_pickup:'جاهز للاستلام', ready_delivery:'جاهز للتوصيل',
-         out_for_delivery:'في الطريق إليك', completed_pickup:'تم الاستلام', completed_delivery:'تم التوصيل', cancelled:'ملغي' },
-    ur:{ pending:'آرڈر موصول ہو گیا', confirmed:'تصدیق ہو گئی', preparing:'تیاری جاری ہے', ready_pickup:'وصولی کے لیے تیار', ready_delivery:'ڈیلیوری کے لیے تیار',
-         out_for_delivery:'راستے میں ہے', completed_pickup:'وصول کر لیا گیا', completed_delivery:'ڈیلیور ہو گیا', cancelled:'منسوخ' },
-    zh:{ pending:'已收到订单', confirmed:'已确认', preparing:'制作中', ready_pickup:'可取餐', ready_delivery:'待配送',
-         out_for_delivery:'配送中', completed_pickup:'已取餐', completed_delivery:'已送达', cancelled:'已取消' }
+    en:{ confirmed:'Confirmed & preparing', out_for_delivery:'Out for delivery', completed:'Completed', cancelled:'Canceled' },
+    ar:{ confirmed:'تم التأكيد وقيد التحضير', out_for_delivery:'في الطريق إليك', completed:'مكتمل', cancelled:'ملغي' },
+    ur:{ confirmed:'تصدیق شدہ اور تیاری جاری', out_for_delivery:'راستے میں ہے', completed:'مکمل', cancelled:'منسوخ' },
+    zh:{ confirmed:'已确认，制作中', out_for_delivery:'配送中', completed:'已完成', cancelled:'已取消' }
   };
+  var LEGACY = { pending:'confirmed', preparing:'confirmed', ready:'confirmed' };
+  function norm(status){ return LEGACY[status] || status; }
 
   var TEXT = {
     en:{ orderPlaced:'Order placed', orderNumber:'Your order number', keepNumber:'Keep this number. You can follow your order with it at any time.',
@@ -23,7 +22,7 @@
          find:'Find my order', yourOrders:'Your orders on this device', noneYet:'No orders saved on this device yet. Enter an order number and phone number to find one.',
          lookup:'Find another order', items:'Items', delivery:'Delivery', total:'Total', placedOn:'Placed', updated:'Updated', autoRefresh:'This page updates by itself.',
          notFound:'We could not find that order. Check the order number and phone number.', loadFail:'Could not load the order. Please try again.', loading:'Loading…',
-         back:'Back to the menu', signedIn:'Your account orders', cancelledNote:'This order was cancelled. Contact the restaurant if you have questions.',
+         back:'Back to the menu', signedIn:'Your account orders', cancelledNote:'This order was canceled. Contact the restaurant if you have questions.',
          mapTitle:'Delivery route', mapRestaurant:'Restaurant', mapHome:'Delivery address', mapDistance:'Distance', mapDrive:'Drive time', mapMin:'about {n} min', mapKm:'km',
          mapApprox:'The delivery point is placed from the address text, so it can be slightly off.', mapStraight:'The road route is not available right now, so a straight line is shown.' },
     ar:{ orderPlaced:'تم إرسال الطلب', orderNumber:'رقم طلبك', keepNumber:'احتفظ بهذا الرقم. يمكنك متابعة طلبك به في أي وقت.',
@@ -56,15 +55,16 @@
   };
 
   var FLOW = {
-    pickup:   ['pending', 'confirmed', 'preparing', 'ready', 'completed'],
-    delivery: ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed']
+    pickup:   ['confirmed', 'completed'],
+    delivery: ['confirmed', 'out_for_delivery', 'completed']
   };
   function kind(type){ return type === 'delivery' ? 'delivery' : 'pickup'; }
 
   window.RHOrder = {
     flow: function(type){ return FLOW[kind(type)].slice(); },
+    normalize: norm,
     label: function(status, type, lang){
-      var key = (status === 'ready' || status === 'completed') ? status + '_' + kind(type) : status;
+      var key = norm(status);
       return (LABELS[lang] || LABELS.en)[key] || LABELS.en[key] || String(status || '');
     },
     t: function(key, lang){ return (TEXT[lang] || TEXT.en)[key] || TEXT.en[key] || key; },

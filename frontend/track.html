@@ -203,6 +203,7 @@
     var map = L.map($('dMap'), { scrollWheelZoom:false, worldCopyJump:true });
     L.tileLayer(cfg.mapTileUrl || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
+      referrerPolicy: 'strict-origin-when-cross-origin',
       attribution: cfg.mapAttribution !== undefined ? cfg.mapAttribution : '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
@@ -267,7 +268,7 @@
     $('dUpdated').textContent = T('updated') + ': ' + when(order.updated_at);
     $('dCancel').hidden = !cancelled; $('dCancel').textContent = T('cancelledNote');
 
-    var flow = RHOrder.flow(order.delivery_type), at = flow.indexOf(order.status), finished = order.status === 'completed';
+    var flow = RHOrder.flow(order.delivery_type), at = flow.indexOf(RHOrder.normalize(order.status)), finished = order.status === 'completed';
     $('dSteps').hidden = cancelled;
     $('dAuto').hidden = cancelled || finished;
     $('dSteps').innerHTML = flow.map(function(s, i){

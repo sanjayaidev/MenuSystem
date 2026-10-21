@@ -112,7 +112,7 @@ router.post('/orders', orderLimiter, async (req, res) => {
       customer_phone,
       delivery_type,
       delivery_address: delivery_type === 'delivery' ? delivery_address : null,
-      status: 'pending',
+      status: 'confirmed',   // new orders start as "Confirmed & preparing"
       payment_status: 'paid',
       payment_method: 'simulated',
       subtotal,
