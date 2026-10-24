@@ -76,6 +76,9 @@
 }
 .contact-btn.wa{background:#25D366; color:#fff; border-color:#25D366;}
 .contact-btn[hidden]{display:none;}
+/* links to the legal pages, under the contact buttons */
+.legal-links{display:flex; flex-wrap:wrap; justify-content:center; gap:4px calc(var(--fw)*.04); font-size:calc(var(--fw)*.03);}
+.legal-links a{color:var(--gold); text-decoration:underline; text-underline-offset:2px;}
 .contact-sheet[dir="rtl"] .contact-body{font-family:'Noto Naskh Arabic','Poppins',sans-serif;}
 .contact-sheet[lang="zh"]{font-family:'Noto Sans SC','Poppins',sans-serif;}
   /* ONE 9:16 page (IG / TikTok). --fw = frame width, everything inside scales from it. */
@@ -171,6 +174,11 @@
         <div class="contact-actions">
           <a class="contact-btn wa" id="contactCallLink" href="#" target="_blank" rel="noopener">Chat on WhatsApp</a>
           <a class="contact-btn" id="contactMapLink" href="#" target="_blank" rel="noopener">Open in Maps</a>
+        </div>
+        <div class="legal-links">
+          <a id="lnkTerms" href="/terms" target="_blank" rel="noopener">Terms of Service</a>
+          <a id="lnkPrivacy" href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+          <a id="lnkReturn" href="/return-policy" target="_blank" rel="noopener">Return Policy</a>
         </div>
       </div>
     </div>
@@ -369,10 +377,10 @@ document.querySelectorAll('.pill').forEach(function(a){
    The anchor keeps a real wa.me href as a no-JS fallback; with JS the tap opens the card instead. */
 (function(){
   var STR = {
-    en:{ title:'Contact us', whatsapp:'WhatsApp', location:'Location', chat:'Chat on WhatsApp', map:'Open in Maps' },
-    ar:{ title:'تواصل معنا', whatsapp:'واتساب', location:'الموقع', chat:'تواصل عبر واتساب', map:'افتح في الخرائط' },
-    ur:{ title:'ہم سے رابطہ کریں', whatsapp:'واٹس ایپ', location:'مقام', chat:'واٹس ایپ پر بات کریں', map:'نقشے میں کھولیں' },
-    zh:{ title:'联系我们', whatsapp:'WhatsApp', location:'位置', chat:'通过 WhatsApp 联系', map:'在地图中打开' }
+    en:{ title:'Contact us', whatsapp:'WhatsApp', location:'Location', chat:'Chat on WhatsApp', map:'Open in Maps', terms:'Terms of Service', privacy:'Privacy Policy', ret:'Return Policy' },
+    ar:{ title:'تواصل معنا', whatsapp:'واتساب', location:'الموقع', chat:'تواصل عبر واتساب', map:'افتح في الخرائط', terms:'شروط الخدمة', privacy:'سياسة الخصوصية', ret:'سياسة الاسترجاع' },
+    ur:{ title:'ہم سے رابطہ کریں', whatsapp:'واٹس ایپ', location:'مقام', chat:'واٹس ایپ پر بات کریں', map:'نقشے میں کھولیں', terms:'سروس کی شرائط', privacy:'رازداری کی پالیسی', ret:'واپسی کی پالیسی' },
+    zh:{ title:'联系我们', whatsapp:'WhatsApp', location:'位置', chat:'通过 WhatsApp 联系', map:'在地图中打开', terms:'服务条款', privacy:'隐私政策', ret:'退货政策' }
   };
   /* shown until /api/contact answers (same defaults as routes/contact.js), so the card is never empty */
   var CONTACT = { phone:'+966 56 928 3982', phone2:'', address:'', mapUrl:'https://maps.app.goo.gl/SPNMnoHksw7VcNu66' };
@@ -402,6 +410,9 @@ document.querySelectorAll('.pill').forEach(function(a){
     $('lblLocation').textContent = t.location;
     $('contactCallLink').textContent = t.chat;
     $('contactMapLink').textContent = t.map;
+    $('lnkTerms').textContent = t.terms;
+    $('lnkPrivacy').textContent = t.privacy;
+    $('lnkReturn').textContent = t.ret;
 
     /* both admin numbers; if they are the same line written two ways, show it once */
     var nums = [], seen = {};

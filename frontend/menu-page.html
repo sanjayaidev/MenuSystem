@@ -487,6 +487,10 @@
     border-radius:12px; padding:13px 10px; border:1px solid var(--gold); color:var(--gold); background:transparent;
   }
   .contact-btn.primary{background:var(--gold); color:#1a1408;}
+  /* links to the legal pages (contact card + checkout) */
+  .legal-links{display:flex; flex-wrap:wrap; justify-content:center; gap:6px 16px; margin-top:6px; font-size:calc(12px + var(--lang-add,0px));}
+  .legal-links a, .legal-note a{color:var(--gold); text-decoration:underline; text-underline-offset:2px;}
+  .legal-note{font-size:calc(12px + var(--lang-add,0px)); text-align:center; color:var(--muted); margin:14px 0 0; line-height:1.6;}
 
   /* ===== FOOTER: Home, Menu, Basket, Profile ===== */
   footer.tabs{
@@ -669,6 +673,11 @@
         <!-- CALL NOW (tel:) DISABLED - WhatsApp replaces it -->
         <a class="contact-btn" id="contactMapLink" href="#" target="_blank" rel="noopener" data-i18n="contactOpenMap">Open in Maps</a>
       </div>
+      <div class="legal-links">
+        <a href="/terms" target="_blank" rel="noopener" data-i18n="legalTerms">Terms of Service</a>
+        <a href="/privacy" target="_blank" rel="noopener" data-i18n="legalPrivacy">Privacy Policy</a>
+        <a href="/return-policy" target="_blank" rel="noopener" data-i18n="legalReturn">Return Policy</a>
+      </div>
     </div>
   </div>
 
@@ -836,6 +845,7 @@
         <div class="summary-line"><span id="checkoutSubLabel"></span><span id="checkoutSubVal"></span></div>
         <div class="summary-line" id="checkoutDeliveryLine"><span id="checkoutDeliveryLabel"></span><span id="checkoutDeliveryVal"></span></div>
         <div class="summary-line final"><span id="checkoutTotalLabel"></span><span id="checkoutTotalVal"></span></div>
+        <p class="legal-note" id="checkoutLegalNote"></p>
         <button class="primary-btn wa-btn" id="checkoutPayBtn"></button>
         <p class="status-note" id="checkoutStatusNote"></p>
       </div>
@@ -972,6 +982,20 @@ const CONTACT_STR = {
   zh:{ contactTitle:'联系我们', contactPhone:'电话', contactAddress:'地址', contactCallNow:'立即致电', contactOpenMap:'在地图中打开', contactWhatsApp:'WhatsApp', contactLocation:'位置', contactChat:'通过 WhatsApp 联系' },
 };
 Object.keys(CONTACT_STR).forEach(code => Object.assign(STR[code], CONTACT_STR[code]));
+
+// Legal links (contact card) and the agreement line shown above the pay button at checkout.
+// legalAgree uses {terms}, {privacy} and {returns} as places for the three links.
+const LEGAL_STR = {
+  en:{ legalTerms:'Terms of Service', legalPrivacy:'Privacy Policy', legalReturn:'Return Policy',
+       legalAgree:'By continuing you agree to our {terms}, {privacy} and {returns}. Fresh food cannot be returned once accepted.' },
+  ar:{ legalTerms:'شروط الخدمة', legalPrivacy:'سياسة الخصوصية', legalReturn:'سياسة الاسترجاع',
+       legalAgree:'بالمتابعة فإنك توافق على {terms} و{privacy} و{returns}. لا يمكن إرجاع الطعام الطازج بعد استلامه.' },
+  ur:{ legalTerms:'سروس کی شرائط', legalPrivacy:'رازداری کی پالیسی', legalReturn:'واپسی کی پالیسی',
+       legalAgree:'جاری رکھنے سے آپ ہماری {terms}، {privacy} اور {returns} سے اتفاق کرتے ہیں۔ تازہ کھانا وصول کرنے کے بعد واپس نہیں ہو سکتا۔' },
+  zh:{ legalTerms:'服务条款', legalPrivacy:'隐私政策', legalReturn:'退货政策',
+       legalAgree:'继续即表示您同意我们的{terms}、{privacy}和{returns}。新鲜食品一经签收，不可退换。' },
+};
+Object.keys(LEGAL_STR).forEach(code => Object.assign(STR[code], LEGAL_STR[code]));
 
 // CATS and ITEMS are no longer hardcoded — they're loaded from the
 // real backend (GET /api/categories and GET /api/menu, which read
@@ -2244,6 +2268,11 @@ function refreshCheckoutStaticText(){
   document.getElementById('checkoutSubLabel').textContent = STR[lang].subtotal;
   document.getElementById('checkoutDeliveryLabel').textContent = STR[lang].deliveryFees;
   document.getElementById('checkoutTotalLabel').textContent = STR[lang].finalTotal;
+  const legalLink = (href, label) => `<a href="${href}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+  document.getElementById('checkoutLegalNote').innerHTML = escapeHtml(STR[lang].legalAgree)
+    .replace('{terms}', legalLink('/terms', STR[lang].legalTerms))
+    .replace('{privacy}', legalLink('/privacy', STR[lang].legalPrivacy))
+    .replace('{returns}', legalLink('/return-policy', STR[lang].legalReturn));
   if(!checkoutOverlay.dataset.submitting){
     document.getElementById('checkoutPayBtn').innerHTML = `${escapeHtml(STR[lang].payBtn)} · ${moneyHtml(cartTotal())}`;
   }

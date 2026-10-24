@@ -107,6 +107,13 @@ app.get('/track', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'track.html'));
 });
 
+// Legal pages (static HTML in frontend/): /privacy, /terms, /return-policy
+['privacy', 'terms', 'return-policy'].forEach((page) => {
+  app.get('/' + page, (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', page + '.html'));
+  });
+});
+
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'admin.html'));
 });
