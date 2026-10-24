@@ -183,6 +183,10 @@
   .check-fields label{display:flex; align-items:center; gap:7px; color:var(--text); font-size:13px;}
   .check-fields input{width:16px; height:16px; margin:0; accent-color:var(--gold);}
   .image-tools{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:10px; margin-top:14px;}
+  .logo-size-controls{display:grid; gap:10px; margin-top:14px;}
+  .logo-size-row{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:10px;}
+  .logo-size-row label output{float:right; color:var(--text);}
+  .logo-size-row input[type=range]{height:18px; padding:0; border:0; background:transparent; accent-color:var(--gold);}
   .image-preview{display:flex; align-items:center; gap:12px; min-height:70px; margin-top:10px; color:var(--muted); font-size:12px;}
   .item-form-heading .image-preview{flex:0 0 auto; min-height:0; margin:0;}
   .image-preview img{width:88px; height:68px; object-fit:cover; border:1px solid var(--line); border-radius:6px; background:var(--bg);}
@@ -391,6 +395,10 @@
         <div class="image-tools">
           <label>Logo image (PNG, JPEG, WebP or GIF, max 5 MB)<input id="brandLogoFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
           <button class="action-btn" id="brandLogoUpload" type="button" disabled>Upload logo</button>
+        </div>
+        <div class="logo-size-controls">
+          <div class="logo-size-row"><label>Index logo size <output id="logoSizeIndexValue">100%</output><input id="logoSizeIndex" type="range" min="50" max="150" step="5" value="100"></label><button class="action-btn" id="logoCopyToMenu" type="button">Copy to menu</button></div>
+          <div class="logo-size-row"><label>Menu page logo size <output id="logoSizeMenuValue">100%</output><input id="logoSizeMenu" type="range" min="50" max="150" step="5" value="100"></label><button class="action-btn" id="logoCopyToIndex" type="button">Copy to index</button></div>
         </div>
         <label>Logo image URL<input id="brandLogoUrl" type="url" maxlength="2000" placeholder="https://..."></label>
         <div class="form-actions"><button class="action-btn primary" id="brandLogoSave" type="submit">Save logo</button><button class="action-btn" id="brandLogoReset" type="button">Use built-in logo</button><span class="form-note" id="brandLogoNote" role="status"></span></div>
@@ -1631,7 +1639,30 @@ function showBrandSettings(design){
   const url = design.logo_url || '';
   document.getElementById('brandLogoUrl').value = url;
   document.getElementById('brandLogoPreview').src = url || 'images/rhclogo.png';
+  setBrandLogoSize('Index', design.logo_size_index);
+  setBrandLogoSize('Menu', design.logo_size_menu);
 }
+
+function setBrandLogoSize(page, value){
+  const suffix = page === 'Index' ? 'Index' : 'Menu';
+  const size = Number.isInteger(Number(value)) && Number(value) >= 50 && Number(value) <= 150 ? Number(value) : 100;
+  document.getElementById(`logoSize${suffix}`).value = size;
+  document.getElementById(`logoSize${suffix}Value`).textContent = `${size}%`;
+}
+
+for(const page of ['Index', 'Menu']){
+  document.getElementById(`logoSize${page}`).addEventListener('input', event => {
+    document.getElementById(`logoSize${page}Value`).textContent = `${event.currentTarget.value}%`;
+  });
+}
+document.getElementById('logoCopyToMenu').addEventListener('click', () => {
+  setBrandLogoSize('Menu', Number(document.getElementById('logoSizeIndex').value));
+  setFormNote('brandLogoNote', 'Index size copied to menu page. Save logo to publish.');
+});
+document.getElementById('logoCopyToIndex').addEventListener('click', () => {
+  setBrandLogoSize('Index', Number(document.getElementById('logoSizeMenu').value));
+  setFormNote('brandLogoNote', 'Menu page size copied to index. Save logo to publish.');
+});
 
 const brandLogoFile = document.getElementById('brandLogoFile');
 brandLogoFile.addEventListener('change', () => {
@@ -1677,7 +1708,11 @@ document.getElementById('brandingForm').addEventListener('submit', async event =
     const result = await adminRequest('/design/branding', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ logo_url: document.getElementById('brandLogoUrl').value.trim() }),
+      body: JSON.stringify({
+        logo_url: document.getElementById('brandLogoUrl').value.trim(),
+        logo_size_index: Number(document.getElementById('logoSizeIndex').value),
+        logo_size_menu: Number(document.getElementById('logoSizeMenu').value),
+      }),
     });
     showBrandSettings(result.design);
     setFormNote('brandLogoNote', 'Logo saved. Refresh the public pages to see it.');

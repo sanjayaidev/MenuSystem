@@ -173,6 +173,8 @@ function designCss(design, language) {
   };
   const family = design.font_style === 'custom' ? "'MenuCustom',serif" : (fontFamilies[design.font_style] || fontFamilies.cinzel);
   vars.push(`--menu-font-family:${family}`, `--menu-font-scale:${(Number(design.font_size) || 14) / 4.375}`);
+  const logoSize = Number(design.logo_size_menu);
+  if (Number.isInteger(logoSize) && logoSize >= 50 && logoSize <= 150) vars.push(`--menu-logo-scale:${logoSize / 100}`);
   if (/^#[0-9a-f]{6}$/i.test(design.font_color || '')) vars.push(`--menu-font-color:${design.font_color}`);
   if (/^#[0-9a-f]{6}$/i.test(design.chip_fill_color || '')) vars.push(`--chip-fill:${design.chip_fill_color}`);
   if (/^#[0-9a-f]{6}$/i.test(design.chip_active_color || '')) vars.push(`--chip-active-fill:${design.chip_active_color}`);

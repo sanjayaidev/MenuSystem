@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:wght@600;700&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --brand-h:clamp(84px,29vw,136px);
+    --brand-h:min(13svh,23.111vw);
     --bg:#121110; --surface:#1c1a18; --line:#2c2925;
     --gold:#e3b23c; --red:#b8352b;
     --text:#f4efe6; --muted:#a99f8f;
@@ -56,8 +56,8 @@
     position:sticky; top:0; z-index:20; background:#000; min-height:var(--brand-h);
     display:flex; align-items:center; justify-content:center; padding:0;
   }
-  .topbar .logo-wrap{width:100%; display:flex; align-items:center; justify-content:center;}
-  .topbar .logo-wrap img{width:100%; height:auto; max-height:var(--brand-h); object-fit:contain; display:block;}
+  .topbar .logo-wrap{width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
+  .topbar .logo-wrap img{width:100%; height:100%; max-height:var(--brand-h); object-fit:contain; display:block; transform:scale(var(--menu-logo-scale,1));}
   .topbar .logo-fallback{color:var(--gold); font-weight:700; font-size:calc(14px + var(--lang-add,0px)); display:none;}
   .language-row{display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px; background:#000;}
   .lang-pills{
@@ -518,7 +518,7 @@
      (100svh = the screen as seen with the browser bars showing, so it still fits on phones). --topbar-h is the logo bar's real height,
      measured by the script at the bottom of the page; until then it falls back to --brand-h. The whole image is shown (never trimmed): it is fitted
      to the width or the height of that box, whichever is needed, and the rest of the box stays black (the box background). */
-  .topbar{min-height:0;}
+  .topbar{height:var(--brand-h); min-height:0; overflow:hidden;}
   .topbar .logo-wrap img{max-height:none;}
   .poster-d{
     position:relative; width:100%; background:#000; overflow:hidden; min-height:160px;
@@ -1012,6 +1012,7 @@ async function loadMenuDesign(){
       }catch(error){ console.warn('Could not load custom menu font:', error); }
     }
     const root = document.documentElement.style;
+    if(Number(design.logo_size_menu) >= 50 && Number(design.logo_size_menu) <= 150) root.setProperty('--menu-logo-scale', String(Number(design.logo_size_menu) / 100));
     root.setProperty('--menu-font-family', family);
     root.setProperty('--menu-font-scale', String((Number(design.font_size) || 14) / 4.375));
     if(/^#[0-9a-f]{6}$/i.test(design.font_color || '')) root.setProperty('--menu-font-color', design.font_color);

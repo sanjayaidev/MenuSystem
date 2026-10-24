@@ -55,7 +55,7 @@ const DEFAULTS = {
   lang_style: DEFAULT_LANG_STYLE,
   global_text_style: {},
   global_card_design: DEFAULT_GLOBAL_CARD_DESIGN,
-  logo_url: '',
+  logo_url: '', logo_size_index: 100, logo_size_menu: 100,
   // empty = the translated text built into the menu page ("Seaweed Soup, Fried Egg Rice, Noodles, Salad & Water")
   includes_text: { en: '', ar: '', ur: '', zh: '' },
   // 16/10/2026: outline around the category boxes ('' = the normal thin grey line) and bold on / off per text.
@@ -383,7 +383,15 @@ router.put('/admin/design/branding', requireAdmin, async (req, res) => {
   }
   try {
     const design = await readDesign();
+    const logoSizeIndex = req.body?.logo_size_index == null ? design.logo_size_index : Number(req.body.logo_size_index);
+    const logoSizeMenu = req.body?.logo_size_menu == null ? design.logo_size_menu : Number(req.body.logo_size_menu);
+    if (!Number.isInteger(logoSizeIndex) || logoSizeIndex < 50 || logoSizeIndex > 150
+      || !Number.isInteger(logoSizeMenu) || logoSizeMenu < 50 || logoSizeMenu > 150) {
+      return res.status(400).json({ error: 'Logo sizes must be whole numbers from 50 to 150%.' });
+    }
     design.logo_url = logoUrl;
+    design.logo_size_index = logoSizeIndex;
+    design.logo_size_menu = logoSizeMenu;
     await writeDesign(design);
     res.json({ design });
   } catch (error) {
