@@ -284,15 +284,11 @@
   .row .add:active{transform:translate(calc(var(--add-x,0) * var(--dir,1) * var(--u)), calc(var(--add-y,0) * .4 * var(--u) + 1px)) scale(var(--add-scale,1));}
   html[dir="rtl"] .row{--dir:-1;}   /* Arabic / Urdu: the card is mirrored, so left / right moves of the price and the button are mirrored too */
   html[dir="rtl"] .row .add{transform-origin:left bottom;}
-  .row .add b{font-weight:var(--bold-add,700);}
-
   @media (max-width:420px){
     .row .name-layer{gap:calc(2 * var(--u)); padding-block-end:calc(19.4 * var(--u));}
   }
   /* small phones: the price is already shown above the button, so keep the button short enough to clear the food PNG */
-  html[lang="ur"] .row .add b{display:none;}   /* the Urdu label is long: same treatment at every width */
   @media (max-width:400px){
-    .row .add b{display:none;}
     .row .add{padding:max(9px, calc(1.3 * var(--u))) max(9px, calc(2 * var(--u)));}
   }
 
@@ -1447,7 +1443,7 @@ function render(){
         ${!hasUrl ? `<div class="thumb-fallback">${FALLBACK_ICON}</div>` : ''}
       </div>
       <button class="open" type="button" aria-label="${escapeHtml(name)}"></button>
-      <button class="add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b>${price}</b></button>
+      <button class="add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span></button>
     </article>`;
   }).join('');
 
@@ -2004,9 +2000,8 @@ function openItemModal(id){
 // plain text made safe, then **word** becomes bold (used for the dish description and the "includes" text)
 function richText(value){ return escapeHtml(value).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
 function updateModalAddBtn(){
-  const price = itemPrice(modalItem) * modalQty;
   document.getElementById('itemModalAdd').innerHTML =
-    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${moneyHtml(price)} · ${STR[lang].addToCart}`;
+    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8a2 2 0 0 1-2-1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${STR[lang].addToCart}`;
 }
 document.getElementById('itemModalClose').addEventListener('click', ()=> closeOverlay(itemModal));
 document.getElementById('itemModalPlus').addEventListener('click', ()=>{

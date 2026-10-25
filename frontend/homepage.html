@@ -752,11 +752,8 @@ function renderSpecial(){
     const label = category.label[lang] || category.label.en || category.key;
     const selectedFoods = config?.items || [];
     const foods = selectedFoods.map(item=>item[`name_${lang}`] || item.name_en);
-    const featuredPrice = selectedFoods[0] && Number.isFinite(Number(selectedFoods[0].price))
-      ? money(Number(selectedFoods[0].price))
-      : '';
     return `<article class="special-card" data-cat="${escapeHtml(category.key)}" data-video-url="${escapeHtml(config?.videoUrl || '')}">
-      <div class="special-video"><video poster="images/offer-demo.png" muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span><b class="special-add-price">${escapeHtml(featuredPrice)}</b></button></div>
+      <div class="special-video"><video poster="images/offer-demo.png" muted playsinline preload="none" aria-hidden="true"></video><div class="hint"><i>‹</i><span>${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'}</span><i>›</i></div><div class="special-scrub"><i></i></div><button class="special-add" type="button"><span>${escapeHtml(STR[lang].addToCart)}</span></button></div>
       <p class="category-name">${escapeHtml(label)}</p>
       ${foods.some(Boolean) ? `<ol class="special-foods">${foods.map((food,index)=>`<li data-slot="${index+1}">${escapeHtml(food || '')}</li>`).join('')}</ol>` : ''}
     </article>`;
@@ -1316,9 +1313,8 @@ function openItemModal(id){
   openOverlay(itemModal);
 }
 function updateModalAddBtn(){
-  const price = itemPrice(modalItem) * modalQty;
   document.getElementById('itemModalAdd').innerHTML =
-    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${money(price)} · ${STR[lang].addToCart}`;
+    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8a2 2 0 0 1-2-1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> ${STR[lang].addToCart}`;
 }
 document.getElementById('itemModalClose').addEventListener('click', ()=> closeOverlay(itemModal));
 document.getElementById('itemModalPlus').addEventListener('click', ()=>{
@@ -1727,15 +1723,12 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     let state=specialStates.get(card);
     if(state) return state;
     const element=card.querySelector('.special-video'), clip=element.querySelector('video'), bar=card.querySelector('.special-scrub i');
-    state={card,element,clip,bar,items:SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items||[],priceLabel:card.querySelector('.special-add-price'),foodRows:[...card.querySelectorAll('.special-foods li')],pos:0,target:0,current:0,lastSeek:-1,raf:0,live:false};
+    state={card,element,clip,bar,items:SPECIAL_SECTIONS.find(section=>section.key===card.dataset.cat)?.items||[],foodRows:[...card.querySelectorAll('.special-foods li')],pos:0,target:0,current:0,lastSeek:-1,raf:0,live:false};
     const duration=()=>clip.duration||0;
     function updateFeaturedProduct(){
       if(!state.items.length || !duration()) return;
       const index=Math.min(state.items.length-1,Math.floor(state.current*duration()/2));
-      const item=state.items[index];
       state.card.dataset.idx=String(index);
-      const price=Number(item?.price);
-      state.priceLabel.textContent=Number.isFinite(price)?money(price):'';
       state.foodRows.forEach((food,rowIndex)=>food.classList.toggle('is-current',rowIndex===index));
     }
     function tick(){

@@ -149,7 +149,7 @@ function itemMarkup(item, language, design) {
     <div class="card">${corner('tl')}${corner('tr')}${corner('bl')}${corner('br')}<svg class="flourish" viewBox="0 0 120 24" aria-hidden="true"><use href="#rh-flourish"/></svg><h3 class="name">${escapeHtml(name)}</h3><p class="price">${moneyHtml(item.price)}</p></div>
     <div class="food">${foodUrl ? `<img src="${escapeHtml(foodUrl)}" alt="" loading="lazy" decoding="async" data-cat="${escapeHtml(category)}" data-has-image-url="${hasUsableImage}">` : ''}${!hasUsableImage ? `<div class="thumb-fallback">${FALLBACK_ICON}</div>` : ''}</div>
     <button class="open" type="button" aria-label="${escapeHtml(name)}"></button>
-    <button class="add" type="button"><span>${escapeHtml(addLabel)}</span><b>${moneyHtml(item.price)}</b></button>
+    <button class="add" type="button"><span>${escapeHtml(addLabel)}</span></button>
   </article>`;
 }
 
