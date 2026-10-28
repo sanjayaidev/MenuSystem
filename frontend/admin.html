@@ -140,11 +140,12 @@
   .live-preview-flourish{width:calc(11 * var(--preview-u,4px)); height:auto; color:#b8975a;}
   /* --pv-* are set from the "Text style" and card boxes by updateLiveMenuPreview() (unset = the normal look) */
   .live-preview-paper::before{content:""; position:absolute; inset:calc(1.6 * var(--preview-u,4px)); border:var(--pv-border-w,1px) solid var(--pv-border-color,rgba(184,151,90,.55)); pointer-events:none;}
-  .live-preview-name-layer strong{margin:0; max-width:100%; letter-spacing:.06em; text-transform:uppercase; white-space:pre-line; overflow-wrap:anywhere; font-family:var(--pv-name-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(9px,4.2cqw,15px) + 2pt) * var(--pv-name-size,1) * var(--pv-size,1)); line-height:1.2; color:var(--pv-name-color,#2b2622);
+  .live-preview-name-layer strong{margin:0; max-width:100%; letter-spacing:.06em; text-transform:uppercase; white-space:pre-line; overflow-wrap:anywhere; font-family:var(--pv-name-font,var(--pv-font,var(--pv-lang-font,var(--pv-menu-font,'Cinzel','Cormorant Garamond',Georgia,'Times New Roman',serif)))); font-size:calc((max(calc(12px * var(--preview-scale,1)),calc(var(--pv-menu-font-scale,3.2) * var(--preview-u,4px) + 2pt * var(--preview-scale,1))) + var(--pv-lang-add,0px)) * var(--pv-name-size,1) * var(--pv-size,1)); line-height:1.2; color:var(--pv-name-color,var(--pv-menu-color,#2b2622));
     transform:translate(calc(var(--preview-dir,1) * var(--pv-name-x,0) * var(--preview-u,4px)), calc(var(--pv-name-y,0) * .4 * var(--preview-u,4px)));}
   #liveMenuPrice{transform:translate(calc(var(--preview-dir,1) * var(--pv-price-x,var(--preview-price-x,0)) * var(--preview-u,4px)), calc(var(--pv-price-y,var(--preview-price-y,0)) * .4 * var(--preview-u,4px)));}
-  .live-preview-price-layer span{display:block; font-family:var(--pv-price-font,var(--pv-font,Georgia,'Times New Roman',serif)); font-size:calc((clamp(10px,5cqw,17px) + 2pt) * var(--pv-price-size,1) * var(--pv-size,1)); font-weight:700; line-height:1; color:var(--pv-price-color,#2b2622);}
-  .live-preview-add{font-family:var(--pv-font,inherit);}
+  .live-preview-price-layer span{display:block; font-family:var(--pv-price-font,var(--pv-font,var(--pv-menu-font,'Cormorant Garamond',Georgia,'Times New Roman',serif))); font-size:calc((max(calc(16px * var(--preview-scale,1)),calc(4.6 * var(--preview-u,4px) + 2pt * var(--preview-scale,1))) + var(--pv-lang-add,0px)) * var(--pv-price-size,1) * var(--pv-size,1)); font-weight:700; line-height:1; color:var(--pv-price-color,var(--pv-menu-color,#5b4a2c)); direction:ltr; unicode-bidi:isolate;}
+  .live-preview-riyal{width:.82em; height:.92em; margin-right:.2em; vertical-align:-.12em; fill:currentColor;}
+  .live-preview-add{font-family:var(--pv-font,var(--pv-lang-font,'Poppins',sans-serif));}
   .style-grid .style-part{grid-column:1 / -1; margin:6px 0 0; color:var(--gold); font-size:12px; font-weight:700;}
   .style-color{display:flex; align-items:center; gap:6px;}
   .style-color input[type=color]{flex:1 1 auto; min-width:0;}
@@ -157,10 +158,13 @@
   .live-preview-food{position:absolute; top:calc((100% - var(--pv-food-height,90%)) / 2); height:var(--pv-food-height,90%); left:0; z-index:2; display:flex; width:calc(100% - var(--preview-card-w,66.6667%) + var(--pv-food-overlap,20%)); align-items:flex-end; justify-content:flex-end; transform:translate(var(--preview-food-x,0%),var(--preview-food-y,0%)) scale(calc(var(--preview-food-scale,1) * var(--preview-food-width,1)), var(--preview-food-scale,1)); transform-origin:bottom right; pointer-events:none;}
   .live-preview-card[dir="rtl"] .live-preview-food{left:auto; right:0; justify-content:flex-start; transform-origin:bottom left;}
   .live-preview-food img{display:block; width:auto; height:100%; max-width:100%; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));}
-  .live-preview-add{position:absolute; inset:auto 3% 4% auto; z-index:3; padding:5px 7px; border-radius:var(--pv-add-radius,0px); background:var(--pv-add-bg,#e3b23c); color:var(--pv-add-color,#1a1408); font-size:calc((8px + 2pt) * var(--pv-add-font-scale,1)); font-weight:700; transform:translate(calc(var(--preview-dir,1) * var(--preview-add-x,0) * var(--preview-u,4px)), calc(var(--preview-add-y,0) * .4 * var(--preview-u,4px))) scale(var(--preview-add-scale,1)); transform-origin:right bottom;}
-  .live-preview-card[dir="rtl"] .live-preview-add{inset-inline:auto 3%; transform-origin:left bottom;}
+  .live-preview-add{position:absolute; inset:auto; inset-inline-end:calc(2.4 * var(--preview-u,4px)); bottom:calc(2.4 * var(--preview-u,4px)); z-index:3; display:flex; align-items:center; gap:calc(1.4 * var(--preview-u,4px)); border:0; padding:max(calc(9px * var(--preview-scale,1)),calc(1.3 * var(--preview-u,4px))) max(calc(10px * var(--preview-scale,1)),calc(2.2 * var(--preview-u,4px))); border-radius:var(--pv-add-radius,0px); background:var(--pv-add-bg,#e3b23c); color:var(--pv-add-color,#1a1408); font-size:calc((max(calc(11px * var(--preview-scale,1)),calc(1.9 * var(--preview-u,4px) + 2pt * var(--preview-scale,1))) + var(--pv-lang-add,0px)) * var(--pv-add-font-scale,1)); font-weight:600; line-height:1; box-shadow:0 calc(.3 * var(--preview-u,4px)) calc(1 * var(--preview-u,4px)) rgba(0,0,0,.3); transform:translate(calc(var(--preview-dir,1) * var(--preview-add-x,0) * var(--preview-u,4px)), calc(var(--preview-add-y,0) * .4 * var(--preview-u,4px))) scale(var(--preview-add-scale,1)); transform-origin:right bottom;}
+  .live-preview-card[dir="rtl"] .live-preview-add{transform-origin:left bottom;}
   .live-preview-name-layer,.live-preview-price-layer,.live-preview-food{container-type:inline-size;}
   .live-preview-card[data-lang="ar"] strong,.live-preview-card[data-lang="ur"] strong,.live-preview-card[data-lang="zh"] strong{letter-spacing:0; text-transform:none;}
+  .live-preview-card[data-lang="ar"] strong{font-family:var(--pv-name-font,var(--pv-font,var(--pv-lang-font,'Noto Naskh Arabic',serif))); line-height:1.5;}
+  .live-preview-card[data-lang="ur"] strong{font-family:var(--pv-name-font,var(--pv-font,var(--pv-lang-font,'Noto Nastaliq Urdu',serif))); line-height:1.9;}
+  .live-preview-card[data-lang="zh"] strong{font-family:var(--pv-name-font,var(--pv-font,var(--pv-lang-font,'Noto Sans SC',sans-serif)));}
   .form-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
   .form-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));}
   .manager-form label{display:block; min-width:0; color:var(--muted); font-size:11px; font-weight:650;}
@@ -701,10 +705,10 @@
                 <svg class="live-preview-flourish" viewBox="0 0 120 24" aria-hidden="true"><use href="#rh-flourish"/></svg>
                 <strong id="liveMenuName">Menu item</strong>
               </div>
-              <div class="live-preview-price-layer"><span id="liveMenuPrice">SAR 0.00</span></div>
+              <div class="live-preview-price-layer"><span id="liveMenuPrice"><svg class="live-preview-riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>0</span></div>
             </div>
             <div class="live-preview-food"><img id="liveMenuFood" alt="" hidden></div>
-            <span class="live-preview-add">ADD TO CART</span>
+            <span class="live-preview-add" id="liveMenuAdd">Add to cart</span>
           </article>
         </aside>
       </form>
@@ -2802,8 +2806,9 @@ function updateLiveMenuPreview(){
   card.style.setProperty('--preview-dir', isRtl ? '-1' : '1');
   nameElement.dir = isRtl ? 'rtl' : 'ltr';
   const price = Number(field('price')?.value);
-  // same as the menu page: 39.00 shows as 39
-  document.getElementById('liveMenuPrice').innerHTML = money(Number.isFinite(price) ? price : 0).replace(/\.00(?=<\/span>)/, '');
+  // Match menu-page amountText(): whole amounts omit decimals, fractions use two places.
+  const displayPrice = Number.isFinite(price) ? price : 0;
+  document.getElementById('liveMenuPrice').innerHTML = `<svg class="live-preview-riyal" viewBox="0 0 1124.14 1256.39" role="img" aria-label="SAR"><use href="#riyal-sign"/></svg>${Math.abs(displayPrice - Math.round(displayPrice)) < 0.005 ? Math.round(displayPrice) : displayPrice.toFixed(2)}`;
 
   const cardColor = /^#[0-9a-f]{6}$/i.test(field('card_color')?.value || '') ? field('card_color').value : '#f6f1e6';
   card.style.setProperty('--pv-card-ratio', String(currentGlobalCardDesign.aspect_ratio || 2.5));
@@ -2822,11 +2827,21 @@ function updateLiveMenuPreview(){
   card.style.setProperty('--preview-add-x', String(percent('add_x', 0, -50, 50)));
   card.style.setProperty('--preview-add-y', String(percent('add_y', 0, -50, 50)));
   card.style.setProperty('--preview-u', `${(card.clientWidth || 400) / 100}px`);   // 1 % of the preview width, so moving looks the same as on the menu page
+  const menuCardWidth = Math.max(1, Math.min(window.innerWidth - 32, 448));
+  const previewScale = Math.min(1, (card.clientWidth || 400) / menuCardWidth);
+  card.style.setProperty('--preview-scale', String(previewScale));
   card.style.setProperty('--preview-bg-x', `${percent('bg_x', 50, 0, 100)}%`);
   card.style.setProperty('--preview-bg-y', `${percent('bg_y', 50, 0, 100)}%`);
   card.style.setProperty('--preview-bg-scale', String(percent('bg_scale', 100, 100, 200) / 100));
   setLivePreviewImage(document.getElementById('liveMenuBg'), field('bg_image_url')?.value);
-  setLivePreviewImage(document.getElementById('liveMenuFood'), field('food_png_url')?.value || field('image_path')?.value || 'images/food.png');
+  let foodImageUrl = field('food_png_url')?.value || field('image_path')?.value || '';
+  if(!foodImageUrl.trim()){
+    const categoryKey = categories.find(category => String(category.id) === String(field('category_id')?.value))?.key || '';
+    const categorySlug = categoryKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const nameSlug = (field('name_en')?.value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    foodImageUrl = `images/${categorySlug}/${nameSlug}.png`;
+  }
+  setLivePreviewImage(document.getElementById('liveMenuFood'), foodImageUrl);
 
   // text style: card font / size / border, plus the name and price style of the language being edited
   const style = collectCardStyle() || {};
@@ -2844,6 +2859,27 @@ function updateLiveMenuPreview(){
     if(value == null || value === '') card.style.removeProperty(property); else card.style.setProperty(property, String(value));
   };
   const cardStyle = style.card || {};
+  const menuFont = STYLE_FONT_STACKS[document.getElementById('designFontStyle')?.value] || STYLE_FONT_STACKS.cinzel;
+  const menuFontSize = Number(document.getElementById('designFontSize')?.value) || 14;
+  const menuColorValue = document.getElementById('designFontColor')?.value;
+  const menuColor = /^#[0-9a-f]{6}$/i.test(menuColorValue || '') ? menuColorValue : '#2b2622';
+  const languageDefaults = {
+    en:{ add:0, font:"'Poppins',sans-serif" },
+    ar:{ add:2, font:"'Noto Naskh Arabic','Poppins',sans-serif" },
+    ur:{ add:0, font:"'Noto Nastaliq Urdu','Poppins',sans-serif" },
+    zh:{ add:0, font:"'Noto Sans SC','Poppins',sans-serif" },
+  };
+  const languageSize = document.getElementById(`langSize_${activeLanguage}`)?.value;
+  const languageAdd = Number.isFinite(Number(languageSize)) ? Number(languageSize) : (languageDefaults[activeLanguage]?.add || 0);
+  const languageFontName = document.getElementById(`langFont_${activeLanguage}`)?.value;
+  const languageFont = STYLE_FONT_STACKS[languageFontName] || languageDefaults[activeLanguage]?.font || languageDefaults.en.font;
+  const addLabels = { en:'Add to cart', ar:'أضف إلى السلة', ur:'کارٹ میں شامل کریں', zh:'加入购物车' };
+  document.getElementById('liveMenuAdd').textContent = addLabels[activeLanguage] || addLabels.en;
+  setVar('--pv-menu-font', menuFont);
+  setVar('--pv-menu-font-scale', menuFontSize / 4.375);
+  setVar('--pv-menu-color', menuColor);
+  setVar('--pv-lang-font', languageFont);
+  setVar('--pv-lang-add', `${languageAdd * previewScale}px`);
   setVar('--pv-font', STYLE_FONT_STACKS[cardStyle.font]);
   setVar('--pv-size', cardStyle.size != null ? cardStyle.size / 100 : null);
   setVar('--pv-border-w', cardStyle.border_w != null ? `${cardStyle.border_w}px` : null);
