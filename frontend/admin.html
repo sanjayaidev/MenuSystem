@@ -2839,7 +2839,8 @@ function updateLiveMenuPreview(){
     const categoryKey = categories.find(category => String(category.id) === String(field('category_id')?.value))?.key || '';
     const categorySlug = categoryKey.toLowerCase().replace(/[^a-z0-9]/g, '');
     const nameSlug = (field('name_en')?.value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    foodImageUrl = `images/${categorySlug}/${nameSlug}.png`;
+    // Only guess a path once both parts exist; otherwise this requested "images//.png" (404).
+    foodImageUrl = categorySlug && nameSlug ? `images/${categorySlug}/${nameSlug}.png` : '';
   }
   setLivePreviewImage(document.getElementById('liveMenuFood'), foodImageUrl);
 
