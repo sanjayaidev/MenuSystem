@@ -731,31 +731,28 @@ router.get('/orders', async (req, res) => {
   const { status, date } = req.query;
   const q = sanitizeSearch(req.query.q);
 
-  let query = supabase
-    .from('orders')
-    .select('id, order_number, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, notes, created_at, updated_at, order_items(id, name_snapshot, unit_price, quantity, line_total)')
-    .order('created_at', { ascending: false });
-
-  if (status) {
-    if (!VALID_STATUSES.includes(status)) {
-      return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
-    }
-    query = query.eq('status', status);
+  if (status && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+  }
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(String(date))) {
+    return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
   }
 
-  if (date) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date))) {
-      return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
-    }
-    const yymmdd = String(date).slice(2).replace(/-/g, '');
-    query = query.like('order_number', `RH-${yymmdd}-%`);
-  }
+  const columns = 'id, order_number, customer_name, customer_phone, delivery_type, delivery_address, status, payment_status, payment_method, subtotal, total, notes, created_at, updated_at, order_items(id, name_snapshot, unit_price, quantity, line_total)';
+  const buildQuery = (select) => {
+    let query = supabase.from('orders').select(select).order('created_at', { ascending: false });
+    if (status) query = query.eq('status', status);
+    if (date) query = query.like('order_number', `RH-${String(date).slice(2).replace(/-/g, '')}-%`);
+    if (q) query = query.or(`order_number.ilike.%${q}%,customer_phone.ilike.%${q}%,customer_name.ilike.%${q}%`);
+    return query;
+  };
 
-  if (q) {
-    query = query.or(`order_number.ilike.%${q}%,customer_phone.ilike.%${q}%,customer_name.ilike.%${q}%`);
+  // delivery_lat / delivery_lng hold the pin the customer confirmed at checkout; a database that has not had
+  // db/01_tables.sql re-run yet simply lists orders without them.
+  let { data: orders, error } = await buildQuery(`${columns}, delivery_lat, delivery_lng`);
+  if (error && (error.code === '42703' || error.code === 'PGRST204')) {
+    ({ data: orders, error } = await buildQuery(columns));
   }
-
-  const { data: orders, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   res.json({ orders });
 });

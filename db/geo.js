@@ -55,9 +55,9 @@ function throttled(task) {
   return run;
 }
 
-async function fetchJson(url, timeoutMs) {
+async function fetchJson(url, timeoutMs, lang = 'en') {
   const response = await fetch(url, {
-    headers: { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Accept-Language': 'en' },
+    headers: { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Accept-Language': lang },
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -65,16 +65,19 @@ async function fetchJson(url, timeoutMs) {
 }
 
 // Search for a place or address. `near` ({lat, lng}) only nudges results toward that area, it does not
-// exclude anything. Returns [{ label, lat, lng }].
-function searchPlaces(query, { near = null, limit = 5 } = {}) {
+// exclude anything. `countrycodes` (e.g. 'sa') does restrict results to those countries, and `lang`
+// ('en', 'ar', ...) picks the language of the result labels. Returns [{ label, lat, lng }].
+function searchPlaces(query, { near = null, limit = 5, countrycodes = '', lang = 'en' } = {}) {
   const text = String(query || '').trim().slice(0, 300);
   if (text.length < 3) return Promise.resolve([]);
   const params = new URLSearchParams({ format: 'jsonv2', q: text, limit: String(limit) });
+  if (/^[a-z]{2}(,[a-z]{2})*$/i.test(countrycodes)) params.set('countrycodes', countrycodes.toLowerCase());
   if (near) {
     const d = 0.5; // about 55 km each way
     params.set('viewbox', [near.lng - d, near.lat + d, near.lng + d, near.lat - d].join(','));
   }
-  return throttled(() => fetchJson(`${NOMINATIM_URL}/search?${params}`, 7000)).then((rows) =>
+  const acceptLanguage = /^[a-z]{2}$/i.test(lang) ? lang.toLowerCase() : 'en';
+  return throttled(() => fetchJson(`${NOMINATIM_URL}/search?${params}`, 7000, acceptLanguage)).then((rows) =>
     (Array.isArray(rows) ? rows : [])
       .map((row) => {
         const point = toPoint(row.lat, row.lon);

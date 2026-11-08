@@ -7,6 +7,7 @@ const { parseOrderRef } = require('../db/order-ref');
 const { toPoint, geocodeAddress, getRoute } = require('../db/geo');
 const { getDeliverySettings, CURRENCY, CURRENCY_DIGITS } = require('../db/delivery-settings');
 const { getMoyasarConfig } = require('../db/moyasar-config');
+const deliveryZone = require('../db/delivery-zone');
 const contactRoutes = require('./contact');
 
 const router = express.Router();
@@ -46,6 +47,7 @@ const paymentWebhookLimiter = rateLimit({
 // body: {
 //   customer_name, customer_phone, delivery_type: 'pickup'|'delivery',
 //   delivery_address (required if delivery_type === 'delivery'),
+//   delivery_lat, delivery_lng (the customer's pin; required for delivery and must be inside the delivery zone),
 //   items: [{ menu_item_id, quantity }]
 // }
 router.post('/orders', orderLimiter, async (req, res) => {
@@ -80,8 +82,23 @@ router.post('/orders', orderLimiter, async (req, res) => {
   if (items.length > 50) {
     return res.status(400).json({ error: 'Too many line items in one order' });
   }
+  if (delivery_type !== 'pickup' && delivery_type !== 'delivery') {
+    return res.status(400).json({ error: 'delivery_type must be pickup or delivery' });
+  }
   if (delivery_type === 'delivery' && !delivery_address) {
     return res.status(400).json({ error: 'delivery_address is required for home delivery' });
+  }
+
+  // Home delivery needs a pin inside the delivery zone. This runs before any order row exists and before the
+  // payment form is ever offered, so an out-of-zone order can not reach payment however the request was made.
+  let deliveryPoint = null;
+  if (delivery_type === 'delivery') {
+    const zoneCheck = deliveryZone.checkDeliveryPoint(req.body.delivery_lat, req.body.delivery_lng);
+    if (!zoneCheck.ok) {
+      debug('ORDER', `#${requestId} delivery refused`, { code: zoneCheck.code });
+      return res.status(zoneCheck.status).json({ error: zoneCheck.message, code: zoneCheck.code });
+    }
+    deliveryPoint = zoneCheck.point;
   }
 
   // Every line must be an object with a whole-number menu_item_id. Without this check a body like
@@ -145,23 +162,30 @@ router.post('/orders', orderLimiter, async (req, res) => {
   }
   const paymentReference = randomUUID();
 
-  const { data: order, error: orderErr } = await supabase
-    .from('orders')
-    .insert({
-      user_id: authUser?.id || null,
-      customer_name,
-      customer_phone,
-      delivery_type,
-      delivery_address: delivery_type === 'delivery' ? delivery_address : null,
-      status: 'confirmed',   // new orders start as "Confirmed & preparing"
-      payment_status: 'pending',
-      payment_method: 'moyasar',
-      moyasar_reference: paymentReference,
-      subtotal,
-      total,
-    })
-    .select()
-    .single();
+  const orderRow = {
+    user_id: authUser?.id || null,
+    customer_name,
+    customer_phone,
+    delivery_type,
+    delivery_address: delivery_type === 'delivery' ? delivery_address : null,
+    delivery_lat: deliveryPoint ? deliveryPoint.lat : null,   // the customer's confirmed pin
+    delivery_lng: deliveryPoint ? deliveryPoint.lng : null,
+    status: 'confirmed',   // new orders start as "Confirmed & preparing"
+    payment_status: 'pending',
+    payment_method: 'moyasar',
+    moyasar_reference: paymentReference,
+    subtotal,
+    total,
+  };
+  let { data: order, error: orderErr } = await supabase.from('orders').insert(orderRow).select().single();
+  if (orderErr && isMissingColumn(orderErr)) {
+    // db/01_tables.sql has not been re-run yet, so the pin columns do not exist: save the order without them
+    // (the pin was still checked above) and keep the pin in memory for the tracking page.
+    const { delivery_lat, delivery_lng, ...legacyRow } = orderRow;
+    ({ data: order, error: orderErr } = await supabase.from('orders').insert(legacyRow).select().single());
+    if (!orderErr && deliveryPoint) remember(geoMemory, order.order_number, deliveryPoint);
+    console.error('orders.delivery_lat / delivery_lng are missing: run db/01_tables.sql in the Supabase SQL Editor to store customer pins.');
+  }
 
   if (orderErr) return res.status(500).json({ error: orderErr.message });
 

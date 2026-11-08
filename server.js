@@ -17,8 +17,10 @@ const contactRoutes = require('./routes/contact');
 const musicRoutes = require('./routes/music');
 const posterRoutes = require('./routes/poster');
 const designRoutes = require('./routes/design');
+const geocodeRoutes = require('./routes/geocode');
 const { renderMenuPage } = require('./routes/menu-page-ssr');
 const { getDeliverySettings, CURRENCY } = require('./db/delivery-settings');
+const deliveryZone = require('./db/delivery-zone');
 const { getMoyasarConfig } = require('./db/moyasar-config');
 
 const app = express();
@@ -147,6 +149,8 @@ app.get('/api/config', async (req, res) => {
     // map tiles for the admin pin picker and the tracking page (free OpenStreetMap tiles unless you set your own)
     mapTileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     mapAttribution: process.env.MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    // where home delivery is allowed; the checkout draws it and gives instant feedback, POST /api/orders enforces it
+    deliveryZone: deliveryZone.publicZone(),
   });
 });
 
@@ -158,11 +162,13 @@ app.use('/api', contactRoutes);
 app.use('/api', musicRoutes);
 app.use('/api', posterRoutes);
 app.use('/api', designRoutes);
+app.use('/api', geocodeRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Red House Catering server running on port ${PORT}`);
+  deliveryZone.logStatus();
 
   const paymentConfig = getMoyasarConfig();
   const { publishableMode, secretMode } = paymentConfig;

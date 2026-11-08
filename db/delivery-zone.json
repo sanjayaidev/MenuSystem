@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Al-Hamra'a district",
+        "placeholder": true,
+        "center": { "lat": 21.524, "lng": 39.171 }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [39.159, 21.512],
+            [39.183, 21.512],
+            [39.183, 21.536],
+            [39.159, 21.536],
+            [39.159, 21.512]
+          ]
+        ]
+      }
+    }
+  ]
+}
