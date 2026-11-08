@@ -60,7 +60,8 @@ function loadZone() {
   const given = props.properties && toPoint(props.properties.center && props.properties.center.lat, props.properties.center && props.properties.center.lng);
   const center = given || toPoint((minLat + maxLat) / 2, (minLng + maxLng) / 2);
   const placeholder = Boolean(props.properties && props.properties.placeholder);
-  return { polygons, center, placeholder, bbox: [minLng, minLat, maxLng, maxLat] };
+  const approximate = Boolean(props.properties && props.properties.approximate);
+  return { polygons, center, placeholder, approximate, bbox: [minLng, minLat, maxLng, maxLat] };
 }
 
 let zone = null;
@@ -143,6 +144,8 @@ function logStatus() {
   }
   if (zone.placeholder) {
     console.warn('Delivery zone is still the PLACEHOLDER rectangle in db/delivery-zone.json. Replace it with the real district boundary before going live.');
+  } else if (zone.approximate) {
+    console.warn('Delivery zone in db/delivery-zone.json is APPROXIMATE (traced from a screenshot). Calibrate it with the restaurant\'s exact coordinates, then remove "approximate" from the file.');
   } else {
     console.log('Delivery zone loaded from db/delivery-zone.json.');
   }

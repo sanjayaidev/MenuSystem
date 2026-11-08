@@ -456,6 +456,10 @@
   .status-note{font-size:calc(12px + var(--lang-add,0px)); text-align:center; color:var(--muted); margin-top:8px;}
   .primary-btn:disabled{opacity:.6; cursor:default;}
 
+  /* "we deliver within the marked area" note under the pick-up / delivery toggle in the cart */
+  .zone-note{margin:-4px 16px 12px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:rgba(227,178,60,.07); color:var(--muted); font-size:calc(12.5px + var(--lang-add,0px)); line-height:1.5;}
+  .zone-note[hidden]{display:none;}
+
   /* delivery location (pin + search) in the checkout */
   #locBlock[hidden], .loc-btn[hidden], .loc-results[hidden], .loc-hint[hidden]{display:none;}
   .loc-banner{border:1px solid var(--gold); background:rgba(227,178,60,.08); color:var(--text); border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:calc(13px + var(--lang-add,0px)); line-height:1.5;}
@@ -742,6 +746,7 @@
       <button data-type="pickup" id="pickupBtn"></button>
       <button data-type="delivery" id="deliveryBtn"></button>
     </div>
+    <p class="zone-note" id="zoneNote" hidden></p>
     <div id="cartEmptyState" class="empty-cart">
       <div class="empty-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
@@ -921,6 +926,7 @@ const STR = {
        paymentCancel:'Back to order details', paymentNotConfigured:'Online payments are not available. Please contact the restaurant.',
        configLoadFailed:'Could not load checkout settings. Please refresh the page and try again.',
        paymentFailed:'Payment was not completed. Please try again.', paymentPending:'Payment is still processing. Refresh this page in a moment to check again.', orderFailed:'Something went wrong. Please try again.',
+       zoneNote:'Home delivery covers the Al-Hamra’a area only. At checkout you will see the exact delivery area on the map and place a pin on your location. Outside the area, choose pick-up from the branch.',
        locLabel:'Delivery location:', locGps:'Use my current location', locSearchPh:'Search for your street or area...', locSearchBtn:'Search',
        locTap:'Tap the map to drop the pin on your delivery spot, then drag it to fine-tune.',
        locDenied:'Location access is disabled. Please search for your address, or tap the map to drop the pin on your delivery spot.',
@@ -960,6 +966,7 @@ const STR = {
        paymentCancel:'العودة إلى تفاصيل الطلب', paymentNotConfigured:'الدفع الإلكتروني غير متاح. يرجى التواصل مع المطعم.',
        configLoadFailed:'تعذّر تحميل إعدادات الدفع. حدّث الصفحة وحاول مرة أخرى.',
        paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', paymentPending:'لا تزال عملية الدفع قيد المعالجة. حدّث الصفحة بعد قليل للتحقق مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
+       zoneNote:'التوصيل للمنازل يشمل منطقة الحمراء فقط. عند إتمام الطلب ستظهر لك منطقة التوصيل على الخريطة وتضع دبوساً على موقعك. خارج المنطقة، اختر الاستلام من الفرع.',
        locLabel:'موقع التوصيل:', locGps:'استخدم موقعي الحالي', locSearchPh:'ابحث عن شارعك أو حيّك...', locSearchBtn:'بحث',
        locTap:'اضغط على الخريطة لوضع الدبوس على موقع التوصيل، ثم اسحبه لضبطه.',
        locDenied:'خدمة الموقع غير مفعّلة. ابحث عن عنوانك، أو اضغط على الخريطة لوضع الدبوس على موقع التوصيل.',
@@ -999,6 +1006,7 @@ const STR = {
        paymentCancel:'آرڈر کی تفصیلات پر واپس جائیں', paymentNotConfigured:'آن لائن ادائیگی دستیاب نہیں۔ براہ کرم ریسٹورنٹ سے رابطہ کریں۔',
        configLoadFailed:'چیک آؤٹ کی ترتیبات لوڈ نہیں ہو سکیں۔ صفحہ ریفریش کرکے دوبارہ کوشش کریں۔',
        paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', paymentPending:'ادائیگی ابھی جاری ہے۔ دوبارہ جانچنے کے لیے تھوڑی دیر بعد صفحہ ریفریش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+       zoneNote:'ہوم ڈیلیوری صرف الحمراء کے علاقے میں ہے۔ چیک آؤٹ پر آپ کو نقشے پر ڈیلیوری کا علاقہ نظر آئے گا اور آپ اپنے مقام پر پن لگائیں گے۔ علاقے سے باہر برانچ سے پک اپ منتخب کریں۔',
        locLabel:'ڈیلیوری کا مقام:', locGps:'میرا موجودہ مقام استعمال کریں', locSearchPh:'اپنی گلی یا علاقہ تلاش کریں...', locSearchBtn:'تلاش',
        locTap:'ڈیلیوری کی جگہ پر پن لگانے کے لیے نقشے پر ٹیپ کریں، پھر اسے کھینچ کر درست کریں۔',
        locDenied:'مقام کی رسائی بند ہے۔ اپنا پتہ تلاش کریں، یا ڈیلیوری کی جگہ پر پن لگانے کے لیے نقشے پر ٹیپ کریں۔',
@@ -1038,6 +1046,7 @@ const STR = {
        paymentCancel:'返回订单详情', paymentNotConfigured:'暂无法在线付款，请联系餐厅。',
        configLoadFailed:'无法加载结账设置。请刷新页面后重试。',
        paymentFailed:'付款未完成，请重试。', paymentPending:'付款仍在处理中。请稍后刷新此页面再次查询。', orderFailed:'出错了，请重试。',
+       zoneNote:'送货上门仅限 Al-Hamra’a 区域。结账时您会在地图上看到具体配送范围，并在您的位置放置图钉。范围之外请选择到店自取。',
        locLabel:'配送位置：', locGps:'使用我的当前位置', locSearchPh:'搜索您的街道或区域…', locSearchBtn:'搜索',
        locTap:'点击地图，把图钉放在您的收货位置，然后拖动微调。',
        locDenied:'定位权限已关闭。请搜索您的地址，或点击地图放置图钉。',
@@ -2141,6 +2150,9 @@ function renderCart(){
   document.getElementById('cartCountPill').textContent = cartCount();
   document.getElementById('pickupBtn').classList.toggle('active', orderType==='pickup');
   document.getElementById('deliveryBtn').classList.toggle('active', orderType==='delivery');
+  const zoneNote = document.getElementById('zoneNote');   // tells customers up front that delivery has an area
+  zoneNote.textContent = STR[lang].zoneNote;
+  zoneNote.hidden = !(locActive() && DELIVERY_ZONE.geometry);
 
   const lines = cartLines();
   const emptyEl = document.getElementById('cartEmptyState');

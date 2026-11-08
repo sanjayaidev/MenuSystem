@@ -4,19 +4,20 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "Al-Hamra'a district",
-        "placeholder": true,
-        "center": { "lat": 21.524, "lng": 39.171 }
+        "name": "Al-Hamra'a delivery area",
+        "approximate": true,
+        "note": "Traced from the client's screenshot of the area (corners: Corniche top-left, Chili's end top-right, Al Andalus Rd bottom-right, two along the bottom). The screenshot scale was estimated, so the east side may be off by a few hundred metres. Calibrate with the restaurant's exact coordinates, then delete the 'approximate' line."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [39.159, 21.512],
-            [39.183, 21.512],
-            [39.183, 21.536],
-            [39.159, 21.536],
-            [39.159, 21.512]
+            [39.14943, 21.5212],
+            [39.17168, 21.52993],
+            [39.17779, 21.51293],
+            [39.16524, 21.50892],
+            [39.15398, 21.50902],
+            [39.14943, 21.5212]
           ]
         ]
       }
