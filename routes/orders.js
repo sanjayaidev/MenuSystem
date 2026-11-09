@@ -93,7 +93,7 @@ router.post('/orders', orderLimiter, async (req, res) => {
   // payment form is ever offered, so an out-of-zone order can not reach payment however the request was made.
   let deliveryPoint = null;
   if (delivery_type === 'delivery') {
-    const zoneCheck = deliveryZone.checkDeliveryPoint(req.body.delivery_lat, req.body.delivery_lng);
+    const zoneCheck = await deliveryZone.checkDeliveryPoint(req.body.delivery_lat, req.body.delivery_lng);
     if (!zoneCheck.ok) {
       debug('ORDER', `#${requestId} delivery refused`, { code: zoneCheck.code });
       return res.status(zoneCheck.status).json({ error: zoneCheck.message, code: zoneCheck.code });

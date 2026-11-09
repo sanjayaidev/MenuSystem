@@ -2,6 +2,7 @@ const express = require('express');
 const supabase = require('../db/supabase');
 const { requireAdmin } = require('../middleware/auth');
 const { toPoint, searchPlaces } = require('../db/geo');
+const deliveryZone = require('../db/delivery-zone');
 
 const router = express.Router();
 
@@ -149,6 +150,7 @@ router.put('/admin/contact', requireAdmin, async (req, res) => {
     return res.status(500).json({ error: error.message || 'Could not save contact details.' });
   }
 
+  deliveryZone.clearCache();   // the delivery area is placed around this pin, so a moved pin applies at once
   res.json({ success: true, contact, orderWa: await getOrderWhatsapp() });
 });
 

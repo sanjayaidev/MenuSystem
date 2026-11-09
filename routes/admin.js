@@ -5,6 +5,7 @@ const { parseOrderRef, sanitizeSearch } = require('../db/order-ref');
 const { requireAdmin } = require('../middleware/auth');
 const { translateTexts, TranslateError } = require('../db/translate');
 const { getDeliverySettings, saveDeliverySettings, CURRENCY } = require('../db/delivery-settings');
+const deliveryZone = require('../db/delivery-zone');
 
 const router = express.Router();
 
@@ -265,7 +266,9 @@ router.use(requireAdmin);
 
 router.get('/delivery-settings', asyncHandler(async (req, res) => {
   try {
-    res.json({ ...(await getDeliverySettings()), currency: CURRENCY });
+    // zoneStatus tells the admin page whether the delivery area is really active (it needs the restaurant pin)
+    const zoneStatus = await deliveryZone.adminStatus().catch(() => null);
+    res.json({ ...(await getDeliverySettings()), currency: CURRENCY, zoneStatus });
   } catch (error) {
     console.error('Could not load delivery settings:', error.message);
     res.status(500).json({ error: 'Could not load delivery settings.' });
@@ -283,10 +286,17 @@ router.put('/delivery-settings', asyncHandler(async (req, res) => {
       || !Number.isFinite(amount) || amount < 0 || amount > 100000 || Math.round(amount * 100) !== amount * 100) {
     return res.status(400).json({ error: 'Delivery amount must be a non-negative amount with at most two decimal places.' });
   }
+  if (req.body?.zoneEnabled !== undefined && typeof req.body.zoneEnabled !== 'boolean') {
+    return res.status(400).json({ error: 'The delivery area switch must be true or false.' });
+  }
   try {
-    const settings = { enabled, amount: Math.round(amount * 100) / 100 };
+    // leaving zoneEnabled out keeps whatever is saved now
+    const zoneEnabled = typeof req.body?.zoneEnabled === 'boolean' ? req.body.zoneEnabled : (await getDeliverySettings()).zoneEnabled;
+    const settings = { zoneEnabled, enabled, amount: Math.round(amount * 100) / 100 };
     await saveDeliverySettings(settings);
-    res.json({ ...settings, currency: CURRENCY });
+    deliveryZone.clearCache();   // the new switch applies to the next order, not 10 seconds later
+    const zoneStatus = await deliveryZone.adminStatus().catch(() => null);
+    res.json({ ...settings, currency: CURRENCY, zoneStatus });
   } catch (error) {
     console.error('Could not save delivery settings:', error.message);
     res.status(500).json({ error: 'Could not save delivery settings.' });

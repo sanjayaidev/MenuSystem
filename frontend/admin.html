@@ -326,6 +326,10 @@
       <div class="panel-title"><h2 data-ui="deliveryTitle">Delivery cost</h2></div>
       <form class="manager-form" id="deliverySettingsForm" novalidate>
         <p class="form-note" style="margin:0 0 12px;" data-ui="deliveryHint">Choose whether to charge a delivery fee and set the amount. Pickup remains free.</p>
+        <div class="check-fields" style="margin-top:0; margin-bottom:6px;">
+          <label><input type="checkbox" id="deliveryZoneEnabled"> <span data-ui="zoneEnable">Only deliver inside the delivery area</span></label>
+        </div>
+        <p class="form-note" style="margin:0 0 14px;" id="deliveryZoneStatus" role="status"></p>
         <div class="check-fields" style="margin-top:0;">
           <label><input type="checkbox" id="deliveryCostEnabled"> <span data-ui="deliveryCharge">Charge a delivery fee</span></label>
         </div>
@@ -1225,18 +1229,42 @@ Object.keys(POSTER_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS
 const DELIVERY_ADMIN_STRINGS = {
   en: { deliveryTab:'Delivery', deliveryTitle:'Delivery cost', deliveryHint:'Choose whether to charge a delivery fee and set the amount. Pickup remains free.',
     deliveryCharge:'Charge a delivery fee', deliveryFee:'Delivery fee', deliverySave:'Save delivery settings',
+    zoneEnable:'Only deliver inside the delivery area',
+    zoneOk:'The delivery area is active. It is placed around the restaurant pin saved in Contact, so moving the pin moves the area. Customers drop a pin at checkout and cannot pay for delivery outside it.',
+    zoneNoPin:'Save the restaurant pin in Contact first. Until then delivery is not restricted to an area.',
+    zoneOff:'Switched off: customers can order home delivery from anywhere.',
+    zoneBroken:'The delivery area file could not be read, so home delivery orders are refused for now. Please contact the developer.',
+    zoneApprox:'The shape is still approximate: please check it on the checkout map.',
     deliverySaved:'Delivery settings saved.', deliverySaving:'Saving...', deliveryLoadFailed:'Could not load delivery settings.',
     deliverySaveFailed:'Could not save delivery settings.', deliveryAmountInvalid:'Enter a non-negative amount with at most two decimal places.' },
   ar: { deliveryTab:'التوصيل', deliveryTitle:'رسوم التوصيل', deliveryHint:'اختر ما إذا كنت تريد فرض رسوم توصيل وحدد المبلغ. الاستلام من الفرع مجاني.',
     deliveryCharge:'فرض رسوم توصيل', deliveryFee:'رسوم التوصيل', deliverySave:'حفظ إعدادات التوصيل',
+    zoneEnable:'التوصيل داخل منطقة التوصيل فقط',
+    zoneOk:'منطقة التوصيل مفعّلة. تُحدَّد حول دبوس المطعم المحفوظ في صفحة التواصل، فتنتقل المنطقة عند تحريك الدبوس. يضع العميل دبوساً عند إتمام الطلب ولا يمكنه الدفع للتوصيل خارج المنطقة.',
+    zoneNoPin:'احفظ دبوس المطعم في صفحة التواصل أولاً. حتى ذلك الحين لا يتم تقييد التوصيل بمنطقة.',
+    zoneOff:'متوقف: يمكن للعملاء طلب التوصيل للمنزل من أي مكان.',
+    zoneBroken:'تعذّرت قراءة ملف منطقة التوصيل، لذلك يتم رفض طلبات التوصيل للمنازل مؤقتاً. يرجى التواصل مع المطوّر.',
+    zoneApprox:'شكل المنطقة تقريبي حتى الآن: يرجى مراجعته على خريطة إتمام الطلب.',
     deliverySaved:'تم حفظ إعدادات التوصيل.', deliverySaving:'جارٍ الحفظ...', deliveryLoadFailed:'تعذّر تحميل إعدادات التوصيل.',
     deliverySaveFailed:'تعذّر حفظ إعدادات التوصيل.', deliveryAmountInvalid:'أدخل مبلغاً غير سالب وبحد أقصى منزلتين عشريتين.' },
   ur: { deliveryTab:'ڈیلیوری', deliveryTitle:'ڈیلیوری فیس', deliveryHint:'منتخب کریں کہ ڈیلیوری فیس لینی ہے یا نہیں، اور رقم درج کریں۔ برانچ سے پک اَپ مفت ہے۔',
     deliveryCharge:'ڈیلیوری فیس وصول کریں', deliveryFee:'ڈیلیوری فیس', deliverySave:'ڈیلیوری کی ترتیبات محفوظ کریں',
+    zoneEnable:'صرف ڈیلیوری کے علاقے کے اندر ڈیلیوری کریں',
+    zoneOk:'ڈیلیوری کا علاقہ فعال ہے۔ یہ رابطہ صفحے میں محفوظ ریستوران کے پن کے گرد بنتا ہے، اس لیے پن ہٹانے سے علاقہ بھی ہٹ جاتا ہے۔ گاہک چیک آؤٹ پر پن لگاتا ہے اور علاقے سے باہر ڈیلیوری کی ادائیگی نہیں کر سکتا۔',
+    zoneNoPin:'پہلے رابطہ صفحے میں ریستوران کا پن محفوظ کریں۔ تب تک ڈیلیوری کسی علاقے تک محدود نہیں۔',
+    zoneOff:'بند ہے: گاہک کہیں سے بھی ہوم ڈیلیوری آرڈر کر سکتے ہیں۔',
+    zoneBroken:'ڈیلیوری علاقے کی فائل پڑھی نہیں جا سکی، اس لیے ہوم ڈیلیوری آرڈر فی الحال مسترد ہو رہے ہیں۔ براہ کرم ڈویلپر سے رابطہ کریں۔',
+    zoneApprox:'علاقے کی شکل ابھی تخمینی ہے: براہ کرم چیک آؤٹ کے نقشے پر اسے جانچ لیں۔',
     deliverySaved:'ڈیلیوری کی ترتیبات محفوظ ہو گئیں۔', deliverySaving:'محفوظ ہو رہا ہے...', deliveryLoadFailed:'ڈیلیوری کی ترتیبات لوڈ نہیں ہو سکیں۔',
     deliverySaveFailed:'ڈیلیوری کی ترتیبات محفوظ نہیں ہو سکیں۔', deliveryAmountInvalid:'صفر یا اس سے زیادہ رقم درج کریں، زیادہ سے زیادہ دو اعشاری ہندسوں کے ساتھ۔' },
   zh: { deliveryTab:'配送', deliveryTitle:'配送费用', deliveryHint:'选择是否收取配送费并设置金额。到店自取免费。',
     deliveryCharge:'收取配送费', deliveryFee:'配送费', deliverySave:'保存配送设置',
+    zoneEnable:'仅在配送范围内送货',
+    zoneOk:'配送范围已启用。它以“联系方式”中保存的餐厅图钉为中心，移动图钉范围也会随之移动。顾客在结账时放置图钉，范围之外无法支付送货订单。',
+    zoneNoPin:'请先在“联系方式”中保存餐厅图钉。在此之前，送货不受范围限制。',
+    zoneOff:'已关闭：顾客可以从任何地方下送货订单。',
+    zoneBroken:'无法读取配送范围文件，因此暂时拒绝送货订单。请联系开发人员。',
+    zoneApprox:'范围形状仍是估算值：请在结账地图上核对。',
     deliverySaved:'配送设置已保存。', deliverySaving:'正在保存...', deliveryLoadFailed:'无法加载配送设置。',
     deliverySaveFailed:'无法保存配送设置。', deliveryAmountInvalid:'请输入非负金额，最多保留两位小数。' },
 };
@@ -3694,6 +3722,15 @@ document.getElementById('contactPinClear').addEventListener('click', clearPin);
   else{ if(!pin) removePinMarker(); showPinStatus(); }
 }));
 
+// The line under the "only deliver inside the delivery area" switch: what is really in effect right now.
+function renderZoneStatus(settings){
+  const el = document.getElementById('deliveryZoneStatus');
+  const status = settings && settings.zoneStatus;
+  if(!status){ el.textContent = ''; return; }
+  const key = { ok:'zoneOk', 'no-pin':'zoneNoPin', off:'zoneOff' }[status.reason] || 'zoneBroken';
+  el.textContent = adminText(key) + (status.reason === 'ok' && status.approximate ? ' ' + adminText('zoneApprox') : '');
+}
+
 async function loadDeliverySettings(){
   const button = document.getElementById('deliverySettingsSave');
   button.disabled = true;
@@ -3704,6 +3741,8 @@ async function loadDeliverySettings(){
     document.getElementById('deliveryCostEnabled').checked = settings.enabled === true;
     document.getElementById('deliveryCostAmount').value = Number(settings.amount).toFixed(2);
     document.getElementById('deliveryCostAmount').disabled = !settings.enabled;
+    document.getElementById('deliveryZoneEnabled').checked = settings.zoneEnabled === true;
+    renderZoneStatus(settings);
     setFormNote('deliverySettingsNote', '');
     if(ordersLoaded) renderOrders(currentOrders);
   }catch(error){
@@ -3732,12 +3771,15 @@ document.getElementById('deliverySettingsForm').addEventListener('submit', async
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         enabled:document.getElementById('deliveryCostEnabled').checked,
+        zoneEnabled:document.getElementById('deliveryZoneEnabled').checked,
         amount,
       }),
     });
     ADMIN_CURRENCY = settings.currency || ADMIN_CURRENCY;
     document.getElementById('deliveryCurrency').textContent = ADMIN_CURRENCY;
     document.getElementById('deliveryCostAmount').value = Number(settings.amount).toFixed(2);
+    document.getElementById('deliveryZoneEnabled').checked = settings.zoneEnabled === true;
+    renderZoneStatus(settings);
     setFormNote('deliverySettingsNote', adminText('deliverySaved'));
   }catch(error){
     setFormNote('deliverySettingsNote', error.message || adminText('deliverySaveFailed'), true);

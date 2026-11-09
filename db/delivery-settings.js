@@ -22,8 +22,12 @@ const CURRENCY_DIGITS = new Intl.NumberFormat('en', {
   currency: CURRENCY,
 }).resolvedOptions().maximumFractionDigits;
 
+// zoneEnabled: "only deliver inside the delivery area" (Admin -> Delivery settings). Off until an admin turns it on,
+// so a freshly deployed (or older saved) database never starts refusing orders before someone has checked the
+// delivery area on the checkout map.
 function defaultSettings() {
   return {
+    zoneEnabled: false,
     enabled: DEFAULT_ENABLED,
     amount: Number.isFinite(DEFAULT_FEE) && DEFAULT_FEE >= 0 && DEFAULT_FEE <= 100000
       && Math.round(DEFAULT_FEE * 100) === DEFAULT_FEE * 100
@@ -46,10 +50,11 @@ async function getDeliverySettings() {
   if (!value || typeof value !== 'object' || Array.isArray(value)
       || typeof value.enabled !== 'boolean'
       || typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount < 0
-      || value.amount > 100000 || Math.round(value.amount * 100) !== value.amount * 100) {
+      || value.amount > 100000 || Math.round(value.amount * 100) !== value.amount * 100
+      || (value.zoneEnabled !== undefined && typeof value.zoneEnabled !== 'boolean')) {
     throw new Error('Saved delivery settings are invalid.');
   }
-  return { enabled: value.enabled, amount: value.amount };
+  return { zoneEnabled: value.zoneEnabled === true, enabled: value.enabled, amount: value.amount };
 }
 
 async function saveDeliverySettings(settings) {

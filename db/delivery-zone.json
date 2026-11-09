@@ -1,26 +1,13 @@
 {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Al-Hamra'a delivery area",
-        "approximate": true,
-        "note": "Traced from the client's screenshot of the area (corners: Corniche top-left, Chili's end top-right, Al Andalus Rd bottom-right, two along the bottom). The screenshot scale was estimated, so the east side may be off by a few hundred metres. Calibrate with the restaurant's exact coordinates, then delete the 'approximate' line."
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [39.14943, 21.5212],
-            [39.17168, 21.52993],
-            [39.17779, 21.51293],
-            [39.16524, 21.50892],
-            [39.15398, 21.50902],
-            [39.14943, 21.5212]
-          ]
-        ]
-      }
-    }
+  "anchor": "restaurant",
+  "unit": "meters",
+  "approximate": true,
+  "note": "The delivery area as distances from the restaurant pin saved in Admin -> Contact: [metres east, metres north]. Corners, in order: Corniche (north-west), Chili's end (north-east), Al Andalus Rd (south-east), two along the south edge. Traced from the client's screenshot using a typical Google Maps zoom for the scale, so the far west side may be off by a few hundred metres. Check it on the checkout map, then delete the 'approximate' line.",
+  "points": [
+    [-2700, 280],
+    [-395, 1250],
+    [240, -635],
+    [-1060, -1080],
+    [-2225, -1065]
   ]
 }

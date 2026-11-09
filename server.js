@@ -150,7 +150,7 @@ app.get('/api/config', async (req, res) => {
     mapTileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     mapAttribution: process.env.MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     // where home delivery is allowed; the checkout draws it and gives instant feedback, POST /api/orders enforces it
-    deliveryZone: deliveryZone.publicZone(),
+    deliveryZone: await deliveryZone.publicZone().catch((e) => { console.error('Could not resolve the delivery area:', e.message); return { enforced: false, center: null, geometry: null }; }),
   });
 });
 

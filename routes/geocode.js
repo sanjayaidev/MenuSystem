@@ -23,7 +23,7 @@ const limiter = rateLimit({
   message: { error: 'Too many searches. Please wait a moment, or tap the map to place the pin.', code: 'SEARCH_RATE_LIMITED' },
 });
 
-const CACHE_TTL_MS = 60 * 60 * 1000;
+const CACHE_TTL_MS = 5 * 60 * 1000;   // short, because each result carries an inside/outside flag for the current zone
 const CACHE_MAX = 500;
 const cache = new Map();   // "lang|text" -> { at, results }
 const LANGS = ['en', 'ar', 'ur', 'zh'];
@@ -40,8 +40,11 @@ router.get('/geocode', limiter, async (req, res) => {
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return res.json({ results: hit.results });
 
   try {
-    const found = await searchPlaces(q, { near: deliveryZone.publicZone().center, limit: 5, countrycodes: 'sa', lang });
-    const results = found.map((place) => ({ ...place, inside: deliveryZone.contains(place.lat, place.lng) }));
+    const zone = await deliveryZone.current();
+    const found = await searchPlaces(q, { near: zone.center, limit: 5, countrycodes: 'sa', lang });
+    // inside is null when there is no zone to test against (switched off, or no restaurant pin yet)
+    const results = found.map((place) => ({ ...place, inside: zone.enforced ? zone.contains(place.lat, place.lng) : null }));
+    // the zone can move (admin changes the pin), so a cached answer is only reused for a short time
     if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
     cache.set(key, { at: Date.now(), results });
     res.json({ results });
