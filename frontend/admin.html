@@ -226,6 +226,19 @@
   .pin-results .pin-result{text-align:start; font-weight:500; line-height:1.4;}
   .pin-map{height:340px; margin-top:10px; border:1px solid var(--line); border-radius:8px; background:#1c1a18; direction:ltr; z-index:0;}
   .pin-coords{margin-top:10px; direction:ltr;}
+  /* delivery area boundary editor (Delivery tab) */
+  .zone-toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .zone-corners{margin-top:6px; direction:ltr;}
+  .zone-row{display:grid; grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 76px; gap:8px; align-items:center; margin-top:6px;}
+  .zone-row input{margin-top:0;}
+  .zone-head{margin-top:12px; color:var(--muted); font-size:11px; font-weight:650;}
+  .zone-num{color:var(--muted); font-size:12px; text-align:center;}
+  .zone-paste{margin-top:12px;}
+  .zone-paste summary{cursor:pointer; color:var(--muted); font-size:12px;}
+  .zone-paste textarea{margin-top:8px;}
+  .zone-paste .action-btn{margin-top:8px;}
+  .zone-corner{box-sizing:border-box; background:var(--gold); color:#1a1408; border:2px solid #fff; border-radius:50%; font:700 12px/20px system-ui,sans-serif; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,.55); cursor:grab;}
+  .zone-mid{box-sizing:border-box; background:#fff; color:#1a1408; border:1px solid var(--gold); border-radius:50%; font:700 13px/16px system-ui,sans-serif; text-align:center; opacity:.82; cursor:copy;}
   .translate-bar .action-btn.done{border-color:var(--green); color:var(--green);}
   .records{display:grid; gap:8px;}
   .record{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:7px;}
@@ -338,6 +351,30 @@
         </div>
         <div class="form-actions"><button class="action-btn primary" id="deliverySettingsSave" type="submit" data-ui="deliverySave">Save delivery settings</button><span class="form-note" id="deliverySettingsNote" role="status"></span></div>
       </form>
+
+      <div class="manager-form" id="deliveryZoneEditor">
+        <h3 data-ui="zoneAreaTitle">Delivery area boundary</h3>
+        <p class="form-note" style="margin:0;" data-ui="zoneAreaHelp">Drag the numbered corners on the map.</p>
+        <p class="form-note" style="margin:6px 0 0;" id="zoneSourceNote" role="status"></p>
+        <div class="pin-map" id="deliveryZoneMap"></div>
+        <div class="zone-toolbar">
+          <button class="action-btn" id="zoneAddBtn" type="button" data-ui="zoneAddCorner">Add corner</button>
+          <button class="action-btn" id="zoneTestBtn" type="button" data-ui="zoneTestBtn">Test a location</button>
+          <span class="form-note" id="zoneTestNote" role="status"></span>
+        </div>
+        <div class="zone-row zone-head"><span></span><span data-ui="cdLat">Latitude</span><span data-ui="cdLng">Longitude</span><span></span></div>
+        <div class="zone-corners" id="zoneCorners"></div>
+        <details class="zone-paste">
+          <summary data-ui="zonePasteTitle">Paste coordinates</summary>
+          <textarea id="zonePasteText" rows="5" spellcheck="false" autocomplete="off" data-ui-placeholder="zonePastePh"></textarea>
+          <button class="action-btn" id="zonePasteApply" type="button" data-ui="zonePasteApply">Use these coordinates</button>
+        </details>
+        <div class="form-actions">
+          <button class="action-btn primary" id="zoneSaveBtn" type="button" data-ui="zoneSave" disabled>Save delivery area</button>
+          <button class="action-btn danger" id="zoneResetBtn" type="button" data-ui="zoneReset" disabled>Reset to original shape</button>
+          <span class="form-note" id="zoneNote" role="status"></span>
+        </div>
+      </div>
     </section>
 
     <section class="admin-panel" id="categoriesPanel" hidden>
@@ -1270,6 +1307,92 @@ const DELIVERY_ADMIN_STRINGS = {
 };
 Object.keys(DELIVERY_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], DELIVERY_ADMIN_STRINGS[code]));
 
+// Delivery area boundary editor (Delivery tab). zoneApprox replaces the older text above.
+// Arabic, Urdu and Chinese are drafts for a native speaker to confirm.
+const ZONE_EDITOR_STRINGS = {
+  en: { zoneAreaTitle:'Delivery area boundary',
+    zoneAreaHelp:'Drag the numbered corners on the map, click a + on an edge to add a corner there, or right-click (long-press) a corner to remove it. You can also type the coordinates in the table or paste them. While the switch above is on, home delivery is only accepted inside this area.',
+    zoneSourceDb:'Showing the boundary saved here.',
+    zoneSourceFile:'Showing the current starting shape. It is not saved in the database yet: adjust it if needed, then click Save delivery area.',
+    zoneNoShape:'There is no delivery area to show yet. Save the restaurant pin in Contact to load the current shape, or paste coordinates below.',
+    zoneAddCorner:'Add corner', zoneDelete:'Delete', zoneRestaurant:'Restaurant', zoneCorner:'Corner',
+    zoneTestBtn:'Test a location', zoneTestHint:'Click the map to test a location.',
+    zoneTestInside:'Inside the delivery area.', zoneTestOutside:'Outside the delivery area.', zoneTestNoArea:'Fix the delivery area first (at least 3 corners, lines not crossing).',
+    zonePasteTitle:'Paste coordinates', zonePastePh:'One corner per line: latitude, longitude\n24.7136, 46.6753', zonePasteApply:'Use these coordinates',
+    zonePasteBad:'Could not read the coordinates. Use one "latitude, longitude" pair per line.',
+    zoneSave:'Save delivery area', zoneReset:'Reset to original shape',
+    zoneResetConfirm:'Delete the saved boundary and go back to the original starting shape?',
+    zoneSaved:'Delivery area saved. It applies to new orders right away.', zoneResetDone:'Back to the original shape.',
+    zoneUnsaved:'Unsaved changes.', zoneLoadFailed:'Could not load the delivery area.', zoneSaveFailed:'Could not save the delivery area.',
+    zoneBadCoord:'Enter a latitude between -90 and 90 and a longitude between -180 and 180.',
+    zoneProblemFew:'A delivery area needs at least 3 corners.', zoneProblemMany:'A delivery area can have at most 100 corners.',
+    zoneProblemSame:'Two neighbouring corners are at the same spot.', zoneProblemSize:'The area is too large (more than 100 km across).',
+    zoneProblemCross:'The outline crosses itself. Move a corner so the lines do not cross.', zoneProblemFlat:'The corners do not enclose an area.',
+    zoneOkSaved:'The delivery area is active and uses the boundary saved below. Customers drop a pin at checkout and cannot pay for delivery outside it.',
+    zoneApprox:'This is still the approximate starting shape: check it on the map below, then click Save delivery area.' },
+  ar: { zoneAreaTitle:'حدود منطقة التوصيل',
+    zoneAreaHelp:'اسحب الزوايا المرقمة على الخريطة، أو انقر على علامة + على أي ضلع لإضافة زاوية، أو انقر بزر الفأرة الأيمن (أو اضغط مطولاً) على زاوية لحذفها. يمكنك أيضاً كتابة الإحداثيات في الجدول أو لصقها. ما دام المفتاح أعلاه مفعّلاً، لا يُقبل التوصيل للمنازل إلا داخل هذه المنطقة.',
+    zoneSourceDb:'يتم عرض الحدود المحفوظة هنا.',
+    zoneSourceFile:'يتم عرض الشكل الابتدائي الحالي. لم يُحفظ في قاعدة البيانات بعد: عدّله عند الحاجة ثم اضغط «حفظ منطقة التوصيل».',
+    zoneNoShape:'لا توجد منطقة توصيل لعرضها بعد. احفظ دبوس المطعم في صفحة التواصل لتحميل الشكل الحالي، أو الصق الإحداثيات أدناه.',
+    zoneAddCorner:'إضافة زاوية', zoneDelete:'حذف', zoneRestaurant:'المطعم', zoneCorner:'الزاوية',
+    zoneTestBtn:'اختبار موقع', zoneTestHint:'انقر على الخريطة لاختبار موقع.',
+    zoneTestInside:'داخل منطقة التوصيل.', zoneTestOutside:'خارج منطقة التوصيل.', zoneTestNoArea:'أصلح منطقة التوصيل أولاً (3 زوايا على الأقل دون تقاطع الخطوط).',
+    zonePasteTitle:'لصق الإحداثيات', zonePastePh:'زاوية في كل سطر: خط العرض، خط الطول\n24.7136, 46.6753', zonePasteApply:'استخدام هذه الإحداثيات',
+    zonePasteBad:'تعذّرت قراءة الإحداثيات. استخدم زوجاً «خط العرض، خط الطول» في كل سطر.',
+    zoneSave:'حفظ منطقة التوصيل', zoneReset:'إعادة الشكل الأصلي',
+    zoneResetConfirm:'هل تريد حذف الحدود المحفوظة والعودة إلى الشكل الابتدائي الأصلي؟',
+    zoneSaved:'تم حفظ منطقة التوصيل. تُطبَّق على الطلبات الجديدة فوراً.', zoneResetDone:'تمت العودة إلى الشكل الأصلي.',
+    zoneUnsaved:'توجد تغييرات غير محفوظة.', zoneLoadFailed:'تعذّر تحميل منطقة التوصيل.', zoneSaveFailed:'تعذّر حفظ منطقة التوصيل.',
+    zoneBadCoord:'أدخل خط عرض بين -90 و90 وخط طول بين -180 و180.',
+    zoneProblemFew:'تحتاج منطقة التوصيل إلى 3 زوايا على الأقل.', zoneProblemMany:'يمكن أن تحتوي منطقة التوصيل على 100 زاوية كحد أقصى.',
+    zoneProblemSame:'زاويتان متجاورتان في المكان نفسه.', zoneProblemSize:'المنطقة كبيرة جداً (أكثر من 100 كم عرضاً).',
+    zoneProblemCross:'الحدود تتقاطع مع نفسها. حرّك زاوية حتى لا تتقاطع الخطوط.', zoneProblemFlat:'الزوايا لا تحيط بمساحة.',
+    zoneOkSaved:'منطقة التوصيل مفعّلة وتستخدم الحدود المحفوظة أدناه. يضع العميل دبوساً عند إتمام الطلب ولا يمكنه الدفع للتوصيل خارج المنطقة.',
+    zoneApprox:'ما زال هذا هو الشكل الابتدائي التقريبي: راجعه على الخريطة أدناه ثم اضغط «حفظ منطقة التوصيل».' },
+  ur: { zoneAreaTitle:'ڈیلیوری علاقے کی حد',
+    zoneAreaHelp:'نقشے پر نمبر والے کونے گھسیٹیں، کسی کنارے پر + دبا کر وہاں نیا کونا شامل کریں، یا کسی کونے پر رائٹ کلک (یا دیر تک دبائیں) کر کے اسے ہٹائیں۔ آپ جدول میں نقاط ٹائپ یا پیسٹ بھی کر سکتے ہیں۔ اوپر والا سوئچ آن ہونے تک ہوم ڈیلیوری صرف اسی علاقے کے اندر قبول ہوتی ہے۔',
+    zoneSourceDb:'یہاں محفوظ کی گئی حد دکھائی جا رہی ہے۔',
+    zoneSourceFile:'موجودہ ابتدائی شکل دکھائی جا رہی ہے۔ یہ ابھی ڈیٹابیس میں محفوظ نہیں ہے: ضرورت ہو تو درست کریں، پھر «ڈیلیوری علاقہ محفوظ کریں» دبائیں۔',
+    zoneNoShape:'ابھی دکھانے کے لیے کوئی ڈیلیوری علاقہ نہیں ہے۔ موجودہ شکل لوڈ کرنے کے لیے رابطہ صفحے میں ریستوران کا پن محفوظ کریں، یا نیچے نقاط پیسٹ کریں۔',
+    zoneAddCorner:'کونا شامل کریں', zoneDelete:'حذف کریں', zoneRestaurant:'ریستوران', zoneCorner:'کونا',
+    zoneTestBtn:'مقام جانچیں', zoneTestHint:'کسی مقام کو جانچنے کے لیے نقشے پر کلک کریں۔',
+    zoneTestInside:'ڈیلیوری علاقے کے اندر۔', zoneTestOutside:'ڈیلیوری علاقے سے باہر۔', zoneTestNoArea:'پہلے ڈیلیوری علاقہ درست کریں (کم از کم 3 کونے، لکیریں نہ کٹیں)۔',
+    zonePasteTitle:'نقاط پیسٹ کریں', zonePastePh:'ہر لائن میں ایک کونا: عرض البلد، طول البلد\n24.7136, 46.6753', zonePasteApply:'یہ نقاط استعمال کریں',
+    zonePasteBad:'نقاط پڑھے نہیں جا سکے۔ ہر لائن میں «عرض البلد، طول البلد» کا ایک جوڑا لکھیں۔',
+    zoneSave:'ڈیلیوری علاقہ محفوظ کریں', zoneReset:'اصل شکل پر واپس جائیں',
+    zoneResetConfirm:'محفوظ کی گئی حد حذف کر کے اصل ابتدائی شکل پر واپس جانا ہے؟',
+    zoneSaved:'ڈیلیوری علاقہ محفوظ ہو گیا۔ یہ نئے آرڈرز پر فوراً لاگو ہوتا ہے۔', zoneResetDone:'اصل شکل بحال ہو گئی۔',
+    zoneUnsaved:'غیر محفوظ تبدیلیاں۔', zoneLoadFailed:'ڈیلیوری علاقہ لوڈ نہیں ہو سکا۔', zoneSaveFailed:'ڈیلیوری علاقہ محفوظ نہیں ہو سکا۔',
+    zoneBadCoord:'-90 سے 90 کے درمیان عرض البلد اور -180 سے 180 کے درمیان طول البلد درج کریں۔',
+    zoneProblemFew:'ڈیلیوری علاقے کے لیے کم از کم 3 کونے درکار ہیں۔', zoneProblemMany:'ڈیلیوری علاقے میں زیادہ سے زیادہ 100 کونے ہو سکتے ہیں۔',
+    zoneProblemSame:'دو ساتھ والے کونے ایک ہی جگہ پر ہیں۔', zoneProblemSize:'علاقہ بہت بڑا ہے (100 کلومیٹر سے زیادہ چوڑا)۔',
+    zoneProblemCross:'حد خود کو کاٹ رہی ہے۔ کوئی کونا ہٹائیں تاکہ لکیریں نہ کٹیں۔', zoneProblemFlat:'کونے کسی رقبے کو نہیں گھیرتے۔',
+    zoneOkSaved:'ڈیلیوری علاقہ فعال ہے اور نیچے محفوظ کی گئی حد استعمال کرتا ہے۔ گاہک چیک آؤٹ پر پن لگاتا ہے اور علاقے سے باہر ڈیلیوری کی ادائیگی نہیں کر سکتا۔',
+    zoneApprox:'یہ ابھی تخمینی ابتدائی شکل ہے: نیچے نقشے پر اسے جانچیں، پھر «ڈیلیوری علاقہ محفوظ کریں» دبائیں۔' },
+  zh: { zoneAreaTitle:'配送范围边界',
+    zoneAreaHelp:'在地图上拖动带编号的角点，点击边上的 + 可在该处添加角点，右键（或长按）角点可删除。也可以在表格中输入或粘贴坐标。上方开关开启时，仅接受此范围内的送货订单。',
+    zoneSourceDb:'显示此处已保存的边界。',
+    zoneSourceFile:'显示当前的初始形状。它尚未保存到数据库：如有需要请先调整，然后点击“保存配送范围”。',
+    zoneNoShape:'暂无可显示的配送范围。请先在“联系方式”中保存餐厅图钉以载入当前形状，或在下方粘贴坐标。',
+    zoneAddCorner:'添加角点', zoneDelete:'删除', zoneRestaurant:'餐厅', zoneCorner:'角点',
+    zoneTestBtn:'测试位置', zoneTestHint:'点击地图测试某个位置。',
+    zoneTestInside:'在配送范围内。', zoneTestOutside:'在配送范围外。', zoneTestNoArea:'请先修正配送范围（至少 3 个角点，且线条不能交叉）。',
+    zonePasteTitle:'粘贴坐标', zonePastePh:'每行一个角点：纬度, 经度\n24.7136, 46.6753', zonePasteApply:'使用这些坐标',
+    zonePasteBad:'无法读取坐标。请每行填写一对“纬度, 经度”。',
+    zoneSave:'保存配送范围', zoneReset:'恢复原始形状',
+    zoneResetConfirm:'删除已保存的边界并恢复到原始初始形状吗？',
+    zoneSaved:'配送范围已保存，立即对新订单生效。', zoneResetDone:'已恢复原始形状。',
+    zoneUnsaved:'有未保存的更改。', zoneLoadFailed:'无法加载配送范围。', zoneSaveFailed:'无法保存配送范围。',
+    zoneBadCoord:'请输入 -90 到 90 之间的纬度和 -180 到 180 之间的经度。',
+    zoneProblemFew:'配送范围至少需要 3 个角点。', zoneProblemMany:'配送范围最多 100 个角点。',
+    zoneProblemSame:'相邻的两个角点位置相同。', zoneProblemSize:'范围过大（宽度超过 100 公里）。',
+    zoneProblemCross:'边界线相互交叉。请移动某个角点，使线条不再交叉。', zoneProblemFlat:'这些角点没有围成一个区域。',
+    zoneOkSaved:'配送范围已启用，使用下方保存的边界。顾客在结账时放置图钉，范围之外无法支付送货订单。',
+    zoneApprox:'这仍是估算的初始形状：请在下方地图上核对，然后点击“保存配送范围”。' },
+};
+Object.keys(ZONE_EDITOR_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], ZONE_EDITOR_STRINGS[code]));
+
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let adminUiLanguage = localStorage.getItem(ADMIN_LANGUAGE_KEY) || 'en';
 let plainPhotoSyncedTo = '';   // Food PNG URL last copied into the plain Image URL field (see syncPlainPhoto)
@@ -1322,6 +1445,7 @@ function applyAdminUiLanguage(language){
   if(currentMusicData) renderMusic(currentMusicData);
   if(currentPosterData !== undefined) renderPoster(currentPosterData);
 
+  zoneRefreshText();
   renderFilters();
   if(ordersLoaded) renderOrders(currentOrders);
   if(!document.getElementById('categoriesPanel').hidden) renderCategories();
@@ -3727,8 +3851,9 @@ function renderZoneStatus(settings){
   const el = document.getElementById('deliveryZoneStatus');
   const status = settings && settings.zoneStatus;
   if(!status){ el.textContent = ''; return; }
-  const key = { ok:'zoneOk', 'no-pin':'zoneNoPin', off:'zoneOff' }[status.reason] || 'zoneBroken';
-  el.textContent = adminText(key) + (status.reason === 'ok' && status.approximate ? ' ' + adminText('zoneApprox') : '');
+  const saved = status.reason === 'ok' && status.source === 'database';   // the boundary drawn in the editor below
+  const key = saved ? 'zoneOkSaved' : ({ ok:'zoneOk', 'no-pin':'zoneNoPin', off:'zoneOff' }[status.reason] || 'zoneBroken');
+  el.textContent = adminText(key) + (status.reason === 'ok' && status.approximate && !saved ? ' ' + adminText('zoneApprox') : '');
 }
 
 async function loadDeliverySettings(){
@@ -3745,12 +3870,313 @@ async function loadDeliverySettings(){
     renderZoneStatus(settings);
     setFormNote('deliverySettingsNote', '');
     if(ordersLoaded) renderOrders(currentOrders);
+    loadZoneEditor();
   }catch(error){
     setFormNote('deliverySettingsNote', error.message || adminText('deliveryLoadFailed'), true);
   }finally{
     button.disabled = false;
   }
 }
+
+/* ---------- delivery area boundary: draggable corners + coordinate table, saved as real lat/lng ----------
+   One polygon with any number of corners. The server (db/delivery-zone.js) checks the same rules again on save. */
+var zoneMap = null, zonePoly = null, zoneRestaurantMarker = null, zoneTestMarker = null;
+var zonePoints = [], zoneCornerMarkers = [], zoneMidMarkers = [];
+var zoneSource = 'none', zoneDirty = false, zoneTesting = false, zoneBusy = false, zoneRestaurantPin = null;
+const ZONE_MAX_CORNERS = 100;
+const ZONE_MAX_SPAN_M = 100000;
+const zoneRound = n => Math.round(n * 1e6) / 1e6;
+
+function zoneOrient(a, b, c){
+  const v = (b.lng - a.lng) * (c.lat - a.lat) - (b.lat - a.lat) * (c.lng - a.lng);
+  return Math.abs(v) < 1e-14 ? 0 : v;
+}
+function zoneWithin(a, b, c){
+  return Math.min(a.lng, b.lng) <= c.lng && c.lng <= Math.max(a.lng, b.lng) && Math.min(a.lat, b.lat) <= c.lat && c.lat <= Math.max(a.lat, b.lat);
+}
+function zoneTouch(a, b, c, d){
+  const o1 = zoneOrient(a, b, c), o2 = zoneOrient(a, b, d), o3 = zoneOrient(c, d, a), o4 = zoneOrient(c, d, b);
+  if(((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) && ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0))) return true;
+  return (o1 === 0 && zoneWithin(a, b, c)) || (o2 === 0 && zoneWithin(a, b, d)) || (o3 === 0 && zoneWithin(c, d, a)) || (o4 === 0 && zoneWithin(c, d, b));
+}
+// '' when the corners make a usable area, otherwise the text key of the first problem.
+function zoneProblemKey(points){
+  const n = points.length;
+  if(n < 3) return 'zoneProblemFew';
+  if(n > ZONE_MAX_CORNERS) return 'zoneProblemMany';
+  for(let i = 0; i < n; i++){
+    const next = points[(i + 1) % n];
+    if(points[i].lat === next.lat && points[i].lng === next.lng) return 'zoneProblemSame';
+  }
+  const lats = points.map(p => p.lat), lngs = points.map(p => p.lng);
+  const midLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+  if((Math.max(...lats) - Math.min(...lats)) * 110700 > ZONE_MAX_SPAN_M
+    || (Math.max(...lngs) - Math.min(...lngs)) * 111320 * Math.cos(midLat * Math.PI / 180) > ZONE_MAX_SPAN_M) return 'zoneProblemSize';
+  for(let i = 0; i < n; i++){
+    for(let j = i + 2; j < n; j++){
+      if(i === 0 && j === n - 1) continue;
+      if(zoneTouch(points[i], points[(i + 1) % n], points[j], points[(j + 1) % n])) return 'zoneProblemCross';
+    }
+  }
+  let twiceArea = 0;
+  for(let i = 0; i < n; i++){ const a = points[i], b = points[(i + 1) % n]; twiceArea += a.lng * b.lat - b.lng * a.lat; }
+  if(Math.abs(twiceArea) / 2 < 1e-10) return 'zoneProblemFlat';
+  for(let i = 0; i < n; i++){
+    const a = points[i], b = points[(i + 1) % n], c = points[(i + 2) % n];
+    if(zoneOrient(a, b, c) === 0 && (a.lng - b.lng) * (c.lng - b.lng) + (a.lat - b.lat) * (c.lat - b.lat) > 0) return 'zoneProblemCross';
+  }
+  return '';
+}
+// Same inside test the server uses (edges count as inside).
+function zoneContains(lat, lng){
+  let inside = false;
+  const p = zonePoints;
+  for(let i = 0, j = p.length - 1; i < p.length; j = i, i++){
+    const xi = p[i].lng, yi = p[i].lat, xj = p[j].lng, yj = p[j].lat;
+    const cross = (lng - xi) * (yj - yi) - (lat - yi) * (xj - xi);
+    if(Math.abs(cross) < 1e-12 && lng >= Math.min(xi, xj) && lng <= Math.max(xi, xj) && lat >= Math.min(yi, yj) && lat <= Math.max(yi, yj)) return true;
+    if((yi > lat) !== (yj > lat) && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function zoneCornerIcon(n){ return L.divIcon({ className:'zone-corner', html:String(n), iconSize:[24, 24], iconAnchor:[12, 12] }); }
+function zoneMidIcon(){ return L.divIcon({ className:'zone-mid', html:'+', iconSize:[18, 18], iconAnchor:[9, 9] }); }
+
+function zoneInsert(index, point){
+  if(zonePoints.length >= ZONE_MAX_CORNERS){ setFormNote('zoneNote', adminText('zoneProblemMany'), true); return; }
+  zonePoints.splice(index, 0, point);
+  zoneDirty = true;
+  zoneRender(); zoneRenderTable(); zoneUpdateStatus();
+}
+function zoneRemove(index){
+  if(zonePoints.length <= 3){ setFormNote('zoneNote', adminText('zoneProblemFew'), true); return; }
+  zonePoints.splice(index, 1);
+  zoneDirty = true;
+  zoneRender(); zoneRenderTable(); zoneUpdateStatus();
+}
+
+// Draws the outline, the numbered corner handles and the "+" handles on the edges.
+function zoneRender(){
+  if(!zoneMap) return;
+  const latlngs = zonePoints.map(p => [p.lat, p.lng]);
+  const style = { color: zonePoints.length >= 3 && zoneProblemKey(zonePoints) ? '#ff6b5e' : '#e3b23c', weight: 2, fillOpacity: .18 };
+  if(zonePoly) zonePoly.setLatLngs(latlngs).setStyle(style);
+  else zonePoly = L.polygon(latlngs, { ...style, interactive: false }).addTo(zoneMap);
+  zoneCornerMarkers.forEach(marker => marker.remove());
+  zoneMidMarkers.forEach(marker => marker.remove());
+  zoneCornerMarkers = []; zoneMidMarkers = [];
+  const n = zonePoints.length;
+  zonePoints.forEach((p, i) => {
+    const marker = L.marker([p.lat, p.lng], { draggable: true, icon: zoneCornerIcon(i + 1), keyboard: false, zIndexOffset: 500, title: `${adminText('zoneCorner')} ${i + 1}` }).addTo(zoneMap);
+    marker.on('drag', () => {
+      const at = marker.getLatLng().wrap();
+      zonePoints[i] = { lat: zoneRound(at.lat), lng: zoneRound(at.lng) };
+      zonePoly.setLatLngs(zonePoints.map(q => [q.lat, q.lng]));
+      zoneSyncRow(i);
+    });
+    marker.on('dragend', () => { zoneDirty = true; setTimeout(() => { zoneRender(); zoneUpdateStatus(); }, 0); });
+    marker.on('contextmenu', () => zoneRemove(i));
+    zoneCornerMarkers.push(marker);
+  });
+  for(let i = 0; n >= 2 && i < (n === 2 ? 1 : n); i++){
+    const a = zonePoints[i], b = zonePoints[(i + 1) % n];
+    const mid = { lat: zoneRound((a.lat + b.lat) / 2), lng: zoneRound((a.lng + b.lng) / 2) };
+    const handle = L.marker([mid.lat, mid.lng], { icon: zoneMidIcon(), keyboard: false, title: adminText('zoneAddCorner') }).addTo(zoneMap);
+    handle.on('click', () => zoneInsert(i + 1, mid));
+    zoneMidMarkers.push(handle);
+  }
+}
+
+function zoneInput(index, field){
+  const input = document.createElement('input');
+  input.inputMode = 'decimal'; input.autocomplete = 'off';
+  input.dataset.field = field;
+  input.value = zonePoints[index][field];
+  input.setAttribute('aria-label', `${adminText('zoneCorner')} ${index + 1} ${adminText(field === 'lat' ? 'cdLat' : 'cdLng')}`);
+  input.addEventListener('change', () => {
+    const text = input.value.trim();
+    const number = Number(text);
+    if(!text || !Number.isFinite(number) || Math.abs(number) > (field === 'lat' ? 90 : 180)){
+      input.value = zonePoints[index][field];
+      setFormNote('zoneNote', adminText('zoneBadCoord'), true);
+      return;
+    }
+    zonePoints[index] = { ...zonePoints[index], [field]: zoneRound(number) };
+    input.value = zonePoints[index][field];
+    zoneDirty = true;
+    zoneRender(); zoneUpdateStatus();
+  });
+  return input;
+}
+function zoneRenderTable(){
+  const box = document.getElementById('zoneCorners');
+  box.replaceChildren();
+  zonePoints.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'zone-row'; row.dataset.index = i;
+    const num = document.createElement('span');
+    num.className = 'zone-num'; num.textContent = i + 1;
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'action-btn danger'; del.textContent = adminText('zoneDelete');
+    del.disabled = zonePoints.length <= 3;
+    del.addEventListener('click', () => zoneRemove(i));
+    row.append(num, zoneInput(i, 'lat'), zoneInput(i, 'lng'), del);
+    box.appendChild(row);
+  });
+}
+function zoneSyncRow(index){
+  const row = document.querySelector(`#zoneCorners .zone-row[data-index="${index}"]`);
+  if(!row) return;
+  row.querySelector('[data-field="lat"]').value = zonePoints[index].lat;
+  row.querySelector('[data-field="lng"]').value = zonePoints[index].lng;
+}
+
+// Buttons, the line under the map, and the note next to Save.
+function zoneUpdateStatus(){
+  const problem = zoneProblemKey(zonePoints);
+  document.getElementById('zoneSaveBtn').disabled = zoneBusy || Boolean(problem) || !(zoneDirty || zoneSource !== 'database');
+  document.getElementById('zoneResetBtn').disabled = zoneBusy || zoneSource !== 'database';
+  document.getElementById('zoneSourceNote').textContent = adminText(zonePoints.length ? (zoneSource === 'database' ? 'zoneSourceDb' : 'zoneSourceFile') : 'zoneNoShape');
+  if(!zonePoints.length) setFormNote('zoneNote', '');
+  else if(problem) setFormNote('zoneNote', adminText(problem), true);
+  else if(zoneDirty) setFormNote('zoneNote', adminText('zoneUnsaved'));
+  else setFormNote('zoneNote', '');
+}
+function zoneFit(){
+  if(zonePoints.length >= 2) zoneMap.fitBounds(L.latLngBounds(zonePoints.map(p => [p.lat, p.lng])).pad(0.2));
+  else if(zoneRestaurantPin) zoneMap.setView([zoneRestaurantPin.lat, zoneRestaurantPin.lng], 16);
+  else zoneMap.setView([DEFAULT_MAP_VIEW.lat, DEFAULT_MAP_VIEW.lng], DEFAULT_MAP_VIEW.zoom);
+}
+// Puts what the server returned on screen: { polygon, source, pin }.
+function zoneApply(data, { fit = true } = {}){
+  zonePoints = (data.polygon || []).map(p => ({ lat: p.lat, lng: p.lng }));
+  zoneSource = data.source || 'none';
+  zoneRestaurantPin = data.pin || null;
+  zoneDirty = false;
+  if(zoneRestaurantMarker){ zoneRestaurantMarker.remove(); zoneRestaurantMarker = null; }
+  if(zoneRestaurantPin){
+    zoneRestaurantMarker = L.circleMarker([zoneRestaurantPin.lat, zoneRestaurantPin.lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#2f7bff', fillOpacity: 1 })
+      .addTo(zoneMap).bindTooltip(adminText('zoneRestaurant'));
+  }
+  zoneRender(); zoneRenderTable(); zoneUpdateStatus();
+  if(fit) zoneFit();
+}
+async function loadZoneEditor(){
+  if(zoneMap && zoneDirty){ zoneMap.invalidateSize(); return; }   // coming back to the tab: keep unsaved edits
+  setFormNote('zoneNote', '');
+  try{
+    await loadLeaflet();
+    const settings = await loadMapSettings();
+    if(!zoneMap){
+      zoneMap = L.map(document.getElementById('deliveryZoneMap'), { center: [DEFAULT_MAP_VIEW.lat, DEFAULT_MAP_VIEW.lng], zoom: DEFAULT_MAP_VIEW.zoom, worldCopyJump: true });
+      L.tileLayer(settings.tileUrl, { maxZoom: 19, attribution: settings.attribution, referrerPolicy: 'strict-origin-when-cross-origin' }).addTo(zoneMap);
+      zoneMap.on('click', zoneMapClick);
+    }
+    zoneMap.invalidateSize();
+    zoneApply(await adminRequest('/delivery-zone'));
+  }catch(error){
+    setFormNote('zoneNote', (error && error.message && zoneMap) ? error.message : adminText('zoneLoadFailed'), true);
+  }
+}
+// Language switch: redraw the parts of the editor that are built in script.
+function zoneRefreshText(){
+  if(!zoneMap) return;
+  zoneRender(); zoneRenderTable(); zoneUpdateStatus();
+}
+
+function zoneMapClick(event){
+  if(!zoneTesting) return;
+  if(zoneProblemKey(zonePoints)){ setFormNote('zoneTestNote', adminText('zoneTestNoArea'), true); return; }
+  const at = event.latlng.wrap();
+  const inside = zoneContains(at.lat, at.lng);
+  if(zoneTestMarker) zoneTestMarker.remove();
+  zoneTestMarker = L.circleMarker([at.lat, at.lng], { radius: 8, color: '#fff', weight: 2, fillColor: inside ? '#3ecf6e' : '#ff6b5e', fillOpacity: 1, interactive: false }).addTo(zoneMap);
+  setFormNote('zoneTestNote', adminText(inside ? 'zoneTestInside' : 'zoneTestOutside'), !inside);
+  if(inside) document.getElementById('zoneTestNote').classList.add('ok');
+}
+document.getElementById('zoneTestBtn').addEventListener('click', event => {
+  zoneTesting = !zoneTesting;
+  event.currentTarget.classList.toggle('primary', zoneTesting);
+  if(zoneMap) zoneMap.getContainer().style.cursor = zoneTesting ? 'crosshair' : '';
+  if(zoneTesting) setFormNote('zoneTestNote', adminText('zoneTestHint'));
+  else{
+    setFormNote('zoneTestNote', '');
+    if(zoneTestMarker){ zoneTestMarker.remove(); zoneTestMarker = null; }
+  }
+});
+
+document.getElementById('zoneAddBtn').addEventListener('click', () => {
+  if(!zoneMap) return;
+  const n = zonePoints.length;
+  let point;
+  if(n >= 3){
+    const a = zonePoints[n - 1], b = zonePoints[0];   // on the closing edge: drag it where it belongs
+    point = { lat: zoneRound((a.lat + b.lat) / 2), lng: zoneRound((a.lng + b.lng) / 2) };
+  }else if(n === 2){
+    const a = zonePoints[0], b = zonePoints[1];       // beside the first two corners, so they make a triangle
+    const dLat = b.lat - a.lat, dLng = b.lng - a.lng, length = Math.hypot(dLat, dLng) || 1;
+    point = { lat: zoneRound((a.lat + b.lat) / 2 - dLng / length * 0.0015), lng: zoneRound((a.lng + b.lng) / 2 + dLat / length * 0.0015) };
+  }else{
+    const centre = zoneMap.getCenter();
+    point = { lat: zoneRound(centre.lat + n * 0.0015), lng: zoneRound(centre.lng + n * 0.0015) };
+  }
+  zoneInsert(n, point);
+});
+
+// One "latitude, longitude" pair per line (commas, spaces, semicolons or tabs between the numbers).
+document.getElementById('zonePasteApply').addEventListener('click', () => {
+  const lines = document.getElementById('zonePasteText').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const points = [];
+  for(const line of lines){
+    const numbers = line.match(/-?\d+(?:\.\d+)?/g) || [];
+    const lat = Number(numbers[0]), lng = Number(numbers[1]);
+    if(numbers.length !== 2 || Math.abs(lat) > 90 || Math.abs(lng) > 180){ setFormNote('zoneNote', adminText('zonePasteBad'), true); return; }
+    points.push({ lat: zoneRound(lat), lng: zoneRound(lng) });
+  }
+  if(!points.length){ setFormNote('zoneNote', adminText('zonePasteBad'), true); return; }
+  if(points.length > 1 && points[0].lat === points[points.length - 1].lat && points[0].lng === points[points.length - 1].lng) points.pop();   // closing corner repeated
+  if(!zoneMap) return;
+  zonePoints = points;
+  zoneDirty = true;
+  zoneRender(); zoneRenderTable(); zoneUpdateStatus(); zoneFit();
+});
+
+document.getElementById('zoneSaveBtn').addEventListener('click', async () => {
+  if(zoneProblemKey(zonePoints)) return;
+  zoneBusy = true; zoneUpdateStatus();
+  setFormNote('zoneNote', adminText('deliverySaving'));
+  try{
+    const data = await adminRequest('/delivery-zone', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ polygon: zonePoints }),
+    });
+    zoneBusy = false;
+    zoneApply(data, { fit: false });
+    renderZoneStatus(data);
+    setFormNote('zoneNote', adminText('zoneSaved'));
+    document.getElementById('zoneNote').classList.add('ok');
+  }catch(error){
+    zoneBusy = false; zoneUpdateStatus();
+    setFormNote('zoneNote', error.message || adminText('zoneSaveFailed'), true);
+  }
+});
+document.getElementById('zoneResetBtn').addEventListener('click', async () => {
+  if(!window.confirm(adminText('zoneResetConfirm'))) return;
+  zoneBusy = true; zoneUpdateStatus();
+  try{
+    const data = await adminRequest('/delivery-zone', { method: 'DELETE' });
+    zoneBusy = false;
+    zoneApply(data);
+    renderZoneStatus(data);
+    setFormNote('zoneNote', adminText('zoneResetDone'));
+    document.getElementById('zoneNote').classList.add('ok');
+  }catch(error){
+    zoneBusy = false; zoneUpdateStatus();
+    setFormNote('zoneNote', error.message || adminText('zoneSaveFailed'), true);
+  }
+});
 document.getElementById('deliveryCostEnabled').addEventListener('change', event => {
   document.getElementById('deliveryCostAmount').disabled = !event.currentTarget.checked;
 });

@@ -303,6 +303,48 @@ router.put('/delivery-settings', asyncHandler(async (req, res) => {
   }
 }));
 
+// The delivery area boundary drawn in Admin -> Delivery: one polygon of real lat/lng corners.
+//   GET    -> { polygon: [{lat, lng}, ...] | null, source: 'database' | 'file' | 'none', pin, zoneStatus }
+//             (source 'file' = the starting shape from db/delivery-zone.json, not saved in the database yet)
+//   PUT    { polygon: [{lat, lng}, ...] } -> validated, saved, applies to the next order
+//   DELETE -> forgets the saved boundary and goes back to the starting shape from the file
+async function zoneEditorPayload() {
+  const shape = await deliveryZone.adminShape();
+  const zoneStatus = await deliveryZone.adminStatus().catch(() => null);
+  return { ...shape, zoneStatus };
+}
+
+router.get('/delivery-zone', asyncHandler(async (req, res) => {
+  try {
+    res.json(await zoneEditorPayload());
+  } catch (error) {
+    console.error('Could not load the delivery area:', error.message);
+    res.status(500).json({ error: 'Could not load the delivery area.' });
+  }
+}));
+
+router.put('/delivery-zone', asyncHandler(async (req, res) => {
+  const checked = deliveryZone.validateZonePolygon(req.body?.polygon);
+  if (!checked.ok) return res.status(checked.status).json({ error: checked.message, code: checked.code });
+  try {
+    await deliveryZone.saveZonePolygon(checked.polygon);
+    res.json(await zoneEditorPayload());
+  } catch (error) {
+    console.error('Could not save the delivery area:', error.message);
+    res.status(500).json({ error: 'Could not save the delivery area.' });
+  }
+}));
+
+router.delete('/delivery-zone', asyncHandler(async (req, res) => {
+  try {
+    await deliveryZone.clearZonePolygon();
+    res.json(await zoneEditorPayload());
+  } catch (error) {
+    console.error('Could not reset the delivery area:', error.message);
+    res.status(500).json({ error: 'Could not reset the delivery area.' });
+  }
+}));
+
 // GET /api/admin/categories
 router.get('/categories', asyncHandler(async (req, res) => {
   const { data, error } = await supabase
