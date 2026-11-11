@@ -454,6 +454,11 @@
     background:rgba(227,178,60,.08);
   }
   .status-note{font-size:calc(12px + var(--lang-add,0px)); text-align:center; color:var(--muted); margin-top:8px;}
+  .field-input.field-invalid, .field-textarea.field-invalid{border-color:#e5484d !important; box-shadow:0 0 0 3px rgba(229,72,77,.22);}
+  .field-error{color:#e5484d; font-size:calc(12px + var(--lang-add,0px)); font-weight:600; margin:6px 2px 0;}
+  .payment-recovery{padding:16px 0; text-align:center;}
+  .payment-recovery p{color:var(--text); margin:0 0 12px;}
+  .payment-recovery button{width:100%;}
   .primary-btn:disabled{opacity:.6; cursor:default;}
 
   /* "we deliver within the marked area" note under the pick-up / delivery toggle in the cart */
@@ -886,6 +891,7 @@
       </div>
       <div id="moyasarCheckout" hidden>
         <div id="moyasarForm" class="mysr-form"></div>
+        <div id="moyasarFailure" class="payment-recovery" role="alert" hidden></div>
         <button class="profile-secondary-btn" id="moyasarCancelBtn" type="button"></button>
       </div>
     </div>
@@ -925,7 +931,7 @@ const STR = {
        payBtn:'Continue to secure payment', processingPayment:'Preparing secure payment…', paymentDone:'Payment confirmed.',
        paymentCancel:'Back to order details', paymentNotConfigured:'Online payments are not available. Please contact the restaurant.',
        configLoadFailed:'Could not load checkout settings. Please refresh the page and try again.',
-       paymentFailed:'Payment was not completed. Please try again.', paymentPending:'Payment is still processing. Refresh this page in a moment to check again.', orderFailed:'Something went wrong. Please try again.',
+      paymentFailed:'Payment was not completed. Please try again.', paymentPending:'Payment is still processing. Refresh this page in a moment to check again.', orderFailed:'Something went wrong. Please try again.', detailsRequired:'Please fill in all required details.', fieldRequired:'This field is required.',
        zoneNote:'Home delivery covers the Al-Hamra’a area only. At checkout you will see the exact delivery area on the map and place a pin on your location. Outside the area, choose pick-up from the branch.',
        locLabel:'Delivery location:', locGps:'Use my current location', locSearchPh:'Search for your street or area...', locSearchBtn:'Search',
        locTap:'Tap the map to drop the pin on your delivery spot, then drag it to fine-tune.',
@@ -965,7 +971,7 @@ const STR = {
        payBtn:'المتابعة إلى الدفع الآمن', processingPayment:'جارٍ تجهيز الدفع الآمن…', paymentDone:'تم تأكيد الدفع.',
        paymentCancel:'العودة إلى تفاصيل الطلب', paymentNotConfigured:'الدفع الإلكتروني غير متاح. يرجى التواصل مع المطعم.',
        configLoadFailed:'تعذّر تحميل إعدادات الدفع. حدّث الصفحة وحاول مرة أخرى.',
-       paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', paymentPending:'لا تزال عملية الدفع قيد المعالجة. حدّث الصفحة بعد قليل للتحقق مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.',
+      paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', paymentPending:'لا تزال عملية الدفع قيد المعالجة. حدّث الصفحة بعد قليل للتحقق مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.', detailsRequired:'يرجى تعبئة جميع البيانات المطلوبة.', fieldRequired:'هذا الحقل مطلوب.',
        zoneNote:'التوصيل للمنازل يشمل منطقة الحمراء فقط. عند إتمام الطلب ستظهر لك منطقة التوصيل على الخريطة وتضع دبوساً على موقعك. خارج المنطقة، اختر الاستلام من الفرع.',
        locLabel:'موقع التوصيل:', locGps:'استخدم موقعي الحالي', locSearchPh:'ابحث عن شارعك أو حيّك...', locSearchBtn:'بحث',
        locTap:'اضغط على الخريطة لوضع الدبوس على موقع التوصيل، ثم اسحبه لضبطه.',
@@ -1005,7 +1011,7 @@ const STR = {
        payBtn:'محفوظ ادائیگی جاری رکھیں', processingPayment:'محفوظ ادائیگی تیار ہو رہی ہے…', paymentDone:'ادائیگی کی تصدیق ہو گئی۔',
        paymentCancel:'آرڈر کی تفصیلات پر واپس جائیں', paymentNotConfigured:'آن لائن ادائیگی دستیاب نہیں۔ براہ کرم ریسٹورنٹ سے رابطہ کریں۔',
        configLoadFailed:'چیک آؤٹ کی ترتیبات لوڈ نہیں ہو سکیں۔ صفحہ ریفریش کرکے دوبارہ کوشش کریں۔',
-       paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', paymentPending:'ادائیگی ابھی جاری ہے۔ دوبارہ جانچنے کے لیے تھوڑی دیر بعد صفحہ ریفریش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
+      paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', paymentPending:'ادائیگی ابھی جاری ہے۔ دوبارہ جانچنے کے لیے تھوڑی دیر بعد صفحہ ریفریش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔', detailsRequired:'براہ کرم تمام ضروری معلومات پُر کریں۔', fieldRequired:'یہ خانہ ضروری ہے۔',
        zoneNote:'ہوم ڈیلیوری صرف الحمراء کے علاقے میں ہے۔ چیک آؤٹ پر آپ کو نقشے پر ڈیلیوری کا علاقہ نظر آئے گا اور آپ اپنے مقام پر پن لگائیں گے۔ علاقے سے باہر برانچ سے پک اپ منتخب کریں۔',
        locLabel:'ڈیلیوری کا مقام:', locGps:'میرا موجودہ مقام استعمال کریں', locSearchPh:'اپنی گلی یا علاقہ تلاش کریں...', locSearchBtn:'تلاش',
        locTap:'ڈیلیوری کی جگہ پر پن لگانے کے لیے نقشے پر ٹیپ کریں، پھر اسے کھینچ کر درست کریں۔',
@@ -1045,7 +1051,7 @@ const STR = {
        payBtn:'继续安全付款', processingPayment:'正在准备安全付款…', paymentDone:'付款已确认。',
        paymentCancel:'返回订单详情', paymentNotConfigured:'暂无法在线付款，请联系餐厅。',
        configLoadFailed:'无法加载结账设置。请刷新页面后重试。',
-       paymentFailed:'付款未完成，请重试。', paymentPending:'付款仍在处理中。请稍后刷新此页面再次查询。', orderFailed:'出错了，请重试。',
+      paymentFailed:'付款未完成，请重试。', paymentPending:'付款仍在处理中。请稍后刷新此页面再次查询。', orderFailed:'出错了，请重试。', detailsRequired:'请填写所有必填信息。', fieldRequired:'此项为必填项。',
        zoneNote:'送货上门仅限 Al-Hamra’a 区域。结账时您会在地图上看到具体配送范围，并在您的位置放置图钉。范围之外请选择到店自取。',
        locLabel:'配送位置：', locGps:'使用我的当前位置', locSearchPh:'搜索您的街道或区域…', locSearchBtn:'搜索',
        locTap:'点击地图，把图钉放在您的收货位置，然后拖动微调。',
@@ -2643,16 +2649,31 @@ document.getElementById('checkoutBack').addEventListener('click', ()=>{
 function loadMoyasarForm(){
   if(window.Moyasar) return Promise.resolve();
   if(!window.moyasarScriptPromise){
-    window.moyasarScriptPromise = new Promise((resolve, reject)=>{
+    let scriptPromise;
+    scriptPromise = new Promise((resolve, reject)=>{
       const script = document.createElement('script');
       script.src = 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.js';
-      script.onload = resolve;
-      script.onerror = ()=>{
-        window.moyasarScriptPromise = null;
+      const onLoad = ()=>{
+        clearTimeout(loadTimer);
+        resolve();
+      };
+      const onError = ()=>{
+        clearTimeout(loadTimer);
+        if(window.moyasarScriptPromise === scriptPromise) window.moyasarScriptPromise = null;
         reject(new Error('Could not load the Moyasar payment form.'));
       };
+      const loadTimer = setTimeout(()=>{
+        script.removeEventListener('load', onLoad);
+        script.removeEventListener('error', onError);
+        script.remove();
+        if(window.moyasarScriptPromise === scriptPromise) window.moyasarScriptPromise = null;
+        reject(new Error('Timed out loading the Moyasar payment form.'));
+      }, 10000);
+      script.addEventListener('load', onLoad, { once:true });
+      script.addEventListener('error', onError, { once:true });
       document.head.appendChild(script);
     });
+    window.moyasarScriptPromise = scriptPromise;
   }
   return window.moyasarScriptPromise;
 }
@@ -2669,12 +2690,13 @@ function showMoyasarFailure(order, error, generation = moyasarInitGeneration){
   if(generation !== moyasarInitGeneration || !checkoutOverlay.classList.contains('is-open')) return;
   invalidateMoyasarInit();
   const formBox = document.getElementById('moyasarForm');
+  const recovery = document.getElementById('moyasarFailure');
   document.getElementById('checkoutDetails').hidden = true;
   document.getElementById('moyasarCheckout').hidden = false;
   formBox.replaceChildren();
+  recovery.replaceChildren();
 
   const message = document.createElement('p');
-  message.className = 'status-note';
   message.textContent = STR[lang].paymentFailed;
   const retry = document.createElement('button');
   retry.type = 'button';
@@ -2688,7 +2710,8 @@ function showMoyasarFailure(order, error, generation = moyasarInitGeneration){
       showMoyasarFailure(order, retryError, moyasarInitGeneration);
     }
   });
-  formBox.append(message, retry);
+  recovery.append(message, retry);
+  recovery.hidden = false;
   console.error('[Moyasar] payment form unavailable:', error);
 }
 
@@ -2708,6 +2731,9 @@ async function initializeMoyasarForm(order){
   }
   document.getElementById('checkoutDetails').hidden = true;
   document.getElementById('moyasarCheckout').hidden = false;
+  const recovery = document.getElementById('moyasarFailure');
+  recovery.hidden = true;
+  recovery.replaceChildren();
   document.getElementById('moyasarCancelBtn').textContent = STR[lang].paymentCancel;
 
   const callbackUrl = new URL('/menu', window.location.origin);
@@ -2718,10 +2744,15 @@ async function initializeMoyasarForm(order){
   formBox.replaceChildren();
   // Require real payment controls; a styled but empty mount can still have a nonzero height.
   moyasarInitTimer = setTimeout(()=>{
-    const hasPaymentControl = formBox.querySelector('form, input, select, button, iframe');
+    const hasVisiblePaymentControl = [...formBox.querySelectorAll('input, select, button, iframe')].some(control=>{
+      const style = getComputedStyle(control);
+      const bounds = control.getBoundingClientRect();
+      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0
+        && bounds.width > 0 && bounds.height > 0;
+    });
     const paymentView = document.getElementById('moyasarCheckout');
     if(generation === moyasarInitGeneration && formBox.isConnected && !paymentView.hidden
-      && checkoutOverlay.classList.contains('is-open') && !hasPaymentControl){
+      && checkoutOverlay.classList.contains('is-open') && !hasVisiblePaymentControl){
       showMoyasarFailure(order, new Error('Moyasar rendered no payment controls.'), generation);
     }
   }, 2500);
@@ -2736,7 +2767,7 @@ async function initializeMoyasarForm(order){
     methods: ['creditcard'],
     fixed_width: false,
     language: lang === 'ar' ? 'ar' : 'en',
-    on_failure: error=>console.error('[Moyasar] payment form failure:', error),
+    on_failure: error=>showMoyasarFailure(order, error, generation),
     on_completed: async payment=>{
       if(!payment || !payment.id) throw new Error('Moyasar did not return a payment ID.');
       const response = await fetch(`${API_BASE}/api/orders/payment/confirm`, {
@@ -2756,12 +2787,41 @@ async function initializeMoyasarForm(order){
 document.getElementById('moyasarCancelBtn').addEventListener('click', ()=>{
   invalidateMoyasarInit();
   document.getElementById('moyasarCheckout').hidden = true;
+  document.getElementById('moyasarFailure').hidden = true;
+  document.getElementById('moyasarFailure').replaceChildren();
   document.getElementById('moyasarForm').replaceChildren();
   document.getElementById('checkoutDetails').hidden = false;
   if(locMap) setTimeout(()=>locMap.invalidateSize(), 80);   // the map was hidden while the payment form was open
 });
 
 /* ---------- MOYASAR PAYMENT + WHATSAPP HANDOFF ---------- */
+const REQUIRED_CHECKOUT_FIELDS = ['checkoutName', 'checkoutPhone', 'checkoutAddress'];
+function clearCheckoutFieldError(id){
+  const field = document.getElementById(id);
+  if(!field) return;
+  field.classList.remove('field-invalid');
+  field.removeAttribute('aria-invalid');
+  document.getElementById(`${id}Error`)?.remove();
+  if(!document.querySelector('.field-invalid')) document.getElementById('checkoutStatusNote').textContent = '';
+}
+function clearCheckoutFieldErrors(){
+  REQUIRED_CHECKOUT_FIELDS.forEach(clearCheckoutFieldError);
+}
+function markCheckoutFieldInvalid(id){
+  const field = document.getElementById(id);
+  field.classList.add('field-invalid');
+  field.setAttribute('aria-invalid', 'true');
+  const error = document.createElement('p');
+  error.className = 'field-error';
+  error.id = `${id}Error`;
+  error.setAttribute('role', 'alert');
+  error.textContent = STR[lang].fieldRequired;
+  field.insertAdjacentElement('afterend', error);
+}
+REQUIRED_CHECKOUT_FIELDS.forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>clearCheckoutFieldError(id));
+});
+
 document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
   const name = document.getElementById('checkoutName').value.trim();
   const phone = document.getElementById('checkoutPhone').value.trim();
@@ -2769,8 +2829,17 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
   const statusNote = document.getElementById('checkoutStatusNote');
   const payBtn = document.getElementById('checkoutPayBtn');
 
-  if(!name || !phone || (orderType==='delivery' && !address)){
-    statusNote.textContent = STR[lang].orderFailed;
+  clearCheckoutFieldErrors();
+  const missingFields = [];
+  if(!name) missingFields.push('checkoutName');
+  if(!phone) missingFields.push('checkoutPhone');
+  if(orderType==='delivery' && !address) missingFields.push('checkoutAddress');
+  if(missingFields.length){
+    missingFields.forEach(markCheckoutFieldInvalid);
+    statusNote.textContent = STR[lang].detailsRequired;
+    const firstMissing = document.getElementById(missingFields[0]);
+    firstMissing.scrollIntoView({ block:'center', behavior:'smooth' });
+    firstMissing.focus({ preventScroll:true });
     return;
   }
   // The pay button is locked until the pin is inside the zone; this is the same check in case it was bypassed.
