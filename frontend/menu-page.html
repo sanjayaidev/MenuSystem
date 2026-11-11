@@ -2619,6 +2619,7 @@ function refreshCheckoutOrderType(){
   setMoney(document.getElementById('checkoutTotalVal'), cartTotal());
 }
 function openCheckout(){
+  invalidateMoyasarInit();
   document.getElementById('checkoutDetails').hidden = false;
   document.getElementById('moyasarCheckout').hidden = true;
   document.getElementById('moyasarForm').replaceChildren();
@@ -2634,6 +2635,7 @@ function openCheckout(){
   initLocation();   // after the overlay is visible, so the map gets its real size
 }
 document.getElementById('checkoutBack').addEventListener('click', ()=>{
+  invalidateMoyasarInit();
   closeOverlay(checkoutOverlay);
   openCart();
 });
@@ -2655,9 +2657,55 @@ function loadMoyasarForm(){
   return window.moyasarScriptPromise;
 }
 
+let moyasarInitGeneration = 0;
+let moyasarInitTimer = null;
+function invalidateMoyasarInit(){
+  moyasarInitGeneration++;
+  clearTimeout(moyasarInitTimer);
+  moyasarInitTimer = null;
+}
+
+function showMoyasarFailure(order, error, generation = moyasarInitGeneration){
+  if(generation !== moyasarInitGeneration || !checkoutOverlay.classList.contains('is-open')) return;
+  invalidateMoyasarInit();
+  const formBox = document.getElementById('moyasarForm');
+  document.getElementById('checkoutDetails').hidden = true;
+  document.getElementById('moyasarCheckout').hidden = false;
+  formBox.replaceChildren();
+
+  const message = document.createElement('p');
+  message.className = 'status-note';
+  message.textContent = STR[lang].paymentFailed;
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.className = 'profile-secondary-btn';
+  retry.textContent = STR[lang].payBtn;
+  retry.addEventListener('click', async ()=>{
+    retry.disabled = true;
+    try{
+      await initializeMoyasarForm(order);
+    }catch(retryError){
+      showMoyasarFailure(order, retryError, moyasarInitGeneration);
+    }
+  });
+  formBox.append(message, retry);
+  console.error('[Moyasar] payment form unavailable:', error);
+}
+
 async function initializeMoyasarForm(order){
-  await loadMoyasarForm();
-  if(!window.Moyasar) throw new Error('Moyasar payment form did not initialize.');
+  invalidateMoyasarInit();
+  const generation = moyasarInitGeneration;
+  try{
+    await loadMoyasarForm();
+    if(generation !== moyasarInitGeneration) return;
+    if(!window.Moyasar){
+      window.moyasarScriptPromise = null;
+      throw new Error('Moyasar payment form did not initialize.');
+    }
+  }catch(error){
+    showMoyasarFailure(order, error, generation);
+    return;
+  }
   document.getElementById('checkoutDetails').hidden = true;
   document.getElementById('moyasarCheckout').hidden = false;
   document.getElementById('moyasarCancelBtn').textContent = STR[lang].paymentCancel;
@@ -2668,14 +2716,16 @@ async function initializeMoyasarForm(order){
   console.info('[Moyasar] init', { amount: order.payment_amount, currency: order.currency, keyPrefix: String(MOYASAR_PUBLISHABLE_KEY).slice(0,8), version: window.Moyasar.version });
   const formBox = document.getElementById('moyasarForm');
   formBox.replaceChildren();
-  // If nothing visible has been drawn shortly after init(), say so on screen instead of leaving a blank page.
-  setTimeout(()=>{
-    if(formBox.isConnected && !formBox.hidden && formBox.offsetHeight < 40){
-      console.error('[Moyasar] form is empty/invisible 2.5s after init(). Check the console above for a Moyasar error, and that moyasar.js/css loaded (Network tab).');
-      formBox.textContent = 'The payment form did not load. Please go back and try again, or contact the restaurant.';
+  // Require real payment controls; a styled but empty mount can still have a nonzero height.
+  moyasarInitTimer = setTimeout(()=>{
+    const hasPaymentControl = formBox.querySelector('form, input, select, button, iframe');
+    const paymentView = document.getElementById('moyasarCheckout');
+    if(generation === moyasarInitGeneration && formBox.isConnected && !paymentView.hidden
+      && checkoutOverlay.classList.contains('is-open') && !hasPaymentControl){
+      showMoyasarFailure(order, new Error('Moyasar rendered no payment controls.'), generation);
     }
   }, 2500);
-  window.Moyasar.init({
+  const initResult = window.Moyasar.init({
     element: '#moyasarForm',
     amount: order.payment_amount,
     currency: order.currency,
@@ -2698,9 +2748,13 @@ async function initializeMoyasarForm(order){
       return response.json();
     }
   });
+  if(initResult && typeof initResult.catch === 'function'){
+    initResult.catch(error=>showMoyasarFailure(order, error, generation));
+  }
 }
 
 document.getElementById('moyasarCancelBtn').addEventListener('click', ()=>{
+  invalidateMoyasarInit();
   document.getElementById('moyasarCheckout').hidden = true;
   document.getElementById('moyasarForm').replaceChildren();
   document.getElementById('checkoutDetails').hidden = false;
@@ -2751,6 +2805,7 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     items: cartLines().map(l=>({ menu_item_id: l.item.id, quantity: l.qty }))
   };
 
+  let order = null;
   try{
     const res = await fetch(`${API_BASE}/api/orders`, {
       method:'POST',
@@ -2763,7 +2818,7 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
       failure.code = data.code;
       throw failure;
     }
-    const order = await res.json();
+    order = await res.json();
     lastOrder = order;
     sessionStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify({
       order_number: order.order_number,
@@ -2774,13 +2829,17 @@ document.getElementById('checkoutPayBtn').addEventListener('click', async ()=>{
     await initializeMoyasarForm(order);
   }catch(err){
     console.error('Could not start the Moyasar payment:', err);
-    document.getElementById('checkoutDetails').hidden = false;
-    document.getElementById('moyasarCheckout').hidden = true;
-    document.getElementById('moyasarForm').replaceChildren();
-    // The server refused the location: show the same guidance in the customer's language.
-    const zoneKey = { OUT_OF_ZONE:'locOutside', ZONE_UNAVAILABLE:'locZoneDown', LOCATION_REQUIRED:'locNeedPin' }[err.code];
-    if(err.code === 'OUT_OF_ZONE' && deliveryPin) deliveryPin = { lat:deliveryPin.lat, lng:deliveryPin.lng, rejected:true };
-    statusNote.textContent = zoneKey ? STR[lang][zoneKey] : (err.message || STR[lang].orderFailed);
+    if(order){
+      showMoyasarFailure(order, err);
+    }else{
+      document.getElementById('checkoutDetails').hidden = false;
+      document.getElementById('moyasarCheckout').hidden = true;
+      document.getElementById('moyasarForm').replaceChildren();
+      // The server refused the location: show the same guidance in the customer's language.
+      const zoneKey = { OUT_OF_ZONE:'locOutside', ZONE_UNAVAILABLE:'locZoneDown', LOCATION_REQUIRED:'locNeedPin' }[err.code];
+      if(err.code === 'OUT_OF_ZONE' && deliveryPin) deliveryPin = { lat:deliveryPin.lat, lng:deliveryPin.lng, rejected:true };
+      statusNote.textContent = zoneKey ? STR[lang][zoneKey] : (err.message || STR[lang].orderFailed);
+    }
   }finally{
     payBtn.disabled = false;
     delete checkoutOverlay.dataset.submitting;
