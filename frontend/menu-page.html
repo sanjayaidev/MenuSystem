@@ -2665,6 +2665,15 @@ async function initializeMoyasarForm(order){
   const callbackUrl = new URL('/menu', window.location.origin);
   callbackUrl.searchParams.set('payment_return', '1');
   callbackUrl.searchParams.set('lang', lang);
+  console.info('[Moyasar] init', { amount: order.payment_amount, currency: order.currency, keyPrefix: String(MOYASAR_PUBLISHABLE_KEY).slice(0,8), version: window.Moyasar.version });
+  window.addEventListener('error', e=>console.error('[Moyasar] window error:', e.message), { once:true });
+  setTimeout(()=>{
+    const box = document.getElementById('moyasarForm');
+    if(box && !box.children.length){
+      console.error('[Moyasar] form container is still empty 2s after init(); check publishable key, moyasar.js/css loading, and console errors above.');
+      box.textContent = 'The payment form did not load. Please go back and try again, or contact the restaurant.';
+    }
+  }, 2000);
   window.Moyasar.init({
     element: '#moyasarForm',
     amount: order.payment_amount,
