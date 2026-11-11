@@ -2690,10 +2690,19 @@ function showMoyasarFailure(order, error, generation = moyasarInitGeneration){
   if(generation !== moyasarInitGeneration || !checkoutOverlay.classList.contains('is-open')) return;
   invalidateMoyasarInit();
   const formBox = document.getElementById('moyasarForm');
-  const recovery = document.getElementById('moyasarFailure');
+  const paymentView = document.getElementById('moyasarCheckout');
+  const recovery = document.getElementById('moyasarFailure') || document.createElement('div');
+  if(!recovery.isConnected){
+    recovery.id = 'moyasarFailure';
+    recovery.className = 'payment-recovery';
+    recovery.setAttribute('role', 'alert');
+    const cancelButton = document.getElementById('moyasarCancelBtn');
+    if(cancelButton) cancelButton.insertAdjacentElement('beforebegin', recovery);
+    else paymentView.append(recovery);
+  }
   document.getElementById('checkoutDetails').hidden = true;
-  document.getElementById('moyasarCheckout').hidden = false;
-  formBox.replaceChildren();
+  paymentView.hidden = false;
+  if(formBox) formBox.replaceChildren();
   recovery.replaceChildren();
 
   const message = document.createElement('p');
@@ -2741,6 +2750,7 @@ async function initializeMoyasarForm(order){
   callbackUrl.searchParams.set('lang', lang);
   console.info('[Moyasar] init', { amount: order.payment_amount, currency: order.currency, keyPrefix: String(MOYASAR_PUBLISHABLE_KEY).slice(0,8), version: window.Moyasar.version });
   const formBox = document.getElementById('moyasarForm');
+  if(!formBox || !formBox.isConnected) throw new Error('Moyasar payment form mount is missing from the checkout page.');
   formBox.replaceChildren();
   // Require real payment controls; a styled but empty mount can still have a nonzero height.
   moyasarInitTimer = setTimeout(()=>{
@@ -2757,7 +2767,7 @@ async function initializeMoyasarForm(order){
     }
   }, 2500);
   const initResult = window.Moyasar.init({
-    element: '#moyasarForm',
+    element: formBox,
     amount: order.payment_amount,
     currency: order.currency,
     description: order.payment_description,
