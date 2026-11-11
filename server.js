@@ -95,6 +95,9 @@ app.get('/menu-page.html', sendMenuPage);
 app.use('/demo', express.static(path.join(__dirname, 'demo')));
 // Leaflet (map library) is served from this server, not a CDN, so the maps do not depend on a third party script.
 app.use('/vendor/leaflet', express.static(path.join(__dirname, 'node_modules', 'leaflet', 'dist'), { maxAge: '7d' }));
+app.get('/homepage.html', (req, res) => {
+  res.redirect(302, `/menu${req.originalUrl.slice('/homepage.html'.length)}`);
+});
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // New flow: / = landing page (index.html) -> /menu = menu page (menu-page.html).
