@@ -1,13 +1,27 @@
 {
-  "anchor": "restaurant",
-  "unit": "meters",
-  "approximate": true,
-  "note": "The delivery area as distances from the restaurant pin saved in Admin -> Contact: [metres east, metres north]. Corners, in order: Corniche (north-west), Chili's end (north-east), Al Andalus Rd (south-east), two along the south edge. Traced from the client's screenshot using a typical Google Maps zoom for the scale, so the far west side may be off by a few hundred metres. Check it on the checkout map, then delete the 'approximate' line.",
-  "points": [
-    [-2700, 280],
-    [-395, 1250],
-    [240, -635],
-    [-1060, -1080],
-    [-2225, -1065]
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Delivery area",
+        "approximate": true,
+        "note": "Real latitude/longitude corners (GeoJSON order: [longitude, latitude]), so the area does not move with the restaurant pin. Traced from the client's Google Maps screenshot and placed using the known positions of Chili's (Al Andalus Rd), InterContinental Jeddah and Nafoura (Corniche), which agree to within about 5 m, so each corner is good to roughly 10-25 m. Corners in order: Al Hamra Corniche (north-west), Palestine Rd / Al Andalus Rd at Chili's (north-east), a bend in Al Andalus Rd beside Chinese Bistro, Al Andalus Rd (south-east), then two along the southern edge. Check it in Admin -> Delivery, then click Save delivery area."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [39.152534, 21.518369],
+            [39.163707, 21.522814],
+            [39.165871, 21.517363],
+            [39.166705, 21.514357],
+            [39.160543, 21.51231],
+            [39.154796, 21.512324],
+            [39.152534, 21.518369]
+          ]
+        ]
+      }
+    }
   ]
 }

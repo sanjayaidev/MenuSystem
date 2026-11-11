@@ -7,13 +7,15 @@
 //   - The SHAPE is edited in Admin -> Delivery (map with draggable corners and a coordinate table) and saved as
 //     real latitude / longitude corners in site_settings 'delivery_zone': { polygon: [{ lat, lng }, ...] }. It does
 //     not depend on the restaurant pin, so moving the pin does not move the area.
-//   - Until an admin saves a shape there, the starting shape in db/delivery-zone.json is used. It is stored as
-//     distances from the restaurant (metres east and north), so it follows the pin. That file can also be plain
-//     GeoJSON with real coordinates ([lng, lat]). Admin shows it as editable corners and saving stores it in the
-//     database; "Reset to original shape" in Admin deletes the saved shape and returns to the file.
+//   - Until an admin saves a shape there, the starting shape in db/delivery-zone.json is used. It is GeoJSON with
+//     real coordinates ([lng, lat]), so it does not depend on the pin. The file can instead hold distances from
+//     the restaurant (metres east and north, "anchor": "restaurant"), which follow the pin. Admin shows the shape
+//     as editable corners and saving stores it in the database; "Reset to original shape" in Admin deletes the
+//     saved shape and returns to the file.
 //
-// While the switch is on but no pin has been saved yet, a pin-based zone can not be placed on the map, so delivery
-// is not restricted (it behaves as if switched off) until the pin is saved. The admin page says so.
+// While the switch is on but no pin has been saved yet, a pin-based (metres) shape can not be placed on the map,
+// so delivery is not restricted (it behaves as if switched off) until the pin is saved. A shape with real
+// coordinates does not need the pin. The admin page says which case applies.
 
 const fs = require('fs');
 const path = require('path');
