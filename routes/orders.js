@@ -178,7 +178,10 @@ router.post('/orders', orderLimiter, async (req, res) => {
     total,
   };
   let { data: order, error: orderErr } = await supabase.from('orders').insert(orderRow).select().single();
-  if (orderErr && isMissingColumn(orderErr)) {
+  // Only fall back when the *pin* columns are the missing ones. If a payment column (moyasar_reference) is the
+  // missing one, retrying without the pin columns would just fail again and hide the real cause.
+  const missingPinColumns = (e) => isMissingColumn(e) && /delivery_(lat|lng)/.test(`${e.message || ''} ${e.details || ''}`);
+  if (orderErr && missingPinColumns(orderErr)) {
     // db/01_tables.sql has not been re-run yet, so the pin columns do not exist: save the order without them
     // (the pin was still checked above) and keep the pin in memory for the tracking page.
     const { delivery_lat, delivery_lng, ...legacyRow } = orderRow;
@@ -187,17 +190,27 @@ router.post('/orders', orderLimiter, async (req, res) => {
     console.error('orders.delivery_lat / delivery_lng are missing: run db/01_tables.sql in the Supabase SQL Editor to store customer pins.');
   }
 
-  if (orderErr) return res.status(500).json({ error: orderErr.message });
+  if (orderErr) {
+    console.error(`[ORDER] #${requestId} could not save the order:`, orderErr.code, orderErr.message, orderErr.details || '');
+    if (isMissingColumn(orderErr)) {
+      console.error('[ORDER] The orders table is missing a column. Run db/06_moyasar_payments.sql (and db/01_tables.sql) in the Supabase SQL Editor, then run: NOTIFY pgrst, \'reload schema\';');
+      return res.status(500).json({ error: 'The order database is not fully set up yet. Please contact the restaurant.' });
+    }
+    return res.status(500).json({ error: orderErr.message });
+  }
+  debug('ORDER', `#${requestId} order saved`, { orderNumber: order.order_number, deliveryType: delivery_type, paymentStatus: order.payment_status });
 
   const rowsToInsert = orderItems.map((oi) => ({ ...oi, order_id: order.id }));
   const { error: itemsErr } = await supabase.from('order_items').insert(rowsToInsert);
 
   if (itemsErr) {
+    console.error(`[ORDER] #${requestId} could not save the order items:`, itemsErr.code, itemsErr.message);
     // best-effort rollback of the order header if line items fail to insert
     await supabase.from('orders').delete().eq('id', order.id);
     return res.status(500).json({ error: itemsErr.message });
   }
 
+  debug('ORDER', `#${requestId} order created, waiting for the payment form`, { orderNumber: order.order_number, paymentAmount: toMinorUnits(total) });
   res.status(201).json({
     id: order.id,
     order_number: order.order_number, // e.g. RH-260928-0042 — show this to the customer

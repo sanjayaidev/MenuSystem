@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Red House Catering — Menu</title>
-<link rel="stylesheet" href="https://cdn.moyasar.com/mpf/1.14.0/moyasar.css">
+<link rel="stylesheet" href="https://cdn.moyasar.com/mpf/1.15.0/moyasar.css">
 <script>document.documentElement.setAttribute('data-theme','dark');</script>
 <script src="order-status.js"></script>
 <!-- LIGHT/DARK TOGGLE DISABLED (dark only). Original theme script:
@@ -885,7 +885,7 @@
       </div>
       </div>
       <div id="moyasarCheckout" hidden>
-        <div id="moyasarForm"></div>
+        <div id="moyasarForm" class="mysr-form"></div>
         <button class="profile-secondary-btn" id="moyasarCancelBtn" type="button"></button>
       </div>
     </div>
@@ -2643,7 +2643,7 @@ function loadMoyasarForm(){
   if(!window.moyasarScriptPromise){
     window.moyasarScriptPromise = new Promise((resolve, reject)=>{
       const script = document.createElement('script');
-      script.src = 'https://cdn.moyasar.com/mpf/1.14.0/moyasar.js';
+      script.src = 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.js';
       script.onload = resolve;
       script.onerror = ()=>{
         window.moyasarScriptPromise = null;
@@ -2666,14 +2666,15 @@ async function initializeMoyasarForm(order){
   callbackUrl.searchParams.set('payment_return', '1');
   callbackUrl.searchParams.set('lang', lang);
   console.info('[Moyasar] init', { amount: order.payment_amount, currency: order.currency, keyPrefix: String(MOYASAR_PUBLISHABLE_KEY).slice(0,8), version: window.Moyasar.version });
-  window.addEventListener('error', e=>console.error('[Moyasar] window error:', e.message), { once:true });
+  const formBox = document.getElementById('moyasarForm');
+  formBox.replaceChildren();
+  // If nothing visible has been drawn shortly after init(), say so on screen instead of leaving a blank page.
   setTimeout(()=>{
-    const box = document.getElementById('moyasarForm');
-    if(box && !box.children.length){
-      console.error('[Moyasar] form container is still empty 2s after init(); check publishable key, moyasar.js/css loading, and console errors above.');
-      box.textContent = 'The payment form did not load. Please go back and try again, or contact the restaurant.';
+    if(formBox.isConnected && !formBox.hidden && formBox.offsetHeight < 40){
+      console.error('[Moyasar] form is empty/invisible 2.5s after init(). Check the console above for a Moyasar error, and that moyasar.js/css loaded (Network tab).');
+      formBox.textContent = 'The payment form did not load. Please go back and try again, or contact the restaurant.';
     }
-  }, 2000);
+  }, 2500);
   window.Moyasar.init({
     element: '#moyasarForm',
     amount: order.payment_amount,
@@ -2683,7 +2684,9 @@ async function initializeMoyasarForm(order){
     callback_url: callbackUrl.toString(),
     supported_networks: ['visa', 'mastercard', 'mada', 'amex', 'unionpay'],
     methods: ['creditcard'],
+    fixed_width: false,
     language: lang === 'ar' ? 'ar' : 'en',
+    on_failure: error=>console.error('[Moyasar] payment form failure:', error),
     on_completed: async payment=>{
       if(!payment || !payment.id) throw new Error('Moyasar did not return a payment ID.');
       const response = await fetch(`${API_BASE}/api/orders/payment/confirm`, {
