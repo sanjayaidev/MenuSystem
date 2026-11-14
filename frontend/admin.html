@@ -274,6 +274,22 @@
     .record-actions{flex-direction:column;}
   }
   @media(max-width:420px){.form-grid,.form-grid.compact,.special-food-fields,#itemForm .form-grid,#itemForm .form-grid.compact{grid-template-columns:1fr;}.image-tools{grid-template-columns:1fr;}}
+  /* Admin -> Cart boxes */
+  .cb-langs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .cb-langs button{border:1px solid var(--line); background:var(--surface); color:var(--text); border-radius:8px; padding:7px 14px; font:inherit; font-size:12px; font-weight:700; cursor:pointer;}
+  .cb-langs button.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
+  .cb-editor{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:12px;}
+  @media (min-width:900px){ .cb-editor{grid-template-columns:1fr 1fr;} }
+  .cb-fields fieldset{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 12px;}
+  .cb-fields legend{font-size:12px; font-weight:700; color:var(--gold); padding:0 6px;}
+  .cb-fields label{display:block; font-size:11px; color:var(--muted); margin:6px 0 2px;}
+  .cb-fields input{width:100%; box-sizing:border-box;}
+  .cb-preview{display:flex; gap:10px; direction:ltr; background:#0f0d0b; border:1px solid var(--line); border-radius:12px; padding:12px; max-width:420px;}
+  .cb-pbox{flex:1 1 0; min-width:0; text-align:center; border:5px solid var(--cbc,#e3b23c); border-radius:18px; padding:14px 8px 16px; background:#1b1814; color:#f4ede0; display:flex; flex-direction:column; gap:7px; overflow-wrap:anywhere;}
+  .cb-pbox.rtl{direction:rtl;}
+  .cb-pbox b{font-size:24px; font-weight:800; line-height:1.2; color:var(--cbc,#e3b23c);}
+  .cb-pbox span{font-size:22px; line-height:1.3;}
+  .cb-pbox span:empty{display:none;}
 </style>
 </head>
 <body>
@@ -316,6 +332,7 @@
     <nav class="admin-nav" aria-label="Admin sections" data-ui-aria-label="adminSections">
       <button class="admin-tab active" data-panel="ordersPanel" type="button" data-ui="orders">Orders</button>
       <button class="admin-tab" data-panel="deliverySettingsPanel" type="button" data-ui="deliveryTab">Delivery</button>
+      <button class="admin-tab" data-panel="cartBoxesPanel" type="button" data-ui="cbTab">Cart boxes</button>
       <button class="admin-tab" data-panel="categoriesPanel" type="button" data-ui="categories">Categories</button>
       <button class="admin-tab" data-panel="menuPanel" type="button" data-ui="menuItems">Menu items</button>
       <button class="admin-tab" data-panel="designPanel" type="button">Menu design</button>
@@ -333,6 +350,29 @@
       <button id="refreshBtn" style="background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer;" data-ui="refresh">Refresh</button>
     </div>
     <div id="ordersList"></div>
+    </section>
+
+    <section class="admin-panel" id="cartBoxesPanel" hidden>
+      <div class="panel-title"><h2 data-ui="cbTitle">Cart boxes</h2></div>
+      <div class="manager-form" id="cartBoxesForm">
+        <p class="form-note" style="margin:0 0 12px;" data-ui="cbHelp">Edit the two big boxes at the top of the basket. Pick a language, type the texts, and watch the preview. Leave a field empty to use the built-in text.</p>
+        <div class="cb-langs" id="cbLangs" role="tablist"></div>
+        <div class="cb-editor">
+          <div class="cb-fields" id="cbFields"></div>
+          <div class="cb-preview-wrap">
+            <p class="form-note" style="margin:0 0 8px;" data-ui="cbPreview">Preview (as the customer sees it)</p>
+            <div class="cb-preview" id="cbPreview"></div>
+          </div>
+        </div>
+        <div class="form-grid compact">
+          <label><span data-ui="cbColor">Outline colour</span><input id="cbColor" type="color" value="#e3b23c"></label>
+        </div>
+        <div class="form-actions">
+          <button class="action-btn primary" id="cbSave" type="button" data-ui="cbSave">Save cart boxes</button>
+          <button class="action-btn" id="cbClearLang" type="button" data-ui="cbClearLang">Use built-in texts for this language</button>
+          <span class="form-note" id="cbNote" role="status"></span>
+        </div>
+      </div>
     </section>
 
     <section class="admin-panel" id="deliverySettingsPanel" hidden>
@@ -1264,7 +1304,7 @@ const POSTER_ADMIN_STRINGS = {
 Object.keys(POSTER_ADMIN_STRINGS).forEach(code => Object.assign(ADMIN_UI_STRINGS[code], POSTER_ADMIN_STRINGS[code]));
 
 const DELIVERY_ADMIN_STRINGS = {
-  en: { deliveryTab:'Delivery', deliveryTitle:'Delivery cost', deliveryHint:'Choose whether to charge a delivery fee and set the amount. Pickup remains free.',
+  en: { cbTab:'Cart boxes', cbTitle:'Cart boxes', cbHelp:'Edit the two big boxes at the top of the basket. Pick a language, type the texts, and watch the preview. Leave a field empty to use the built-in text.', cbPreview:'Preview (as the customer sees it)', cbColor:'Outline colour', cbSave:'Save cart boxes', cbClearLang:'Use built-in texts for this language', cbSaving:'Saving…', cbSaved:'Saved. The basket shows the new texts now.', cbSaveFailed:'Could not save the cart boxes.', cbLoadFailed:'Could not load the cart boxes.', cbBoxDelivery:'Left box: Home Delivery', cbBoxPickup:'Right box: Pick Up', cbFieldTitle:'Title', cbFieldLine1:'Line 1', cbFieldLine2:'Line 2', cbFieldLine3:'Line 3', deliveryTab:'Delivery', deliveryTitle:'Delivery cost', deliveryHint:'Choose whether to charge a delivery fee and set the amount. Pickup remains free.',
     deliveryCharge:'Charge a delivery fee', deliveryFee:'Delivery fee', deliverySave:'Save delivery settings',
     zoneEnable:'Only deliver inside the delivery area',
     zoneOk:'The delivery area is active. It is placed around the restaurant pin saved in Contact, so moving the pin moves the area. Customers drop a pin at checkout and cannot pay for delivery outside it.',
@@ -1274,7 +1314,7 @@ const DELIVERY_ADMIN_STRINGS = {
     zoneApprox:'The shape is still approximate: please check it on the checkout map.',
     deliverySaved:'Delivery settings saved.', deliverySaving:'Saving...', deliveryLoadFailed:'Could not load delivery settings.',
     deliverySaveFailed:'Could not save delivery settings.', deliveryAmountInvalid:'Enter a non-negative amount with at most two decimal places.' },
-  ar: { deliveryTab:'التوصيل', deliveryTitle:'رسوم التوصيل', deliveryHint:'اختر ما إذا كنت تريد فرض رسوم توصيل وحدد المبلغ. الاستلام من الفرع مجاني.',
+  ar: { cbTab:'صناديق السلة', cbTitle:'صناديق السلة', cbHelp:'عدّل الصندوقين الكبيرين أعلى السلة. اختر اللغة واكتب النصوص وشاهد المعاينة. اترك الحقل فارغاً لاستخدام النص الافتراضي.', cbPreview:'معاينة (كما يراها العميل)', cbColor:'لون الإطار', cbSave:'حفظ صناديق السلة', cbClearLang:'استخدام النصوص الافتراضية لهذه اللغة', cbSaving:'جارٍ الحفظ…', cbSaved:'تم الحفظ. تظهر النصوص الجديدة في السلة الآن.', cbSaveFailed:'تعذر حفظ صناديق السلة.', cbLoadFailed:'تعذر تحميل صناديق السلة.', cbBoxDelivery:'الصندوق الأيسر: توصيل للمنزل', cbBoxPickup:'الصندوق الأيمن: استلام', cbFieldTitle:'العنوان', cbFieldLine1:'السطر 1', cbFieldLine2:'السطر 2', cbFieldLine3:'السطر 3', deliveryTab:'التوصيل', deliveryTitle:'رسوم التوصيل', deliveryHint:'اختر ما إذا كنت تريد فرض رسوم توصيل وحدد المبلغ. الاستلام من الفرع مجاني.',
     deliveryCharge:'فرض رسوم توصيل', deliveryFee:'رسوم التوصيل', deliverySave:'حفظ إعدادات التوصيل',
     zoneEnable:'التوصيل داخل منطقة التوصيل فقط',
     zoneOk:'منطقة التوصيل مفعّلة. تُحدَّد حول دبوس المطعم المحفوظ في صفحة التواصل، فتنتقل المنطقة عند تحريك الدبوس. يضع العميل دبوساً عند إتمام الطلب ولا يمكنه الدفع للتوصيل خارج المنطقة.',
@@ -1284,7 +1324,7 @@ const DELIVERY_ADMIN_STRINGS = {
     zoneApprox:'شكل المنطقة تقريبي حتى الآن: يرجى مراجعته على خريطة إتمام الطلب.',
     deliverySaved:'تم حفظ إعدادات التوصيل.', deliverySaving:'جارٍ الحفظ...', deliveryLoadFailed:'تعذّر تحميل إعدادات التوصيل.',
     deliverySaveFailed:'تعذّر حفظ إعدادات التوصيل.', deliveryAmountInvalid:'أدخل مبلغاً غير سالب وبحد أقصى منزلتين عشريتين.' },
-  ur: { deliveryTab:'ڈیلیوری', deliveryTitle:'ڈیلیوری فیس', deliveryHint:'منتخب کریں کہ ڈیلیوری فیس لینی ہے یا نہیں، اور رقم درج کریں۔ برانچ سے پک اَپ مفت ہے۔',
+  ur: { cbTab:'کارٹ باکسز', cbTitle:'کارٹ باکسز', cbHelp:'ٹوکری کے اوپر والے دونوں بڑے باکس تبدیل کریں۔ زبان منتخب کریں، متن لکھیں اور پیش منظر دیکھیں۔ پہلے سے موجود متن کے لیے خانہ خالی چھوڑ دیں۔', cbPreview:'پیش منظر (جیسا گاہک دیکھتا ہے)', cbColor:'کنارے کا رنگ', cbSave:'کارٹ باکسز محفوظ کریں', cbClearLang:'اس زبان کے لیے پہلے سے موجود متن استعمال کریں', cbSaving:'محفوظ ہو رہا ہے…', cbSaved:'محفوظ ہو گیا۔ ٹوکری میں اب نیا متن نظر آتا ہے۔', cbSaveFailed:'کارٹ باکسز محفوظ نہیں ہو سکے۔', cbLoadFailed:'کارٹ باکسز لوڈ نہیں ہو سکے۔', cbBoxDelivery:'بایاں باکس: ہوم ڈیلیوری', cbBoxPickup:'دایاں باکس: پک اپ', cbFieldTitle:'عنوان', cbFieldLine1:'سطر 1', cbFieldLine2:'سطر 2', cbFieldLine3:'سطر 3', deliveryTab:'ڈیلیوری', deliveryTitle:'ڈیلیوری فیس', deliveryHint:'منتخب کریں کہ ڈیلیوری فیس لینی ہے یا نہیں، اور رقم درج کریں۔ برانچ سے پک اَپ مفت ہے۔',
     deliveryCharge:'ڈیلیوری فیس وصول کریں', deliveryFee:'ڈیلیوری فیس', deliverySave:'ڈیلیوری کی ترتیبات محفوظ کریں',
     zoneEnable:'صرف ڈیلیوری کے علاقے کے اندر ڈیلیوری کریں',
     zoneOk:'ڈیلیوری کا علاقہ فعال ہے۔ یہ رابطہ صفحے میں محفوظ ریستوران کے پن کے گرد بنتا ہے، اس لیے پن ہٹانے سے علاقہ بھی ہٹ جاتا ہے۔ گاہک چیک آؤٹ پر پن لگاتا ہے اور علاقے سے باہر ڈیلیوری کی ادائیگی نہیں کر سکتا۔',
@@ -1294,7 +1334,7 @@ const DELIVERY_ADMIN_STRINGS = {
     zoneApprox:'علاقے کی شکل ابھی تخمینی ہے: براہ کرم چیک آؤٹ کے نقشے پر اسے جانچ لیں۔',
     deliverySaved:'ڈیلیوری کی ترتیبات محفوظ ہو گئیں۔', deliverySaving:'محفوظ ہو رہا ہے...', deliveryLoadFailed:'ڈیلیوری کی ترتیبات لوڈ نہیں ہو سکیں۔',
     deliverySaveFailed:'ڈیلیوری کی ترتیبات محفوظ نہیں ہو سکیں۔', deliveryAmountInvalid:'صفر یا اس سے زیادہ رقم درج کریں، زیادہ سے زیادہ دو اعشاری ہندسوں کے ساتھ۔' },
-  zh: { deliveryTab:'配送', deliveryTitle:'配送费用', deliveryHint:'选择是否收取配送费并设置金额。到店自取免费。',
+  zh: { cbTab:'购物车方框', cbTitle:'购物车方框', cbHelp:'编辑购物车顶部的两个大方框。选择语言、输入文字并查看预览。留空则使用内置文字。', cbPreview:'预览（顾客看到的样子）', cbColor:'边框颜色', cbSave:'保存购物车方框', cbClearLang:'此语言使用内置文字', cbSaving:'正在保存…', cbSaved:'已保存。购物车现在显示新文字。', cbSaveFailed:'无法保存购物车方框。', cbLoadFailed:'无法加载购物车方框。', cbBoxDelivery:'左侧方框：送货上门', cbBoxPickup:'右侧方框：到店自取', cbFieldTitle:'标题', cbFieldLine1:'第 1 行', cbFieldLine2:'第 2 行', cbFieldLine3:'第 3 行', deliveryTab:'配送', deliveryTitle:'配送费用', deliveryHint:'选择是否收取配送费并设置金额。到店自取免费。',
     deliveryCharge:'收取配送费', deliveryFee:'配送费', deliverySave:'保存配送设置',
     zoneEnable:'仅在配送范围内送货',
     zoneOk:'配送范围已启用。它以“联系方式”中保存的餐厅图钉为中心，移动图钉范围也会随之移动。顾客在结账时放置图钉，范围之外无法支付送货订单。',
@@ -1729,6 +1769,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     if(tab.dataset.panel === 'musicPanel') loadMusic();
     if(tab.dataset.panel === 'contactPanel') loadContact();
     if(tab.dataset.panel === 'deliverySettingsPanel') loadDeliverySettings();
+    if(tab.dataset.panel === 'cartBoxesPanel') loadCartBoxes();
   });
 });
 
@@ -4209,6 +4250,100 @@ document.getElementById('deliverySettingsForm').addEventListener('submit', async
     setFormNote('deliverySettingsNote', adminText('deliverySaved'));
   }catch(error){
     setFormNote('deliverySettingsNote', error.message || adminText('deliverySaveFailed'), true);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+/* ---------- cart boxes: edit the texts of the two big basket boxes (4 languages) with a live preview ---------- */
+var cbData = null, cbLang = 'en';
+const CB_LANGS = [['en','English'], ['ar','العربية'], ['ur','اردو'], ['zh','中文']];
+const CB_FIELDS = ['title','line1','line2','line3'];
+const CB_FIELD_KEYS = { title:'cbFieldTitle', line1:'cbFieldLine1', line2:'cbFieldLine2', line3:'cbFieldLine3' };
+
+function cbShown(box, field, lang){
+  const typed = cbData.saved[box][field][lang];
+  return (typed && typed.trim()) ? typed.trim() : (cbData.defaults[box][field][lang] || '');
+}
+function renderCartBoxPreview(){
+  const color = document.getElementById('cbColor').value;
+  const rtl = ['ar','ur'].includes(cbLang);
+  const preview = document.getElementById('cbPreview');
+  preview.replaceChildren();
+  ['delivery','pickup'].forEach(box=>{
+    const el = document.createElement('div');
+    el.className = 'cb-pbox' + (rtl ? ' rtl' : '');
+    el.style.setProperty('--cbc', color);
+    CB_FIELDS.forEach(field=>{
+      const node = document.createElement(field === 'title' ? 'b' : 'span');
+      node.textContent = cbShown(box, field, cbLang);
+      el.appendChild(node);
+    });
+    preview.appendChild(el);
+  });
+}
+function renderCartBoxFields(){
+  const langs = document.getElementById('cbLangs');
+  langs.replaceChildren();
+  CB_LANGS.forEach(([code, label])=>{
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label; b.className = code === cbLang ? 'active' : '';
+    b.addEventListener('click', ()=>{ cbLang = code; renderCartBoxFields(); });
+    langs.appendChild(b);
+  });
+  const wrap = document.getElementById('cbFields');
+  wrap.replaceChildren();
+  [['delivery','cbBoxDelivery'], ['pickup','cbBoxPickup']].forEach(([box, legendKey])=>{
+    const set = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    legend.textContent = adminText(legendKey);
+    set.appendChild(legend);
+    CB_FIELDS.forEach(field=>{
+      const label = document.createElement('label');
+      label.textContent = adminText(CB_FIELD_KEYS[field]);
+      const input = document.createElement('input');
+      input.type = 'text'; input.className = 'field-input';
+      input.maxLength = field === 'title' ? 40 : 80;
+      input.dir = ['ar','ur'].includes(cbLang) ? 'rtl' : 'ltr';
+      input.value = cbData.saved[box][field][cbLang] || '';
+      input.placeholder = cbData.defaults[box][field][cbLang] || '';
+      input.addEventListener('input', ()=>{ cbData.saved[box][field][cbLang] = input.value; renderCartBoxPreview(); });
+      label.appendChild(input);
+      set.appendChild(label);
+    });
+    wrap.appendChild(set);
+  });
+  renderCartBoxPreview();
+}
+async function loadCartBoxes(){
+  try{
+    cbData = await adminRequest('/cart-boxes');
+    document.getElementById('cbColor').value = cbData.saved.color || cbData.defaults.color;
+    renderCartBoxFields();
+    setFormNote('cbNote', '');
+  }catch(error){
+    setFormNote('cbNote', error.message || adminText('cbLoadFailed'), true);
+  }
+}
+document.getElementById('cbColor').addEventListener('input', ()=>{ if(cbData) renderCartBoxPreview(); });
+document.getElementById('cbClearLang').addEventListener('click', ()=>{
+  if(!cbData) return;
+  ['delivery','pickup'].forEach(box=>CB_FIELDS.forEach(field=>{ cbData.saved[box][field][cbLang] = ''; }));
+  renderCartBoxFields();
+});
+document.getElementById('cbSave').addEventListener('click', async ()=>{
+  if(!cbData) return;
+  const button = document.getElementById('cbSave');
+  button.disabled = true;
+  setFormNote('cbNote', adminText('cbSaving'));
+  try{
+    const body = { color:document.getElementById('cbColor').value, delivery:cbData.saved.delivery, pickup:cbData.saved.pickup };
+    cbData = await adminRequest('/cart-boxes', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    document.getElementById('cbColor').value = cbData.saved.color;
+    renderCartBoxFields();
+    setFormNote('cbNote', adminText('cbSaved'));
+  }catch(error){
+    setFormNote('cbNote', error.message || adminText('cbSaveFailed'), true);
   }finally{
     button.disabled = false;
   }

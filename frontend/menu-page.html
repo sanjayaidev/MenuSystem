@@ -384,14 +384,20 @@
   .qty-stepper .qty-val{min-width:16px; text-align:center; font-weight:700;}
 
   /* cart / order type toggle */
-  .order-type{display:flex; gap:10px; padding:0 16px 14px;}
-  .order-type button{
-    flex:1; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--text);
-    font-family:inherit; font-size:calc(13px + var(--lang-add,0px)); font-weight:600; padding:12px 8px; cursor:pointer;
+  /* two big choice boxes: Home Delivery (left) and Pick Up (right). Sizes: title one step above the menu titles (22px), body text at the menu title size. */
+  .order-type{display:flex; gap:10px; padding:0 16px 14px; direction:ltr; --cb-color:var(--gold); --cb-title:calc(24px + var(--lang-add,0px)); --cb-body:calc(22px + var(--lang-add,0px));}
+  .choice-box{
+    flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px; text-align:center;
+    border:5px solid var(--cb-color); border-radius:18px; background:var(--surface); color:var(--text);
+    font-family:inherit; padding:16px 8px 18px; cursor:pointer; overflow-wrap:break-word; hyphens:manual;
+    transition:background .15s, box-shadow .15s, transform .15s;
   }
-  .order-type button.active{background:var(--gold); color:#1a1408; border-color:var(--gold);}
-  .order-type button .free-tag{color:#5fbf7a; font-weight:700; margin-inline-end:4px;}
-  .order-type button.active .free-tag{color:#1a1408;}
+  html[dir="rtl"] .choice-box{direction:rtl;}
+  .choice-box:focus-visible{outline:3px solid var(--text); outline-offset:3px;}
+  .choice-box.active{background:color-mix(in srgb, var(--cb-color) 22%, var(--surface)); box-shadow:0 0 0 3px color-mix(in srgb, var(--cb-color) 35%, transparent), 0 8px 22px rgba(0,0,0,.35);}
+  .choice-box .cb-title{font-size:var(--cb-title); font-weight:800; line-height:1.2; color:var(--cb-color);}
+  .choice-box .cb-line{font-size:var(--cb-body); font-weight:500; line-height:1.3;}
+  .choice-box .cb-line:empty{display:none;}
 
   .cart-list{padding:0 16px; flex:0 1 auto; min-height:0; max-height:42svh; overflow-y:auto;}
   .cart-row{
@@ -462,10 +468,9 @@
   .primary-btn:disabled{opacity:.6; cursor:default;}
 
   /* "we deliver within the marked area" note under the pick-up / delivery toggle in the cart */
-  .zone-note{margin:-4px 16px 12px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:rgba(227,178,60,.07); color:var(--muted); font-size:calc(12.5px + var(--lang-add,0px)); line-height:1.5;}
-  .zone-note[hidden]{display:none;}
 
   /* delivery location (pin + search) in the checkout */
+  #pickupBlock[hidden]{display:none;}
   #locBlock[hidden], .loc-btn[hidden], .loc-results[hidden], .loc-hint[hidden]{display:none;}
   .loc-banner{border:1px solid var(--gold); background:rgba(227,178,60,.08); color:var(--text); border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:calc(13px + var(--lang-add,0px)); line-height:1.5;}
   .loc-banner.is-ok{border-color:#3fa56b; background:rgba(63,165,107,.14);}
@@ -748,10 +753,13 @@
       <span class="count-pill" id="cartCountPill">0</span>
     </div>
     <div class="order-type" id="orderTypeRow">
-      <button data-type="pickup" id="pickupBtn"></button>
-      <button data-type="delivery" id="deliveryBtn"></button>
+      <button type="button" class="choice-box" data-type="delivery" id="deliveryBtn" aria-pressed="true">
+        <span class="cb-title"></span><span class="cb-line"></span><span class="cb-line"></span><span class="cb-line"></span>
+      </button>
+      <button type="button" class="choice-box" data-type="pickup" id="pickupBtn" aria-pressed="false">
+        <span class="cb-title"></span><span class="cb-line"></span><span class="cb-line"></span><span class="cb-line"></span>
+      </button>
     </div>
-    <p class="zone-note" id="zoneNote" hidden></p>
     <div id="cartEmptyState" class="empty-cart">
       <div class="empty-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
@@ -848,18 +856,20 @@
     </div>
     <div class="checkout-body">
       <div id="checkoutDetails">
-      <p class="checkout-branch" id="checkoutBranch"></p>
-      <div class="checkout-subrow"><span id="checkoutTypeLabel"></span><span id="checkoutTypeVal"></span></div>
-
-      <p class="field-label" id="checkoutContactLabel"></p>
       <p class="field-label" id="nameLabel"></p>
       <input class="field-input" id="checkoutName" type="text">
       <p class="field-label" id="phoneLabel"></p>
       <input class="field-input" id="checkoutPhone" type="tel" placeholder="+__ _________">
+      <div id="pickupBlock" hidden>
+        <p class="field-label" id="pickupMapLabel"></p>
+        <div class="loc-map" id="pickupMap" dir="ltr"></div>
+        <p class="loc-hint" id="pickupMapNote"></p>
+      </div>
       <div id="addressWrap">
         <div id="locBlock" hidden>
           <p class="field-label" id="locLabel"></p>
           <div class="loc-banner" id="locBanner" role="status" aria-live="polite"></div>
+          <div class="loc-map" id="locMap" dir="ltr"></div>
           <button type="button" class="loc-btn wide" id="locGpsBtn"></button>
           <div class="loc-row">
             <input class="field-input" id="locSearchInput" type="search" autocomplete="off" maxlength="120" enterkeyhint="search">
@@ -867,7 +877,6 @@
           </div>
           <p class="loc-hint" id="locSearchMsg" role="status" aria-live="polite" hidden></p>
           <ul class="loc-results" id="locResults" hidden></ul>
-          <div class="loc-map" id="locMap" dir="ltr"></div>
           <button type="button" class="loc-btn wide loc-pickup" id="locPickupBtn" hidden></button>
         </div>
         <p class="field-label" id="addressLabel"></p>
@@ -884,13 +893,13 @@
         <div class="summary-line"><span id="checkoutSubLabel"></span><span id="checkoutSubVal"></span></div>
         <div class="summary-line" id="checkoutDeliveryLine"><span id="checkoutDeliveryLabel"></span><span id="checkoutDeliveryVal"></span></div>
         <div class="summary-line final"><span id="checkoutTotalLabel"></span><span id="checkoutTotalVal"></span></div>
-        <p class="legal-note" id="checkoutLegalNote"></p>
         <button class="primary-btn wa-btn" id="checkoutPayBtn"></button>
         <p class="status-note" id="checkoutStatusNote"></p>
       </div>
       </div>
       <div id="moyasarCheckout" hidden>
         <div id="moyasarForm" class="mysr-form"></div>
+        <p class="legal-note" id="checkoutLegalNote"></p>
         <div id="moyasarFailure" class="payment-recovery" role="alert" hidden></div>
         <button class="profile-secondary-btn" id="moyasarCancelBtn" type="button"></button>
       </div>
@@ -924,7 +933,7 @@ const STR = {
        cartEmptyTitle:'The basket is currently empty.', cartEmptyText:'Enjoy the most delicious meals and order now!',
        browseMenu:'Browse the menu', subtotal:'Subtotal:', deliveryFees:'Delivery fees:', finalTotal:'Final total:',
        completeOrder:'Complete your order now', addToCart:'Add to cart', calLabel:'Calories',
-       checkoutTitle:'Checkout', requestType:'Request type:', customerContact:'Customer contact information:',
+       checkoutTitle:'Checkout', pickupMapLabel:'Our branch on the map', pickupMapFailed:'The map could not be loaded.',
        fullName:'Full name:', fullNamePh:'Enter your name...', mobileNumber:'Mobile number (WhatsApp/call):',
        deliveryAddress:'Delivery address:', deliveryAddressPh:'Neighborhood, street, building/villa, apartment...',
        paymentMethod:'Payment method:', paymentProvider:'Secure card payment by Moyasar',
@@ -932,7 +941,6 @@ const STR = {
        paymentCancel:'Back to order details', paymentNotConfigured:'Online payments are not available. Please contact the restaurant.',
        configLoadFailed:'Could not load checkout settings. Please refresh the page and try again.',
       paymentFailed:'Payment was not completed. Please try again.', paymentPending:'Payment is still processing. Refresh this page in a moment to check again.', orderFailed:'Something went wrong. Please try again.', detailsRequired:'Please fill in all required details.', fieldRequired:'This field is required.',
-       zoneNote:'Home delivery covers the Al-Hamra’a area only. At checkout you will see the exact delivery area on the map and place a pin on your location. Outside the area, choose pick-up from the branch.',
        locLabel:'Delivery location:', locGps:'Use my current location', locSearchPh:'Search for your street or area...', locSearchBtn:'Search',
        locTap:'Tap the map to drop the pin on your delivery spot, then drag it to fine-tune.',
        locDenied:'Location access is disabled. Please search for your address, or tap the map to drop the pin on your delivery spot.',
@@ -964,7 +972,7 @@ const STR = {
        cartEmptyTitle:'السلة فارغة حالياً.', cartEmptyText:'استمتع بألذ الأطباق واطلب وجبتك الآن!',
        browseMenu:'تصفح القائمة', subtotal:'المجموع الفرعي:', deliveryFees:'رسوم التوصيل:', finalTotal:'الإجمالي النهائي:',
        completeOrder:'أكمل طلبك الآن', addToCart:'أضف إلى السلة', calLabel:'سعرة حرارية',
-       checkoutTitle:'إتمام الطلب', requestType:'نوع الطلب:', customerContact:'بيانات التواصل:',
+       checkoutTitle:'إتمام الطلب', pickupMapLabel:'موقع فرعنا على الخريطة', pickupMapFailed:'تعذر تحميل الخريطة.',
        fullName:'الاسم الكامل:', fullNamePh:'أدخل اسمك...', mobileNumber:'رقم الجوال (واتساب/اتصال):',
        deliveryAddress:'عنوان التوصيل:', deliveryAddressPh:'الحي، الشارع، رقم المبنى/الفيلا، الشقة...',
        paymentMethod:'طريقة الدفع:', paymentProvider:'دفع آمن بالبطاقة عبر Moyasar',
@@ -972,7 +980,6 @@ const STR = {
        paymentCancel:'العودة إلى تفاصيل الطلب', paymentNotConfigured:'الدفع الإلكتروني غير متاح. يرجى التواصل مع المطعم.',
        configLoadFailed:'تعذّر تحميل إعدادات الدفع. حدّث الصفحة وحاول مرة أخرى.',
       paymentFailed:'لم تكتمل عملية الدفع. حاول مرة أخرى.', paymentPending:'لا تزال عملية الدفع قيد المعالجة. حدّث الصفحة بعد قليل للتحقق مرة أخرى.', orderFailed:'حدث خطأ ما. حاول مرة أخرى.', detailsRequired:'يرجى تعبئة جميع البيانات المطلوبة.', fieldRequired:'هذا الحقل مطلوب.',
-       zoneNote:'التوصيل للمنازل يشمل منطقة الحمراء فقط. عند إتمام الطلب ستظهر لك منطقة التوصيل على الخريطة وتضع دبوساً على موقعك. خارج المنطقة، اختر الاستلام من الفرع.',
        locLabel:'موقع التوصيل:', locGps:'استخدم موقعي الحالي', locSearchPh:'ابحث عن شارعك أو حيّك...', locSearchBtn:'بحث',
        locTap:'اضغط على الخريطة لوضع الدبوس على موقع التوصيل، ثم اسحبه لضبطه.',
        locDenied:'خدمة الموقع غير مفعّلة. ابحث عن عنوانك، أو اضغط على الخريطة لوضع الدبوس على موقع التوصيل.',
@@ -1004,7 +1011,7 @@ const STR = {
        cartEmptyTitle:'ٹوکری اس وقت خالی ہے۔', cartEmptyText:'لذیذ کھانوں سے لطف اٹھائیں اور ابھی آرڈر کریں!',
        browseMenu:'مینو دیکھیں', subtotal:'ذیلی مجموعہ:', deliveryFees:'ڈیلیوری فیس:', finalTotal:'حتمی رقم:',
        completeOrder:'ابھی آرڈر مکمل کریں', addToCart:'کارٹ میں شامل کریں', calLabel:'کیلوریز',
-       checkoutTitle:'چیک آؤٹ', requestType:'درخواست کی قسم:', customerContact:'رابطہ کی معلومات:',
+       checkoutTitle:'چیک آؤٹ', pickupMapLabel:'نقشے پر ہماری برانچ', pickupMapFailed:'نقشہ لوڈ نہیں ہو سکا۔',
        fullName:'پورا نام:', fullNamePh:'اپنا نام درج کریں...', mobileNumber:'موبائل نمبر (واٹس ایپ/کال):',
        deliveryAddress:'ڈیلیوری پتہ:', deliveryAddressPh:'محلہ، گلی، عمارت/ولا نمبر، اپارٹمنٹ...',
        paymentMethod:'ادائیگی کا طریقہ:', paymentProvider:'Moyasar کے ذریعے محفوظ کارڈ ادائیگی',
@@ -1012,7 +1019,6 @@ const STR = {
        paymentCancel:'آرڈر کی تفصیلات پر واپس جائیں', paymentNotConfigured:'آن لائن ادائیگی دستیاب نہیں۔ براہ کرم ریسٹورنٹ سے رابطہ کریں۔',
        configLoadFailed:'چیک آؤٹ کی ترتیبات لوڈ نہیں ہو سکیں۔ صفحہ ریفریش کرکے دوبارہ کوشش کریں۔',
       paymentFailed:'ادائیگی مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔', paymentPending:'ادائیگی ابھی جاری ہے۔ دوبارہ جانچنے کے لیے تھوڑی دیر بعد صفحہ ریفریش کریں۔', orderFailed:'کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔', detailsRequired:'براہ کرم تمام ضروری معلومات پُر کریں۔', fieldRequired:'یہ خانہ ضروری ہے۔',
-       zoneNote:'ہوم ڈیلیوری صرف الحمراء کے علاقے میں ہے۔ چیک آؤٹ پر آپ کو نقشے پر ڈیلیوری کا علاقہ نظر آئے گا اور آپ اپنے مقام پر پن لگائیں گے۔ علاقے سے باہر برانچ سے پک اپ منتخب کریں۔',
        locLabel:'ڈیلیوری کا مقام:', locGps:'میرا موجودہ مقام استعمال کریں', locSearchPh:'اپنی گلی یا علاقہ تلاش کریں...', locSearchBtn:'تلاش',
        locTap:'ڈیلیوری کی جگہ پر پن لگانے کے لیے نقشے پر ٹیپ کریں، پھر اسے کھینچ کر درست کریں۔',
        locDenied:'مقام کی رسائی بند ہے۔ اپنا پتہ تلاش کریں، یا ڈیلیوری کی جگہ پر پن لگانے کے لیے نقشے پر ٹیپ کریں۔',
@@ -1044,7 +1050,7 @@ const STR = {
        cartEmptyTitle:'购物车当前为空。', cartEmptyText:'尽享美味佳肴，现在就下单吧！',
        browseMenu:'浏览菜单', subtotal:'小计：', deliveryFees:'配送费：', finalTotal:'总计：',
        completeOrder:'立即完成订单', addToCart:'加入购物车', calLabel:'卡路里',
-       checkoutTitle:'结账', requestType:'订单类型：', customerContact:'客户联系信息：',
+       checkoutTitle:'结账', pickupMapLabel:'地图上的分店位置', pickupMapFailed:'地图无法加载。',
        fullName:'姓名：', fullNamePh:'请输入您的姓名…', mobileNumber:'手机号码（WhatsApp/通话）：',
        deliveryAddress:'送货地址：', deliveryAddressPh:'小区、街道、楼栋/别墅号、公寓号…',
        paymentMethod:'付款方式：', paymentProvider:'通过 Moyasar 安全银行卡付款',
@@ -1052,7 +1058,6 @@ const STR = {
        paymentCancel:'返回订单详情', paymentNotConfigured:'暂无法在线付款，请联系餐厅。',
        configLoadFailed:'无法加载结账设置。请刷新页面后重试。',
       paymentFailed:'付款未完成，请重试。', paymentPending:'付款仍在处理中。请稍后刷新此页面再次查询。', orderFailed:'出错了，请重试。', detailsRequired:'请填写所有必填信息。', fieldRequired:'此项为必填项。',
-       zoneNote:'送货上门仅限 Al-Hamra’a 区域。结账时您会在地图上看到具体配送范围，并在您的位置放置图钉。范围之外请选择到店自取。',
        locLabel:'配送位置：', locGps:'使用我的当前位置', locSearchPh:'搜索您的街道或区域…', locSearchBtn:'搜索',
        locTap:'点击地图，把图钉放在您的收货位置，然后拖动微调。',
        locDenied:'定位权限已关闭。请搜索您的地址，或点击地图放置图钉。',
@@ -1701,6 +1706,7 @@ let WHATSAPP_NUMBER = '';       // overwritten by loadConfig() below
 let BRANCH_NAME = 'Red House Trading';
 let MOYASAR_ENABLED = false;
 let MOYASAR_PUBLISHABLE_KEY = '';
+let CART_BOXES = null;          // texts + outline colour of the two big cart boxes (Admin -> Cart boxes); null = built-in texts
 let DELIVERY_ZONE = { enforced:false, center:null, geometry:null };   // overwritten by loadConfig(): where home delivery is allowed
 let MAP_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 let MAP_ATTRIBUTION = '&copy; OpenStreetMap contributors';
@@ -1725,6 +1731,7 @@ async function loadConfig(){
         geometry: cfg.deliveryZone.geometry || null
       };
     }
+    if(cfg.cartBoxes && typeof cfg.cartBoxes === 'object') CART_BOXES = cfg.cartBoxes;
     MAP_TILE_URL = cfg.mapTileUrl || MAP_TILE_URL;
     if(cfg.mapAttribution !== undefined) MAP_ATTRIBUTION = cfg.mapAttribution;
     CONFIG_LOADED = true;
@@ -1736,14 +1743,16 @@ async function loadConfig(){
 
 /* ---------- contact details (call button) ---------- */
 // Editable from the admin "Contact" tab; served by GET /api/contact.
-let CONTACT = { phone:'', phone2:'', address:'', mapUrl:'' };
+let CONTACT = { phone:'', phone2:'', address:'', mapUrl:'', lat:null, lng:null };
 
 async function loadContact(){
   try{
     const res = await fetch(`${API_BASE}/api/contact`, { cache:'no-store' });
     if(!res.ok) throw new Error(`GET /api/contact failed (${res.status})`);
     const data = await res.json();
-    CONTACT = { phone:String(data.phone||''), phone2:String(data.phone2||''), address:String(data.address||''), mapUrl:String(data.mapUrl||'') };
+    const pinLat = Number(data.lat), pinLng = Number(data.lng);
+    CONTACT = { phone:String(data.phone||''), phone2:String(data.phone2||''), address:String(data.address||''), mapUrl:String(data.mapUrl||''),
+      lat:data.lat != null && Number.isFinite(pinLat) ? pinLat : null, lng:data.lng != null && Number.isFinite(pinLng) ? pinLng : null };
   }catch(err){
     console.error('Failed to load contact details:', err);
   }
@@ -1907,7 +1916,7 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
    are the only places that mutate `cart` so every call site stays in
    sync with whichever storage is currently active. */
 let cart = {};            // { itemId: qty } — always the in-memory source of truth for rendering
-let orderType = 'pickup'; // 'pickup' | 'delivery'
+let orderType = 'delivery'; // 'pickup' | 'delivery' - Home Delivery is only the starting choice; the customer's pick is kept while the page is open
 let lastOrder = null;     // most recently created or paid order
 
 const GUEST_CART_KEY = 'redhouse_guest_cart';
@@ -2132,8 +2141,6 @@ document.getElementById('itemModalAdd').addEventListener('click', ()=>{
 const cartOverlay = document.getElementById('cartOverlay');
 function refreshCartStaticText(){
   document.getElementById('cartTitle').textContent = STR[lang].cartTitle;
-  document.getElementById('pickupBtn').innerHTML = `<span class="free-tag">(${STR[lang].free})</span>🏠 ${STR[lang].pickupLabel}`;
-  document.getElementById('deliveryBtn').innerHTML = `🛵 ${STR[lang].deliveryLabel}`;
   document.getElementById('cartEmptyTitle').textContent = STR[lang].cartEmptyTitle;
   document.getElementById('cartEmptyText').textContent = STR[lang].cartEmptyText;
   document.getElementById('cartBrowseBtn').textContent = STR[lang].browseMenu;
@@ -2151,14 +2158,32 @@ document.getElementById('cartBrowseBtn').addEventListener('click', ()=>{
 document.getElementById('pickupBtn').addEventListener('click', ()=>{ orderType='pickup'; renderCart(); });
 document.getElementById('deliveryBtn').addEventListener('click', ()=>{ orderType='delivery'; renderCart(); });
 
+// The built-in texts only matter if /api/config could not be loaded; normally the server sends them (edited in Admin -> Cart boxes).
+const CART_BOX_FALLBACK = {
+  delivery:{ title:{en:'Home Delivery'}, line1:{en:'West Hamra District area'}, line2:{en:'Pin your location on the map'}, line3:{en:'Delivery in 30 to 45 minutes'} },
+  pickup:{ title:{en:'Pick Up'}, line1:{en:'From the branch'}, line2:{en:'See our location on the map'}, line3:{en:'Al-Andalus st. - Tihama Bldg.'} }
+};
+function cartBoxText(box, field){
+  const src = (CART_BOXES && CART_BOXES[box] && CART_BOXES[box][field]) || CART_BOX_FALLBACK[box][field] || {};
+  return String(src[lang] || src.en || '');
+}
+function renderChoiceBoxes(){
+  const color = CART_BOXES && /^#[0-9a-f]{6}$/i.test(CART_BOXES.color || '') ? CART_BOXES.color : '';
+  const row = document.getElementById('orderTypeRow');
+  if(color) row.style.setProperty('--cb-color', color); else row.style.removeProperty('--cb-color');
+  [['delivery','deliveryBtn'], ['pickup','pickupBtn']].forEach(([box, id])=>{
+    const btn = document.getElementById(id);
+    const spans = btn.querySelectorAll('span');
+    ['title','line1','line2','line3'].forEach((field, i)=>{ spans[i].textContent = cartBoxText(box, field); });
+    btn.classList.toggle('active', orderType === box);
+    btn.setAttribute('aria-pressed', String(orderType === box));
+  });
+}
+
 function renderCart(){
   refreshCartStaticText();
   document.getElementById('cartCountPill').textContent = cartCount();
-  document.getElementById('pickupBtn').classList.toggle('active', orderType==='pickup');
-  document.getElementById('deliveryBtn').classList.toggle('active', orderType==='delivery');
-  const zoneNote = document.getElementById('zoneNote');   // tells customers up front that delivery has an area
-  zoneNote.textContent = STR[lang].zoneNote;
-  zoneNote.hidden = !(locActive() && DELIVERY_ZONE.geometry);
+  renderChoiceBoxes();
 
   const lines = cartLines();
   const emptyEl = document.getElementById('cartEmptyState');
@@ -2563,7 +2588,32 @@ async function searchAddress(){
   }
 }
 
+/* Pick-up: a map with the branch pin set in Admin -> Contact (no pin set yet: only the address is shown) */
+let pickupMap = null, pickupLeafletFailed = false;
+function renderPickupBlock(){
+  const block = document.getElementById('pickupBlock');
+  const show = orderType === 'pickup';
+  block.hidden = !show;
+  if(!show) return;
+  document.getElementById('pickupMapLabel').textContent = STR[lang].pickupMapLabel;
+  const hasPin = CONTACT.lat != null && CONTACT.lng != null;
+  document.getElementById('pickupMap').hidden = !hasPin || pickupLeafletFailed;
+  document.getElementById('pickupMapNote').textContent = pickupLeafletFailed ? STR[lang].pickupMapFailed : (CONTACT.address || cartBoxText('pickup', 'line3'));
+  if(!hasPin) return;
+  loadLeaflet().then(()=>{
+    if(orderType !== 'pickup') return;
+    if(!pickupMap){
+      pickupMap = L.map('pickupMap', { center:[CONTACT.lat, CONTACT.lng], zoom:16, scrollWheelZoom:false });
+      L.tileLayer(MAP_TILE_URL, { maxZoom:19, attribution:MAP_ATTRIBUTION, referrerPolicy:'strict-origin-when-cross-origin' }).addTo(pickupMap);
+      L.marker([CONTACT.lat, CONTACT.lng]).addTo(pickupMap);
+    }
+    pickupMap.setView([CONTACT.lat, CONTACT.lng], 16);
+    setTimeout(()=>pickupMap.invalidateSize(), 120);
+  }).catch(err=>{ console.error('Could not load the branch map:', err); pickupLeafletFailed = true; renderPickupBlock(); });
+}
+
 function initLocation(){
+  renderPickupBlock();
   renderLocation();
   if(!locActive()) return;
   ensureLocMap().catch(err=>{ console.error('Could not load the map:', err); locNotice = 'mapFailed'; renderLocation(); });
@@ -2582,6 +2632,7 @@ function switchToPickup(){
   renderCart();
   refreshCheckoutOrderType();
   refreshCheckoutStaticText();   // refreshes the pay button total, hides the map block and unlocks the pay button
+  renderPickupBlock();
   document.getElementById('checkoutStatusNote').textContent = '';
 }
 document.getElementById('locGpsBtn').addEventListener('click', useMyLocation);
@@ -2591,9 +2642,6 @@ document.getElementById('locPickupBtn').addEventListener('click', switchToPickup
 
 function refreshCheckoutStaticText(){
   document.getElementById('checkoutTitle').textContent = STR[lang].checkoutTitle;
-  document.getElementById('checkoutBranch').textContent = BRANCH_NAME;
-  document.getElementById('checkoutTypeLabel').textContent = STR[lang].requestType;
-  document.getElementById('checkoutContactLabel').textContent = STR[lang].customerContact;
   document.getElementById('nameLabel').textContent = STR[lang].fullName;
   document.getElementById('checkoutName').placeholder = STR[lang].fullNamePh;
   document.getElementById('phoneLabel').textContent = STR[lang].mobileNumber;
@@ -2614,10 +2662,10 @@ function refreshCheckoutStaticText(){
     document.getElementById('checkoutPayBtn').innerHTML = `${escapeHtml(STR[lang].payBtn)} · ${moneyHtml(cartTotal())}`;
   }
   renderLocation();   // map block texts + pay button lock
+  if(checkoutOverlay.classList.contains('is-open')) renderPickupBlock();   // language switch while the checkout is open
 }
 // The parts of the checkout that depend on pick-up vs home delivery.
 function refreshCheckoutOrderType(){
-  document.getElementById('checkoutTypeVal').textContent = orderType==='delivery' ? STR[lang].deliveryLabel : STR[lang].pickupLabel;
   document.getElementById('addressWrap').style.display = orderType==='delivery' ? 'block' : 'none';
   setMoney(document.getElementById('checkoutSubVal'), cartSubtotal());
   document.getElementById('checkoutDeliveryLine').style.display = orderType==='delivery' && DELIVERY_FEE_ENABLED ? 'flex' : 'none';

@@ -316,6 +316,12 @@ Free maps, no API keys: Leaflet (served from `/vendor/leaflet`), OpenStreetMap t
 - **How the delivery point is found.** The delivery address is free text typed at checkout, so the server looks it up the first time the order is tracked (long addresses are retried without their first parts, e.g. the apartment) and saves the result in `orders.delivery_lat` / `delivery_lng`. Run `db/01_tables.sql` again once to add those two columns; until then the lookup still works but is only remembered in server memory. Because it comes from text, the dot can be off by some distance, and the page says so. Orders placed with the checkout pin (see "Delivery zone and checkout pin" below) already carry an exact spot, which the tracking page uses instead of guessing.
 - **Limits of the free services.** OpenStreetMap's address search allows 1 request per second (the server spaces its calls) and OpenStreetMap's tile server and the OSRM demo server are shared, best-effort services meant for light use. Routes are cached for 6 hours and a failed address lookup is not retried for 10 minutes. If traffic grows, set `MAP_TILE_URL` and `ROUTING_URL`.
 
+## Cart boxes and checkout (14/11/2026, client "MENU_2_POINTS_CHANGE")
+
+- **Cart:** the pick-up/delivery toggle is now two big outlined boxes: **Home Delivery** (left, selected when the page opens) and **Pick Up** (right). The customer's choice is kept while the page stays open.
+- **Edit the box texts:** Admin -> **Cart boxes**. Pick a language (English / Arabic / Urdu / Chinese), type the title and three lines of each box, and watch the live preview. The outline colour is there too. An empty field uses the built-in text. Stored in `site_settings` key `cart_boxes` (no SQL to run), served in `GET /api/config` as `cartBoxes`, saved with `GET/PUT /api/admin/cart-boxes`.
+- **Checkout:** the lines "Red House Trading", "Request type" and "Customer contact information" are removed; the map comes right after name and mobile number. For **Pick Up** the map shows the branch pin from Admin -> Contact (without a pin only the address is shown). "By continuing you agree to..." now appears on the card-payment step, as plain text.
+
 ## Delivery zone and checkout pin (08/11/2026)
 Home delivery is only accepted inside a delivery zone, and the customer proves where they are with a map pin. Free, no API keys, no new services (Leaflet and OpenStreetMap, as above).
 

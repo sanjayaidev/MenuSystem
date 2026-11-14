@@ -21,6 +21,7 @@ const geocodeRoutes = require('./routes/geocode');
 const { renderMenuPage } = require('./routes/menu-page-ssr');
 const { getDeliverySettings, CURRENCY } = require('./db/delivery-settings');
 const deliveryZone = require('./db/delivery-zone');
+const cartBoxes = require('./db/choice-boxes');
 const { getMoyasarConfig } = require('./db/moyasar-config');
 
 const app = express();
@@ -153,6 +154,8 @@ app.get('/api/config', async (req, res) => {
     mapTileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     mapAttribution: process.env.MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     // where home delivery is allowed; the checkout draws it and gives instant feedback, POST /api/orders enforces it
+    // texts + outline colour of the two big cart boxes (Admin -> Cart boxes); built-in texts where nothing is saved
+    cartBoxes: await cartBoxes.getCartBoxes().catch(() => cartBoxes.merge(null)),
     deliveryZone: await deliveryZone.publicZone().catch((e) => { console.error('Could not resolve the delivery area:', e.message); return { enforced: false, center: null, geometry: null }; }),
   });
 });

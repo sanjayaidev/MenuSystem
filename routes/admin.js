@@ -6,6 +6,7 @@ const { requireAdmin } = require('../middleware/auth');
 const { translateTexts, TranslateError } = require('../db/translate');
 const { getDeliverySettings, saveDeliverySettings, CURRENCY } = require('../db/delivery-settings');
 const deliveryZone = require('../db/delivery-zone');
+const cartBoxes = require('../db/choice-boxes');
 
 const router = express.Router();
 
@@ -300,6 +301,30 @@ router.put('/delivery-settings', asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Could not save delivery settings:', error.message);
     res.status(500).json({ error: 'Could not save delivery settings.' });
+  }
+}));
+
+// The two big boxes at the top of the cart (Home Delivery / Pick Up): texts in 4 languages + outline colour.
+//   GET -> { saved, defaults, effective }   PUT { color, delivery: {title, line1..3: {en,ar,ur,zh}}, pickup: {...} }
+//   Empty text = use the built-in text.
+router.get('/cart-boxes', asyncHandler(async (req, res) => {
+  try {
+    res.json(await cartBoxes.getCartBoxesForAdmin());
+  } catch (error) {
+    console.error('Could not load the cart boxes:', error.message);
+    res.status(500).json({ error: 'Could not load the cart boxes.' });
+  }
+}));
+
+router.put('/cart-boxes', asyncHandler(async (req, res) => {
+  const checked = cartBoxes.validate(req.body);
+  if (!checked.ok) return res.status(400).json({ error: checked.message });
+  try {
+    await cartBoxes.saveCartBoxes(checked.value);
+    res.json(await cartBoxes.getCartBoxesForAdmin());
+  } catch (error) {
+    console.error('Could not save the cart boxes:', error.message);
+    res.status(500).json({ error: 'Could not save the cart boxes.' });
   }
 }));
 
