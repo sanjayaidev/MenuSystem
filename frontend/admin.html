@@ -4001,7 +4001,7 @@ function zoneRemove(index){
 function zoneRender(){
   if(!zoneMap) return;
   const latlngs = zonePoints.map(p => [p.lat, p.lng]);
-  const style = { color: zonePoints.length >= 3 && zoneProblemKey(zonePoints) ? '#ff6b5e' : '#e3b23c', weight: 2, fillOpacity: .18 };
+  const style = { color: zonePoints.length >= 3 && zoneProblemKey(zonePoints) ? '#ff6b5e' : '#1e73ff', weight: 2, fillOpacity: .18 };
   if(zonePoly) zonePoly.setLatLngs(latlngs).setStyle(style);
   else zonePoly = L.polygon(latlngs, { ...style, interactive: false }).addTo(zoneMap);
   zoneCornerMarkers.forEach(marker => marker.remove());

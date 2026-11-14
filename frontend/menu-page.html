@@ -2491,7 +2491,7 @@ async function ensureLocMap(){
   locMap = L.map('locMap', { center:[c.lat, c.lng], zoom:15, scrollWheelZoom:false });
   L.tileLayer(MAP_TILE_URL, { maxZoom:19, attribution:MAP_ATTRIBUTION, referrerPolicy:'strict-origin-when-cross-origin' }).addTo(locMap);
   if(DELIVERY_ZONE.geometry){
-    const zoneLayer = L.geoJSON(DELIVERY_ZONE.geometry, { style:{ color:'#e3b23c', weight:2, fillOpacity:.08 }, interactive:false }).addTo(locMap);
+    const zoneLayer = L.geoJSON(DELIVERY_ZONE.geometry, { style:{ color:'#1e73ff', weight:2, fillOpacity:.08 }, interactive:false }).addTo(locMap);
     try{ locMap.fitBounds(zoneLayer.getBounds(), { padding:[12, 12] }); }catch(e){ /* keep the default view */ }
   }
   locMap.on('click', e=>setPin(e.latlng.lat, e.latlng.lng));
